@@ -39,7 +39,9 @@ namespace HUMR
         public int index = 0;
 
         static int nHeaderStrNum = 19;//timestamp example/*2021.01.03 20:57:35*/
-        static string strKeyWord = " Log        -  HUMR:";
+        string strKeyWord = " Log        -  HUMR:";
+        static string strOldKeyWord = " Log        -  HUMR:";
+        static string strNewKeyWord = " Debug      -  HUMR:";
         [TooltipAttribute("GenericAnimationを出力する場合はチェックを入れてください(チェックがないと複数のAnimationを出力できません)")]
         public bool ExportGenericAnimation = true;
         [TooltipAttribute("モーションを出力したいユーザーの名前を書いてください")]
@@ -70,8 +72,22 @@ namespace HUMR
             List<int> newLogLines = new List<int>();//抽出したログの中で新しく始まった行を格納する
             newLogLines.Add(0);
             float beforetime = 0;
+            bool checkedNewKeyWard = false;
             for (int j = 0; j < strOutputLogLines.Length; j++)
             {
+                if (!checkedNewKeyWard)
+                {
+                    if (strOutputLogLines[j].Contains(strOldKeyWord + DisplayName))
+                    {
+                        strKeyWord = strOldKeyWord;
+                        checkedNewKeyWard = true;
+                    }
+                    else if (strOutputLogLines[j].Contains(strNewKeyWord + DisplayName))
+                    {
+                        strKeyWord = strNewKeyWord;
+                        checkedNewKeyWard = true;
+                    }
+                }
                 //対象のログの行を抽出
                 if (strOutputLogLines[j].Contains(strKeyWord + DisplayName))
                 {
