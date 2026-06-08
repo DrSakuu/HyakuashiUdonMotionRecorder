@@ -10,7 +10,7 @@ VRChatの利用規約やモラルに反しない使用をお願いします。
 HUMR_VCC_v1.1.1
 * Unity 2022.3.22f1
 * VRChat SDK - Worlds 3.10.3
-* FBX Exporter Version 4.2.0 / FBX Exporter Version 4.2.1
+* FBX Exporter Version 4.2.1
 * VRChat 2026.2.2
 
 ### 導入の手順(Recorder)
