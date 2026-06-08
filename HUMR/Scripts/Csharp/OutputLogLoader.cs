@@ -18,6 +18,7 @@ using System.Linq;
 using System.IO;
 using UnityEditor;
 using UnityEngine.EventSystems;
+using System.Globalization;
 
 namespace HUMR
 {
@@ -99,7 +100,7 @@ namespace HUMR
                         {
                             if (strTmpOLL[k] == ',')
                             {
-                                float currenttime = float.Parse(strTmpOLL.Substring(0, k));
+                                float currenttime = float.Parse(strTmpOLL.Substring(0, k), CultureInfo.InvariantCulture);
                                 if (currenttime < beforetime)
                                 {
                                     newLogLines.Add(nTargetCounter);
@@ -153,7 +154,7 @@ namespace HUMR
                                 {
                                     if (strDisplayNameOutputLogLines[nTargetLineCounter][k] == ',')
                                     {
-                                        float currenttime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k));
+                                        float currenttime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k), CultureInfo.InvariantCulture);
                                         if (currenttime < beforetime)
                                         {
                                             Debug.LogAssertion("new record line is contained");
@@ -171,10 +172,10 @@ namespace HUMR
                             string[] strSplitedOutPutLog = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',');
                             if (strSplitedOutPutLog.Length == 4 * (HumanTrait.BoneName.Length + 1/*time + hip position*/))
                             {
-                                float key_time = float.Parse(strSplitedOutPutLog[0]);
+                                float key_time = float.Parse(strSplitedOutPutLog[0], CultureInfo.InvariantCulture);
                                 Vector3 rootScale = animator.transform.localScale;
                                 Vector3 armatureScale = animator.GetBoneTransform((HumanBodyBones)0).parent.localScale;
-                                Vector3 hippos = new Vector3(float.Parse(strSplitedOutPutLog[1]), float.Parse(strSplitedOutPutLog[2]), float.Parse(strSplitedOutPutLog[3]));
+                                Vector3 hippos = new Vector3(float.Parse(strSplitedOutPutLog[1], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[2], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[3], CultureInfo.InvariantCulture));
                                 transform.rotation = Quaternion.identity;//Avatarがrotation(0,0,0)でない可能性があるため
                                 hippos = Quaternion.Inverse(animator.GetBoneTransform((HumanBodyBones)0).parent.localRotation) * hippos;//armatureがrotation(0,0,0)でない可能性があるため
                                 hippos = new Vector3(hippos.x / rootScale.x/ armatureScale.x, hippos.y / rootScale.y/ armatureScale.y, hippos.z / rootScale.z/ armatureScale.z); //いる
@@ -184,7 +185,7 @@ namespace HUMR
                                 Quaternion[] boneWorldRotation = new Quaternion[HumanTrait.BoneName.Length];
                                 for (int k = 0; k < HumanTrait.BoneName.Length; k++)
                                 {
-                                    boneWorldRotation[k] = new Quaternion(float.Parse(strSplitedOutPutLog[k * 4 + 4]), float.Parse(strSplitedOutPutLog[k * 4 + 5]), float.Parse(strSplitedOutPutLog[k * 4 + 6]), float.Parse(strSplitedOutPutLog[k * 4 + 7]));
+                                    boneWorldRotation[k] = new Quaternion(float.Parse(strSplitedOutPutLog[k * 4 + 4], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[k * 4 + 5], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[k * 4 + 6], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[k * 4 + 7], CultureInfo.InvariantCulture));
                                 }
                                 for (int k = 0; k < HumanTrait.BoneName.Length; k++)
                                 {
@@ -258,7 +259,7 @@ namespace HUMR
                     string displaynameFolderPath = animFolderPath + "/" + DisplayName;
                     CreateDirectoryIfNotExist(displaynameFolderPath);
 
-                    string animationName = files[index].Substring(files[index].Length - 13).Remove(9)+"_"+i.ToString();
+                    string animationName = files[index].Substring(files[index].Length - 23).Remove(19)+"_"+i.ToString();
                     string animPath = displaynameFolderPath + "/" + animationName + ".anim";
                     Debug.Log(animPath);
 
@@ -297,7 +298,7 @@ namespace HUMR
                 CreateDirectoryIfNotExist(exportFolderPath);
                 string displaynameFBXFolderPath = exportFolderPath + "/" + ValidName(DisplayName);
                 CreateDirectoryIfNotExist(displaynameFBXFolderPath);
-                UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(displaynameFBXFolderPath + "/" + files[index].Substring(files[index].Length - 13).Remove(9), this.gameObject);
+                UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(displaynameFBXFolderPath + "/" + files[index].Substring(files[index].Length - 23).Remove(19), this.gameObject);
             }
         }
 

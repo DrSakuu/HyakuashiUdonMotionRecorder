@@ -54,7 +54,7 @@ namespace HUMR
             string[] files = Directory.GetFiles(path, "*.txt");
             for (int i = 0; i < files.Length; i++)
             {
-                files[i] = files[i].Substring(files[i].Length - 13).Remove(9);
+                files[i] = files[i].Substring(files[i].Length - 23).Remove(19);
             }
 
 
