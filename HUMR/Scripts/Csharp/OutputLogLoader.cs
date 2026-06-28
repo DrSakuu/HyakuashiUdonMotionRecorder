@@ -3,7 +3,7 @@
  * OutputLogLoader.cs
  * 
  * メインの処理を行う。ログ出力時と同一のアバターをHierarchy上に置き、これをアタッチして使用することを想定している
- * PackageManagerからFBXExportorをインストールしておく必要あり
+ * PackageManagerからFBXExporterをインストールしておく必要あり
  * 
  * フォルダを構成して、OutputLog_xx_xx_xxからアニメーションを作成
  * そのアニメーションをアバターのアニメーターに入れてFBXとして出力
@@ -11,10 +11,8 @@
  * 
  * *****/
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 using System.IO;
 using UnityEditor;
 using UnityEngine.EventSystems;
@@ -23,99 +21,96 @@ using System.Globalization;
 namespace HUMR
 {
 #if UNITY_EDITOR
-    public interface OutputLogLoaderinterface : IEventSystemHandler
+    public interface OutputLogLoaderInterface : IEventSystemHandler
     {
         void LoadLogToExportAnim();
     }
 
     [RequireComponent(typeof(Animator))]
-    public class OutputLogLoader : MonoBehaviour, OutputLogLoaderinterface
+    public class OutputLogLoader : MonoBehaviour, OutputLogLoaderInterface
     {
-        Animator animator;
-        UnityEditor.Animations.AnimatorController controller;
-        string[] files;
+        private Animator _animator;
+        private UnityEditor.Animations.AnimatorController _controller;
+        private string[] _files;
         [HideInInspector]
-        public string OutputLogPath = "";
+        public string logFilePath = "";
         [HideInInspector]
-        public int index = 0;
+        public int index;
 
-        static int nHeaderStrNum = 19;//timestamp example/*2021.01.03 20:57:35*/
-        string strKeyWord = " Log        -  HUMR:";
-        static string strOldKeyWord = " Log        -  HUMR:";
-        static string strNewKeyWord = " Debug      -  HUMR:";
-        [TooltipAttribute("GenericAnimationを出力する場合はチェックを入れてください(チェックがないと複数のAnimationを出力できません)")]
-        public bool ExportGenericAnimation = true;
-        [TooltipAttribute("モーションを出力したいユーザーの名前を書いてください")]
-        public string DisplayName = "";
+        private const int NHeaderStrNum = 19; //timestamp example/*2021.01.03 20:57:35*/
+        private string _strKeyWord = " Log        -  HUMR:";
+        private const string StrOldKeyWord = " Log        -  HUMR:";
+        private const string StrNewKeyWord = " Debug      -  HUMR:";
+
+        [Tooltip("GenericAnimationを出力する場合はチェックを入れてください(チェックがないと複数のAnimationを出力できません)")]
+        public bool exportGenericAnimation = true;
+        [Tooltip("モーションを出力したいユーザーの名前を書いてください")]
+        public string displayName = "";
 
         public void LoadLogToExportAnim()
         {
-            if (DisplayName == "")
+            if (displayName == "")
             {
                 Debug.LogWarning("DisplayName is null");
                 return;
             }
-            if (animator == null)
+            if (_animator == null)
             {
-                animator = GetComponent<Animator>();
+                _animator = GetComponent<Animator>();
             }
-            string humrPath = @"Assets/HUMR";
+            const string humrPath = @"Assets/HUMR";
             CreateDirectoryIfNotExist(humrPath);
 
             ControllerSetUp(humrPath);
 
-            string[] files = Directory.GetFiles(OutputLogPath, "*.txt");
+            var files = Directory.GetFiles(logFilePath, "*.txt");
 
-            string[] strOutputLogLines = File.ReadAllLines(files[index]);
-            int nTargetCounter = 0;
-            List<int> newTargetLines = new List<int>();//ファイルの中での新しく始まった対象の行を格納する
+            var strOutputLogLines = File.ReadAllLines(files[index]);
+            var nTargetCounter = 0;
+            var newTargetLines = new List<int>();//ファイルの中での新しく始まった対象の行を格納する
             newTargetLines.Add(0);
-            List<int> newLogLines = new List<int>();//抽出したログの中で新しく始まった行を格納する
+            var newLogLines = new List<int>();//抽出したログの中で新しく始まった行を格納する
             newLogLines.Add(0);
-            float beforetime = 0;
-            bool checkedNewKeyWard = false;
-            for (int j = 0; j < strOutputLogLines.Length; j++)
+            var beforeTime = 0f;
+            var checkedNewKeyWord = false;
+            for (var j = 0; j < strOutputLogLines.Length; j++)
             {
-                if (!checkedNewKeyWard)
+                if (!checkedNewKeyWord)
                 {
-                    if (strOutputLogLines[j].Contains(strOldKeyWord + DisplayName))
+                    if (strOutputLogLines[j].Contains(StrOldKeyWord + displayName))
                     {
-                        strKeyWord = strOldKeyWord;
-                        checkedNewKeyWard = true;
+                        _strKeyWord = StrOldKeyWord;
+                        checkedNewKeyWord = true;
                     }
-                    else if (strOutputLogLines[j].Contains(strNewKeyWord + DisplayName))
+                    else if (strOutputLogLines[j].Contains(StrNewKeyWord + displayName))
                     {
-                        strKeyWord = strNewKeyWord;
-                        checkedNewKeyWard = true;
+                        _strKeyWord = StrNewKeyWord;
+                        checkedNewKeyWord = true;
                     }
                 }
                 //対象のログの行を抽出
-                if (strOutputLogLines[j].Contains(strKeyWord + DisplayName))
+                if (!strOutputLogLines[j].Contains(_strKeyWord + displayName)) continue;
+                if (strOutputLogLines[j].Length > NHeaderStrNum + (_strKeyWord + displayName).Length)
                 {
-                    if (strOutputLogLines[j].Length > nHeaderStrNum + (strKeyWord + DisplayName).Length)
+                    //記録終わりを検知
+                    var strTmpOLL = strOutputLogLines[j].Substring(NHeaderStrNum + (_strKeyWord + displayName).Length);
+                    for (var k = 0; k < strTmpOLL.Length; k++)
                     {
-                        //記録終わりを検知
-                        string strTmpOLL = strOutputLogLines[j].Substring(nHeaderStrNum + (strKeyWord + DisplayName).Length);
-                        for (int k = 0; k < strTmpOLL.Length; k++)
+                        if (strTmpOLL[k] != ',') continue;
+                        var currentTime = float.Parse(strTmpOLL.Substring(0, k), CultureInfo.InvariantCulture);
+                        if (currentTime < beforeTime)
                         {
-                            if (strTmpOLL[k] == ',')
-                            {
-                                float currenttime = float.Parse(strTmpOLL.Substring(0, k), CultureInfo.InvariantCulture);
-                                if (currenttime < beforetime)
-                                {
-                                    newLogLines.Add(nTargetCounter);
-                                    newTargetLines.Add(j);
-                                }
-                                beforetime = currenttime;
-                                break;
-                            }
+                            newLogLines.Add(nTargetCounter);
+                            newTargetLines.Add(j);
                         }
-                        nTargetCounter++;//目的の行が何行あるか。
+                        beforeTime = currentTime;
+                        break;
                     }
-                    else
-                    {
-                        Debug.LogWarning("Length is not correct");
-                    }
+                    nTargetCounter++;//目的の行が何行あるか。
+                }
+                else
+                {
+                    Debug.LogWarning("Length is not correct");
                 }
             }
             newLogLines.Add(nTargetCounter);
@@ -123,153 +118,148 @@ namespace HUMR
             // Keyframeの生成
             if (nTargetCounter == 0)
             {
-                Debug.LogWarning("Not exist Motion Data with ["+ DisplayName + "] (Did you enter correct DisplayName ? or select correct log ?)");
+                Debug.LogWarning("Not exist Motion Data with ["+ displayName + "] (Did you enter correct DisplayName ? or select correct log ?)");
                 return;
             }
 
-            for (int i =0; i<newLogLines.Count-1;i++)
+            for (var i =0; i<newLogLines.Count-1;i++)
             {
-                int nLineNum = newLogLines[i + 1] - newLogLines[i];
-                int nTargetLineNum = newTargetLines[i + 1] - newTargetLines[i];
-                Keyframe[][] Keyframes = new Keyframe[4 * (HumanTrait.BoneName.Length + 1/*time + hip position*/) - 1/*time*/][];//[要素数]
-                for (int j = 0; j < Keyframes.Length; j++)
+                var nLineNum = newLogLines[i + 1] - newLogLines[i];
+                var keyframes = new Keyframe[4 * (HumanTrait.BoneName.Length + 1/*time + hip position*/) - 1/*time*/][];//[要素数]
+                for (var j = 0; j < keyframes.Length; j++)
                 {
-                    Keyframes[j] = new Keyframe[nLineNum];//[行数]
+                    keyframes[j] = new Keyframe[nLineNum];//[行数]
                 }
 
                 //Keyframeにログの値を入れていく
                 {
-                    string[] strDisplayNameOutputLogLines = new string[nLineNum];//目的の行の配列
-                    int nTargetLineCounter = 0;
-                    beforetime = 0;
-                    for (int j = newTargetLines[i]; j < newTargetLines[i+1]; j++)
+                    var strDisplayNameOutputLogLines = new string[nLineNum];//目的の行の配列
+                    var nTargetLineCounter = 0;
+                    beforeTime = 0;
+                    for (var j = newTargetLines[i]; j < newTargetLines[i+1]; j++)
                     {
                         //対象のログの行を抽出
-                        if (strOutputLogLines[j].Contains(strKeyWord + DisplayName))
+                        if (!strOutputLogLines[j].Contains(_strKeyWord + displayName)) continue;
+                        if (strOutputLogLines[j].Length > NHeaderStrNum + (_strKeyWord + displayName).Length)
                         {
-                            if (strOutputLogLines[j].Length > nHeaderStrNum + (strKeyWord + DisplayName).Length)
+                            strDisplayNameOutputLogLines[nTargetLineCounter] = strOutputLogLines[j].Substring(NHeaderStrNum + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
+                            for (var k = 0; k < strDisplayNameOutputLogLines[nTargetLineCounter].Length; k++)
                             {
-                                strDisplayNameOutputLogLines[nTargetLineCounter] = strOutputLogLines[j].Substring(nHeaderStrNum + (strKeyWord + DisplayName).Length);//時間,position,rotation,rotation,…
-                                for (int k = 0; k < strDisplayNameOutputLogLines[nTargetLineCounter].Length; k++)
+                                if (strDisplayNameOutputLogLines[nTargetLineCounter][k] != ',') continue;
+                                var currentTime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k), CultureInfo.InvariantCulture);
+                                if (currentTime < beforeTime)
                                 {
-                                    if (strDisplayNameOutputLogLines[nTargetLineCounter][k] == ',')
-                                    {
-                                        float currenttime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k), CultureInfo.InvariantCulture);
-                                        if (currenttime < beforetime)
-                                        {
-                                            Debug.LogAssertion("new record line is contained");
-                                        }
-                                        beforetime = currenttime;
-                                        break;
-                                    }
+                                    Debug.LogAssertion("new record line is contained");
                                 }
+                                beforeTime = currentTime;
+                                break;
                             }
-                            else
-                            {
-                                Debug.LogWarning("Log Length is not correct");
-                            }
-                            //Debug.Log(DisplayNameOutputLogLines[nTargetLineCounter]);
-                            string[] strSplitedOutPutLog = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',');
-                            if (strSplitedOutPutLog.Length == 4 * (HumanTrait.BoneName.Length + 1/*time + hip position*/))
-                            {
-                                float key_time = float.Parse(strSplitedOutPutLog[0], CultureInfo.InvariantCulture);
-                                Vector3 rootScale = animator.transform.localScale;
-                                Vector3 armatureScale = animator.GetBoneTransform((HumanBodyBones)0).parent.localScale;
-                                Vector3 hippos = new Vector3(float.Parse(strSplitedOutPutLog[1], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[2], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[3], CultureInfo.InvariantCulture));
-                                transform.rotation = Quaternion.identity;//Avatarがrotation(0,0,0)でない可能性があるため
-                                hippos = Quaternion.Inverse(animator.GetBoneTransform((HumanBodyBones)0).parent.localRotation) * hippos;//armatureがrotation(0,0,0)でない可能性があるため
-                                hippos = new Vector3(hippos.x / rootScale.x/ armatureScale.x, hippos.y / rootScale.y/ armatureScale.y, hippos.z / rootScale.z/ armatureScale.z); //いる
-                                Keyframes[0][nTargetLineCounter] = new Keyframe(key_time, hippos.x);
-                                Keyframes[1][nTargetLineCounter] = new Keyframe(key_time, hippos.y);
-                                Keyframes[2][nTargetLineCounter] = new Keyframe(key_time, hippos.z);
-                                Quaternion[] boneWorldRotation = new Quaternion[HumanTrait.BoneName.Length];
-                                for (int k = 0; k < HumanTrait.BoneName.Length; k++)
-                                {
-                                    boneWorldRotation[k] = new Quaternion(float.Parse(strSplitedOutPutLog[k * 4 + 4], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[k * 4 + 5], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[k * 4 + 6], CultureInfo.InvariantCulture), float.Parse(strSplitedOutPutLog[k * 4 + 7], CultureInfo.InvariantCulture));
-                                }
-                                for (int k = 0; k < HumanTrait.BoneName.Length; k++)
-                                {
-
-                                    if (animator.GetBoneTransform((HumanBodyBones)k) == null)
-                                    {
-                                        continue;
-                                    }
-                                    animator.GetBoneTransform((HumanBodyBones)k).rotation = boneWorldRotation[k];
-                                }
-
-                                for (int k = 0; k < HumanTrait.BoneName.Length; k++)
-                                {
-                                    if (animator.GetBoneTransform((HumanBodyBones)k) == null)
-                                    {
-                                        continue;
-                                    }
-                                    Quaternion localrot = animator.GetBoneTransform((HumanBodyBones)k).localRotation;
-                                    Keyframes[k * 4 + 3][nTargetLineCounter] = new Keyframe(key_time, localrot.x);
-                                    Keyframes[k * 4 + 4][nTargetLineCounter] = new Keyframe(key_time, localrot.y);
-                                    Keyframes[k * 4 + 5][nTargetLineCounter] = new Keyframe(key_time, localrot.z);
-                                    Keyframes[k * 4 + 6][nTargetLineCounter] = new Keyframe(key_time, localrot.w);
-                                }
-                            }
-                            else
-                            {
-                                Debug.Log(strSplitedOutPutLog.Length);//228
-                                Debug.LogAssertion("Key value length is not correct");
-                            }
-                            nTargetLineCounter++;
                         }
+                        else
+                        {
+                            Debug.LogWarning("Log Length is not correct");
+                        }
+                        //Debug.Log(DisplayNameOutputLogLines[nTargetLineCounter]);
+                        var strSplitOutputLog = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',');
+                        if (strSplitOutputLog.Length == 4 * (HumanTrait.BoneName.Length + 1/*time + hip position*/))
+                        {
+                            var keyTime = float.Parse(strSplitOutputLog[0], CultureInfo.InvariantCulture);
+                            var rootScale = _animator.transform.localScale;
+                            var armatureScale = _animator.GetBoneTransform(0).parent.localScale;
+                            var hippos = new Vector3(float.Parse(strSplitOutputLog[1], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[2], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[3], CultureInfo.InvariantCulture));
+                            transform.rotation = Quaternion.identity;//Avatarがrotation(0,0,0)でない可能性があるため
+                            hippos = Quaternion.Inverse(_animator.GetBoneTransform(0).parent.localRotation) * hippos;//armatureがrotation(0,0,0)でない可能性があるため
+                            hippos = new Vector3(hippos.x / rootScale.x/ armatureScale.x, hippos.y / rootScale.y/ armatureScale.y, hippos.z / rootScale.z/ armatureScale.z); //いる
+                            keyframes[0][nTargetLineCounter] = new Keyframe(keyTime, hippos.x);
+                            keyframes[1][nTargetLineCounter] = new Keyframe(keyTime, hippos.y);
+                            keyframes[2][nTargetLineCounter] = new Keyframe(keyTime, hippos.z);
+                            var boneWorldRotation = new Quaternion[HumanTrait.BoneName.Length];
+                            for (var k = 0; k < HumanTrait.BoneName.Length; k++)
+                            {
+                                boneWorldRotation[k] = new Quaternion(float.Parse(strSplitOutputLog[k * 4 + 4], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[k * 4 + 5], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[k * 4 + 6], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[k * 4 + 7], CultureInfo.InvariantCulture));
+                            }
+                            for (var k = 0; k < HumanTrait.BoneName.Length; k++)
+                            {
+
+                                if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
+                                {
+                                    continue;
+                                }
+                                _animator.GetBoneTransform((HumanBodyBones)k).rotation = boneWorldRotation[k];
+                            }
+
+                            for (var k = 0; k < HumanTrait.BoneName.Length; k++)
+                            {
+                                if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
+                                {
+                                    continue;
+                                }
+                                var localRotation = _animator.GetBoneTransform((HumanBodyBones)k).localRotation;
+                                keyframes[k * 4 + 3][nTargetLineCounter] = new Keyframe(keyTime, localRotation.x);
+                                keyframes[k * 4 + 4][nTargetLineCounter] = new Keyframe(keyTime, localRotation.y);
+                                keyframes[k * 4 + 5][nTargetLineCounter] = new Keyframe(keyTime, localRotation.z);
+                                keyframes[k * 4 + 6][nTargetLineCounter] = new Keyframe(keyTime, localRotation.w);
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log(strSplitOutputLog.Length);//228
+                            Debug.LogAssertion("Key value length is not correct");
+                        }
+                        nTargetLineCounter++;
                     }
                 }
 
                 //AnimationClipにAnimationCurveを設定
-                AnimationClip clip = new AnimationClip();
+                var clip = new AnimationClip();
                 {
                     // AnimationCurveの生成
-                    AnimationCurve[] AnimCurves = new AnimationCurve[Keyframes.Length];
+                    var animCurves = new AnimationCurve[keyframes.Length];
 
-                    for (int l = 0; l < AnimCurves.Length; l++)//[行数-1]
+                    for (var l = 0; l < animCurves.Length; l++)//[行数-1]
                     {
-                        AnimCurves[l] = new AnimationCurve(Keyframes[l]);
+                        animCurves[l] = new AnimationCurve(keyframes[l]);
                     }
                     // AnimationCurveの追加
-                    clip.SetCurve(GetHierarchyPath(animator.GetBoneTransform((HumanBodyBones)0)), typeof(Transform), "localPosition.x", AnimCurves[0]);
-                    clip.SetCurve(GetHierarchyPath(animator.GetBoneTransform((HumanBodyBones)0)), typeof(Transform), "localPosition.y", AnimCurves[1]);
-                    clip.SetCurve(GetHierarchyPath(animator.GetBoneTransform((HumanBodyBones)0)), typeof(Transform), "localPosition.z", AnimCurves[2]);
-                    for (int m = 0; m < (AnimCurves.Length - 3) / 4; m++)//[骨数]
+                    clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.x", animCurves[0]);
+                    clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.y", animCurves[1]);
+                    clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.z", animCurves[2]);
+                    for (var m = 0; m < (animCurves.Length - 3) / 4; m++)//[骨数]
                     {
-                        if (animator.GetBoneTransform((HumanBodyBones)m) == null)
+                        if (_animator.GetBoneTransform((HumanBodyBones)m) == null)
                         {
                             continue;
                         }
-                        clip.SetCurve(GetHierarchyPath(animator.GetBoneTransform((HumanBodyBones)m)),
-                            typeof(Transform), "localRotation.x", AnimCurves[m * 4 + 3]);
-                        clip.SetCurve(GetHierarchyPath(animator.GetBoneTransform((HumanBodyBones)m)),
-                            typeof(Transform), "localRotation.y", AnimCurves[m * 4 + 4]);
-                        clip.SetCurve(GetHierarchyPath(animator.GetBoneTransform((HumanBodyBones)m)),
-                            typeof(Transform), "localRotation.z", AnimCurves[m * 4 + 5]);
-                        clip.SetCurve(GetHierarchyPath(animator.GetBoneTransform((HumanBodyBones)m)),
-                            typeof(Transform), "localRotation.w", AnimCurves[m * 4 + 6]);
+                        clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
+                            typeof(Transform), "localRotation.x", animCurves[m * 4 + 3]);
+                        clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
+                            typeof(Transform), "localRotation.y", animCurves[m * 4 + 4]);
+                        clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
+                            typeof(Transform), "localRotation.z", animCurves[m * 4 + 5]);
+                        clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
+                            typeof(Transform), "localRotation.w", animCurves[m * 4 + 6]);
                     }
                     clip.EnsureQuaternionContinuity();//これをしないとQuaternion補間してくれない
                 }
 
                 //GenericAnimation出力
                 {
-                    string animFolderPath = humrPath + @"/GenericAnimations";
+                    const string animFolderPath = humrPath + @"/GenericAnimations";
                     CreateDirectoryIfNotExist(animFolderPath);
-                    string displaynameFolderPath = animFolderPath + "/" + DisplayName;
-                    CreateDirectoryIfNotExist(displaynameFolderPath);
+                    var displayNameFolderPath = animFolderPath + "/" + displayName;
+                    CreateDirectoryIfNotExist(displayNameFolderPath);
 
-                    string animationName = files[index].Substring(files[index].Length - 23).Remove(19)+"_"+i.ToString();
-                    string animPath = displaynameFolderPath + "/" + animationName + ".anim";
+                    var animationName = files[index].Substring(files[index].Length - 23).Remove(19)+"_"+i.ToString();
+                    var animPath = displayNameFolderPath + "/" + animationName + ".anim";
                     Debug.Log(animPath);
 
-                    if (ExportGenericAnimation)
+                    if (exportGenericAnimation)
                     {
                         if (File.Exists(animPath))
                         {
                             AssetDatabase.DeleteAsset(animPath);
                             Debug.LogWarning("Same Name Generic Animation is existing. Overwritten!!");
-                            foreach (var layer in controller.layers)//アニメーションを消したことにより空のアニメーションステートが出来てたら削除
+                            foreach (var layer in _controller.layers)//アニメーションを消したことにより空のアニメーションステートが出来てたら削除
                             {
                                 foreach (var state in layer.stateMachine.states)
                                 {
@@ -288,44 +278,44 @@ namespace HUMR
 
                 //アニメーションをアバターのアニメーターに入れる
                 {
-                    controller.layers[0].stateMachine.AddState(clip.name).motion = clip;
+                    _controller.layers[0].stateMachine.AddState(clip.name).motion = clip;
                 }
             }
             //FBXとして出力
             {
-                animator.runtimeAnimatorController = controller;
-                string exportFolderPath = humrPath + @"/FBXs";
+                _animator.runtimeAnimatorController = _controller;
+                const string exportFolderPath = humrPath + @"/FBXs";
                 CreateDirectoryIfNotExist(exportFolderPath);
-                string displaynameFBXFolderPath = exportFolderPath + "/" + ValidName(DisplayName);
-                CreateDirectoryIfNotExist(displaynameFBXFolderPath);
-                UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(displaynameFBXFolderPath + "/" + files[index].Substring(files[index].Length - 23).Remove(19), this.gameObject);
+                var displayNameFBXFolderPath = exportFolderPath + "/" + ValidName(displayName);
+                CreateDirectoryIfNotExist(displayNameFBXFolderPath);
+                UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(displayNameFBXFolderPath + "/" + files[index].Substring(files[index].Length - 23).Remove(19), this.gameObject);
             }
         }
 
         //ファイル名やパスに使えない文字を‗に置換
-        string ValidName(string str)
+        private static string ValidName(string str)
         {
-            string strValid = str;
-            char[] chInvalid = Path.GetInvalidFileNameChars();
+            var strValid = str;
+            var chInvalid = Path.GetInvalidFileNameChars();
 
-            foreach (char c in chInvalid)
+            foreach (var c in chInvalid)
             {
                 strValid = strValid.Replace(c, '_');
             }
             return strValid;
         }
 
-        void ControllerSetUp(string humrPath)
+        private void ControllerSetUp(string humrPath)
         {
-            string tmpAniConPath = humrPath + @"/AnimationController";
-            if (controller == null)
+            var tmpAniConPath = humrPath + @"/AnimationController";
+            if (_controller == null)
             {
                 CreateDirectoryIfNotExist(tmpAniConPath);
-                controller = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath(tmpAniConPath + "/TmpAniCon.controller");
+                _controller = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath(tmpAniConPath + "/TmpAniCon.controller");
             }
-            else if (AssetDatabase.GetAssetPath(controller) == tmpAniConPath + "/TmpAniCon.controller")
+            else if (AssetDatabase.GetAssetPath(_controller) == tmpAniConPath + "/TmpAniCon.controller")
             {
-                foreach (var layer in controller.layers)
+                foreach (var layer in _controller.layers)
                 {
                     foreach (var state in layer.stateMachine.states)
                     {
@@ -335,7 +325,7 @@ namespace HUMR
             }
             else
             {
-                foreach (var layer in controller.layers)
+                foreach (var layer in _controller.layers)
                 {
                     foreach (var state in layer.stateMachine.states)
                     {
@@ -348,7 +338,7 @@ namespace HUMR
             }
         }
 
-        void CreateDirectoryIfNotExist(string path)
+        private static void CreateDirectoryIfNotExist(string path)
         {
             //存在するかどうか判定しなくても良いみたいだが気持ち悪いので
             if (!Directory.Exists(path))
@@ -357,10 +347,10 @@ namespace HUMR
             }
         }
 
-        string GetHierarchyPath(Transform self)
+        private static string GetHierarchyPath(Transform self)
         {
-            string path = self.gameObject.name;
-            Transform parent = self.parent;
+            var path = self.gameObject.name;
+            var parent = self.parent;
             while (parent.parent != null)
             {
                 path = parent.name + "/" + path;
