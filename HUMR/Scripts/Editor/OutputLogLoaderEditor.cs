@@ -4,15 +4,13 @@
  * 
  * Editor拡張。Editorフォルダの下に配置すること
  * 
- * OutputlogLoader.csをアタッチした際のInspectorに表示される項目を拡張している
+ * OutputLogLoader.csをアタッチした際のInspectorに表示される項目を拡張している
  * 
  * FBXExporterの有無を確認し、存在するOutputLogをプルダウンに表示する
  * "LoadLogToExportAnim"のボタンを押すとOutputLog内の処理が実行される
  * 
  * *****/
 #if UNITY_EDITOR
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
@@ -23,8 +21,8 @@ namespace HUMR
     [CustomEditor(typeof(OutputLogLoader))]
     public class OutputLogLoaderEditor : Editor
     {
-        string path;
-        bool foldout;
+        private string _path;
+        private bool _foldout;
 
         public override void OnInspectorGUI()
         {
@@ -33,42 +31,46 @@ namespace HUMR
             base.OnInspectorGUI();
 
             //targetを変換して対象を取得
-            OutputLogLoader targetScript = target as OutputLogLoader;
+            var targetScript = target as OutputLogLoader;
 
             EditorGUI.BeginChangeCheck();
 
-            foldout = EditorGUILayout.Foldout(foldout, "Advanced : CustomOutputLogPath");
-            if (foldout)
+            _foldout = EditorGUILayout.Foldout(_foldout, "Advanced : CustomOutputLogPath");
+            if (_foldout)
             {
                 EditorGUI.indentLevel++;
-                path = EditorGUILayout.TextField("OutputLogPath", path);
+                _path = EditorGUILayout.TextField("OutputLogPath", _path);
                 EditorGUI.indentLevel--;
             }
             else
             {
-                path = System.Environment.GetEnvironmentVariable("USERPROFILE");
-                path += @"\AppData\LocalLow\VRChat\VRChat";
+                _path = System.Environment.GetEnvironmentVariable("USERPROFILE");
+                _path += @"\AppData\LocalLow\VRChat\VRChat";
             }
-            targetScript.OutputLogPath = path;
 
-            string[] files = Directory.GetFiles(path, "*.txt");
-            for (int i = 0; i < files.Length; i++)
+            if (targetScript == null) return;
+            targetScript.logFilePath = _path;
+
+            var files = Directory.GetFiles(_path, "*.txt");
+            for (var i = 0; i < files.Length; i++)
             {
                 files[i] = files[i].Substring(files[i].Length - 23).Remove(19);
             }
 
 
             // ラベルの作成
-            string label = "LoadOutputLog";
+            const string label = "LoadOutputLog";
             // 初期値として表示する項目のインデックス番号
-            int selectedIndex = targetScript.index;
+            var selectedIndex = targetScript.index;
             // プルダウンメニューの作成
-            int index = files.Length > 0 ? EditorGUILayout.Popup(label, selectedIndex, files)
+            var index = files.Length > 0
+                ? EditorGUILayout.Popup(label, selectedIndex, files)
                 : -1;
 
             if (EditorGUI.EndChangeCheck())
-            {// 操作を Undo に登録
-             // インデックス番号を登録
+            {
+                // 操作を Undo に登録
+                // インデックス番号を登録
                 targetScript.index = index;
             }
 
@@ -77,12 +79,11 @@ namespace HUMR
             //PrivateMethodを実行する用のボタン
             if (GUILayout.Button("LoadLogToExportAnim"))
             {
-                ExecuteEvents.Execute<OutputLogLoaderinterface>(
-                target: targetScript.gameObject,
-                eventData: null,
-                functor: (recieveTarget, y) => recieveTarget.LoadLogToExportAnim());
+                ExecuteEvents.Execute<OutputLogLoaderInterface>(
+                    target: targetScript.gameObject,
+                    eventData: null,
+                    functor: (receiveTarget, _) => receiveTarget.LoadLogToExportAnim());
             }
-
         }
     }
 }

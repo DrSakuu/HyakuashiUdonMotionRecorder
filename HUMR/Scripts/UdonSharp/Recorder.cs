@@ -8,6 +8,7 @@
  * 
  * *****/
 
+using System.Globalization;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -16,68 +17,69 @@ namespace HUMR
 {
     public class Recorder : UdonSharpBehaviour
     {
-        [SerializeField,TooltipAttribute("チェックを入れるとワールド内の全ての人のモーションが記録されます（周知を推奨）")]
-        bool recordAllPlayers = false;
-        [TooltipAttribute("記録毎に最低何秒間の間隔を空けるかの設定")]
-        public float SecondsPerRecord = 0.1f;
+        [SerializeField,Tooltip("チェックを入れるとワールド内の全ての人のモーションが記録されます（周知を推奨）")]
+        private bool recordAllPlayers = false;
+        [Tooltip("記録毎に最低何秒間の間隔を空けるかの設定")]
+        public float secondsPerRecord = 0.1f;
 
-        Quaternion[] bonerotation;
-        VRCPlayerApi[] players;
-        VRCPlayerApi player;
-        float time;
-        float beforetime;
+        private Quaternion[] _boneRotations;
+        private VRCPlayerApi[] _players;
+        private VRCPlayerApi _player;
+        private float _time;
+        private float _beforeTime;
 
-        void Start()
+        private void Start()
         {
-            players = new VRCPlayerApi[80];
-            players[0] = Networking.LocalPlayer;
-            bonerotation = new Quaternion[HumanTrait.BoneName.Length];
-            time = 0;
-            beforetime = time;
+            _players = new VRCPlayerApi[80];
+            _players[0] = Networking.LocalPlayer;
+            _boneRotations = new Quaternion[HumanTrait.BoneName.Length];
+            _time = 0;
+            _beforeTime = _time;
         }
         private void Update()
         {
-            if (time - beforetime > SecondsPerRecord)
+            if (_time - _beforeTime > secondsPerRecord)
             {
                 if (recordAllPlayers)
                 {
-                    VRCPlayerApi.GetPlayers(players);
+                    VRCPlayerApi.GetPlayers(_players);
                 }
-                for (int i = 0; i < players.Length; i++)
+
+                foreach (var player in _players)
                 {
-                    if (players[i] == null)
+                    if (player == null)
                     {
                         continue;
                     }
-                    player = players[i];
+                    _player = player;
 
-                    string strOutputLog = "HUMR:";
-                    strOutputLog += player.displayName;
-                    strOutputLog += time.ToString();
+                    var strOutputLog = "HUMR:";
+                    strOutputLog += _player.displayName;
+                    strOutputLog += _time.ToString(CultureInfo.InvariantCulture);
                     strOutputLog += ",";
                     //hipbone = root
-                    strOutputLog += player.GetBonePosition(HumanBodyBones.Hips).x.ToString("F7");
+                    strOutputLog += _player.GetBonePosition(HumanBodyBones.Hips).x.ToString("F7");
                     strOutputLog += ",";
-                    strOutputLog += player.GetBonePosition(HumanBodyBones.Hips).y.ToString("F7");
+                    strOutputLog += _player.GetBonePosition(HumanBodyBones.Hips).y.ToString("F7");
                     strOutputLog += ",";
-                    strOutputLog += player.GetBonePosition(HumanBodyBones.Hips).z.ToString("F7");
-                    for (int j = 0; j < bonerotation.Length; j++)
+                    strOutputLog += _player.GetBonePosition(HumanBodyBones.Hips).z.ToString("F7");
+                    for (var j = 0; j < _boneRotations.Length; j++)
                     {
-                        bonerotation[j] = player.GetBoneRotation((HumanBodyBones)j);
+                        _boneRotations[j] = _player.GetBoneRotation((HumanBodyBones)j);
                         strOutputLog += ",";
-                        strOutputLog += bonerotation[j].x.ToString("F7");
+                        strOutputLog += _boneRotations[j].x.ToString("F7");
                         strOutputLog += ",";
-                        strOutputLog += bonerotation[j].y.ToString("F7");
+                        strOutputLog += _boneRotations[j].y.ToString("F7");
                         strOutputLog += ",";
-                        strOutputLog += bonerotation[j].z.ToString("F7");
+                        strOutputLog += _boneRotations[j].z.ToString("F7");
                         strOutputLog += ",";
-                        strOutputLog += bonerotation[j].w.ToString("F7");
+                        strOutputLog += _boneRotations[j].w.ToString("F7");
                     }
                     Debug.Log(strOutputLog);
-                    beforetime = time;
+                    _beforeTime = _time;
                 }
             }
-            time += Time.deltaTime;
+            _time += Time.deltaTime;
         }
     }
 }
