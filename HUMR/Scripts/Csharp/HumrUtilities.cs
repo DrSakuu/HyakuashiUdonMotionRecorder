@@ -6,6 +6,18 @@ using UnityEngine;
 
 namespace HUMR
 {
+    public class MotionFrame
+    {
+        public float RecordTime { get; set; }
+        public Vector3 HipPosition { get; set; }
+        public List<Quaternion> BoneRotations { get; set; } = new List<Quaternion>();
+    }
+
+    public class MotionSegment
+    {
+        public List<MotionFrame> Frames { get; set; } = new List<MotionFrame>();
+    }
+    
     public class HumrUtilities : MonoBehaviour
     {
 

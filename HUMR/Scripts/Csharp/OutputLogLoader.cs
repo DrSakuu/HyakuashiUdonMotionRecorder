@@ -24,18 +24,6 @@ namespace HUMR
     {
         void LoadLogToExportAnim();
     }
-    
-    public class MotionFrame
-    {
-        public float RecordTime { get; set; }
-        public Vector3 HipPosition { get; set; }
-        public List<Quaternion> BoneRotations { get; set; } = new List<Quaternion>();
-    }
-
-    public class MotionSegment
-    {
-        public List<MotionFrame> Frames { get; set; } = new List<MotionFrame>();
-    }
 
     [RequireComponent(typeof(Animator))]
     public class OutputLogLoader : MonoBehaviour, OutputLogLoaderInterface
@@ -57,21 +45,23 @@ namespace HUMR
         private const string HumrPath = "Assets/HUMR";
         
         private string[] _files;
-        private string _strKeyWord = " Debug      -  HUMR:";
+        private string _strKeyWord = "-  [HUMR] ";
 
         public void LoadLogToExportAnim()
         {
+            ControllerSetUp(HumrPath);
+            
             var files = GetLogFiles(logFilePath);
             if (!ValidateInputs(files)) return;
 
             var logLines = File.ReadAllLines(files[selectedIndex]);
 
-            var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines, displayName);
-            if (segments.Count == 0)
-            {
-                HumrUtilities.HumrWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
-                return;
-            }
+            // var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines, displayName);
+            // if (segments.Count == 0)
+            // {
+            //     HumrUtilities.HumrWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
+            //     return;
+            // }
             
             var nTargetCounter = 0;
             var newTargetLines = new List<int>();//ファイルの中での新しく始まった対象の行を格納する
@@ -86,10 +76,10 @@ namespace HUMR
                 if (logLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
                 {
                     //記録終わりを検知
-                    var strTmpOLL = logLines[j].Substring(TimeStampLength + (_strKeyWord + displayName).Length);
+                    var strTmpOLL = logLines[j].Substring(TimeStampLength + 13 + (_strKeyWord + displayName).Length);
                     for (var k = 0; k < strTmpOLL.Length; k++)
                     {
-                        if (strTmpOLL[k] != ',') continue;
+                        if (strTmpOLL[k] != ';') continue;
                         var currentTime = float.Parse(strTmpOLL.Substring(0, k), CultureInfo.InvariantCulture);
                         if (currentTime < beforeTime)
                         {
@@ -108,8 +98,6 @@ namespace HUMR
             }
             newLogLines.Add(nTargetCounter);
             newTargetLines.Add(logLines.Length);
-            
-            HumrUtilities.HumrLog($"segments: {segments}, newLogLines: {newLogLines}, newTargetLines: {newTargetLines}");
             
             // Keyframeの生成
             if (nTargetCounter == 0)
@@ -138,10 +126,10 @@ namespace HUMR
                         if (!logLines[j].Contains(_strKeyWord + displayName)) continue;
                         if (logLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
                         {
-                            strDisplayNameOutputLogLines[nTargetLineCounter] = logLines[j].Substring(TimeStampLength + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
+                            strDisplayNameOutputLogLines[nTargetLineCounter] = logLines[j].Substring(TimeStampLength + 13 + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
                             for (var k = 0; k < strDisplayNameOutputLogLines[nTargetLineCounter].Length; k++)
                             {
-                                if (strDisplayNameOutputLogLines[nTargetLineCounter][k] != ',') continue;
+                                if (strDisplayNameOutputLogLines[nTargetLineCounter][k] != ';') continue;
                                 var currentTime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k), CultureInfo.InvariantCulture);
                                 if (currentTime < beforeTime)
                                 {
@@ -156,7 +144,7 @@ namespace HUMR
                             HumrUtilities.HumrWarning("Log Length is not correct");
                         }
                         //Debug.Log(DisplayNameOutputLogLines[nTargetLineCounter]);
-                        var strSplitOutputLog = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',');
+                        var strSplitOutputLog = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',', ';');
                         if (strSplitOutputLog.Length == 4 * (HumanTrait.BoneName.Length + 1/*time + hip position*/))
                         {
                             var keyTime = float.Parse(strSplitOutputLog[0], CultureInfo.InvariantCulture);
