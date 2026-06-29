@@ -1,13 +1,13 @@
 # Hyakuashi Udon Motion Recorder
 
-This fork is a complete rewrite of the codebase so I can implement new features more easily. Eventually it might become version `v2.0.0`.
+This fork is a complete rewrite of the codebase so new features can be implemented more easily.
 
+- Made into a package for easy installation
 - New OutputLog format: semicolons to separate different types
-- Remove hard coded log parsing indexes
 - A new `MotionFrame` structure to hold the recorded data
-- Remove duplicated code, extract static methods to utility classes
+- Remove duplicated code
 
-## Original readme
+## Original Readme
 
 HUMR(HyakuashiUdonMotionRecorder)はVRChat上での動きをHumanoidAnimationとして出力するためのunitypackageです。
 
