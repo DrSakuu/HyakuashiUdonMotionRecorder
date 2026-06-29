@@ -4,6 +4,11 @@
 
 A complete rewrite of the codebase so new features can be implemented more easily.
 
+- New OutputLog format: semicolons to separate different types
+- Remove hard coded log parsing indexes
+- A new `MotionFrame` structure to hold the recorded data
+- Remove duplicated code, extract static methods to utility classes
+
 ## Installation
 
 ### Requirements

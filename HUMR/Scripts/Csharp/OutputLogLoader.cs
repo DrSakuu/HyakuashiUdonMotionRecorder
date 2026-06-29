@@ -13,7 +13,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine.EventSystems;
 
@@ -264,26 +263,16 @@ namespace HUMR
         }
 
         /// <summary>
-        /// Converts a raw world hip position into normalized spaces relative to the parent armature's transform rotation and local scale metrics.
+        /// Converts a raw world hip position into the local space of the parent armature.
         /// </summary>
         private Vector3 ProcessHipPosition(Vector3 rawHipPos)
         {
-            transform.rotation = Quaternion.identity; // Safe state orientation anchor reset
-
-            var hipTransform = _animator.GetBoneTransform(0);
+            //TODO: fix feet sinking into the ground
+            var hipTransform = _animator.GetBoneTransform(HumanBodyBones.Hips);
             if (hipTransform == null || hipTransform.parent == null) return rawHipPos;
-
+            
             var armatureParent = hipTransform.parent;
-            var processedHipPos = Quaternion.Inverse(armatureParent.localRotation) * rawHipPos;
-
-            var rootScale = _animator.transform.localScale;
-            var armatureScale = armatureParent.localScale;
-
-            return new Vector3(
-                processedHipPos.x / rootScale.x / armatureScale.x,
-                processedHipPos.y / rootScale.y / armatureScale.y,
-                processedHipPos.z / rootScale.z / armatureScale.z
-            );
+            return armatureParent.InverseTransformPoint(rawHipPos);
         }
 
         /// <summary>
