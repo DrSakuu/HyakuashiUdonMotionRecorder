@@ -11,6 +11,9 @@
  * *****/
 
 #if UNITY_EDITOR
+using System;
+using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
@@ -23,6 +26,21 @@ namespace HUMR
     {
         private string _path;
         private bool _foldout;
+        private string[] _logFilePaths;
+        private string[] _logFileNames;
+
+        private static readonly Regex FilenameRegex = new Regex(@"^output_log_|\.txt$");
+
+        private void CollectLogFilePaths()
+        {
+            _logFilePaths = Directory.GetFiles(_path, "*.txt")
+                .OrderBy(file => File.GetLastWriteTime(Path.Combine(_path, file)))
+                .Reverse()
+                .ToArray();
+            _logFileNames = _logFilePaths
+                .Select(p => FilenameRegex.Replace(Path.GetFileName(p), ""))
+                .ToArray();
+        }
 
         public override void OnInspectorGUI()
         {
@@ -44,32 +62,27 @@ namespace HUMR
             }
             else
             {
-                _path = System.Environment.GetEnvironmentVariable("USERPROFILE");
+                _path = Environment.GetEnvironmentVariable("USERPROFILE");
                 _path += @"\AppData\LocalLow\VRChat\VRChat";
             }
-
+            
             if (targetScript == null) return;
             targetScript.logFilePath = _path;
 
-            var files = Directory.GetFiles(_path, "*.txt");
-            for (var i = 0; i < files.Length; i++)
-            {
-                files[i] = files[i].Substring(files[i].Length - 23).Remove(19);
-            }
-
+            CollectLogFilePaths();
 
             // ラベルの作成
             const string label = "LoadOutputLog";
             // 初期値として表示する項目のインデックス番号
-            var selectedIndex = targetScript.selectedIndex;
-            // プルダウンメニューの作成
-            var index = files.Length > 0 ? EditorGUILayout.Popup(label, selectedIndex, files) : -1;
-
+             var scriptIndex = targetScript.selectedIndex;
+             // プルダウンメニューの作成
+             var newIndex = _logFileNames.Length > 0 ? EditorGUILayout.Popup(label, scriptIndex, _logFileNames) : -1;
+             targetScript.selectedIndex = newIndex;
             if (EditorGUI.EndChangeCheck())
             {
                 // 操作を Undo に登録
                 // インデックス番号を登録
-                targetScript.selectedIndex = index;
+                targetScript.selectedIndex = newIndex;
             }
 
             GUILayout.Space(15);
