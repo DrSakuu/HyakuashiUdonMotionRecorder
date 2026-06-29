@@ -1,4 +1,4 @@
-name: Build Release
+name: Build Unity Package
 
 on: 
   workflow_dispatch:
@@ -26,7 +26,6 @@ jobs:
     
       - name: Set Environment Variables
         run: |
-          echo "zipFile=${{ env.packageName }}-${{ steps.version.outputs.prop }}".zip >> $GITHUB_ENV
           echo "unityPackage=${{ env.packageName }}-${{ steps.version.outputs.prop }}.unitypackage" >> $GITHUB_ENV\
       
       - name: Make Package Folder
@@ -34,15 +33,7 @@ jobs:
           mkdir Packages
           mkdir Packages/${{ env.packageName }}
           ls | grep -v Packages | xargs mv -t Packages/${{ env.packageName }}
-        
-      - name: Create Zip
-        uses: thedoctor0/zip-release@09336613be18a8208dfa66bd57efafd9e2685657
-        with:
-          type: "zip"
-          directory: "Packages/${{ env.packageName }}/"
-          filename: "../../${{env.zipFile}}"
-          exclusions: ".git*"
-      
+              
       - name: Track Package Meta Files
         run: find "Packages/${{ env.packageName }}/" -name \*.meta >> metaList
 
@@ -55,7 +46,5 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Unity-Release-Artifacts
-          path: |
-            ${{ env.zipFile }}
-            ${{ env.unityPackage }}
+          archive: false
+          path: ${{ env.unityPackage }}
