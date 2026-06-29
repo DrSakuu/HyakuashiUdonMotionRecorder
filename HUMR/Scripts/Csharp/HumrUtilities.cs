@@ -125,5 +125,20 @@ namespace HUMR
             }
             return sanitized;
         }
+        
+        public static void HumrLog(object message)
+        {
+            Debug.Log($"[HUMR] {message}");
+        }
+        
+        public static void HumrWarning(object message)
+        {
+            Debug.LogWarning($"[HUMR] {message}");
+        }
+        
+        public static void HumrAssertion(object message)
+        {
+            Debug.LogAssertion($"[HUMR] {message}");
+        }
     }
 }
