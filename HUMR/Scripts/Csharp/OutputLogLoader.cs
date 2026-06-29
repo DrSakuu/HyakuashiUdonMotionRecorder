@@ -1,4 +1,3 @@
-
 /*******
  * OutputLogLoader.cs
  * 
