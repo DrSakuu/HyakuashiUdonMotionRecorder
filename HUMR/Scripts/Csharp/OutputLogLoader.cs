@@ -49,7 +49,7 @@ namespace HUMR
 
         public void LoadLogToExportAnim()
         {
-            ControllerSetUp(HumrPath);
+            SetupAnimatorController();
             
             var files = GetLogFiles(logFilePath);
             if (!ValidateInputs(files)) return;
@@ -116,77 +116,73 @@ namespace HUMR
                 }
 
                 //Keyframeにログの値を入れていく
+                var strDisplayNameOutputLogLines = new string[nLineNum];//目的の行の配列
+                var nTargetLineCounter = 0;
+                beforeTime = 0;
+                for (var j = newTargetLines[i]; j < newTargetLines[i+1]; j++)
                 {
-                    var strDisplayNameOutputLogLines = new string[nLineNum];//目的の行の配列
-                    var nTargetLineCounter = 0;
-                    beforeTime = 0;
-                    for (var j = newTargetLines[i]; j < newTargetLines[i+1]; j++)
+                    //対象のログの行を抽出
+                    if (!logLines[j].Contains(_strKeyWord + displayName)) continue;
+                    if (logLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
                     {
-                        //対象のログの行を抽出
-                        if (!logLines[j].Contains(_strKeyWord + displayName)) continue;
-                        if (logLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
+                        strDisplayNameOutputLogLines[nTargetLineCounter] = logLines[j].Substring(TimeStampLength + 13 + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
+                        for (var k = 0; k < strDisplayNameOutputLogLines[nTargetLineCounter].Length; k++)
                         {
-                            strDisplayNameOutputLogLines[nTargetLineCounter] = logLines[j].Substring(TimeStampLength + 13 + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
-                            for (var k = 0; k < strDisplayNameOutputLogLines[nTargetLineCounter].Length; k++)
+                            if (strDisplayNameOutputLogLines[nTargetLineCounter][k] != ';') continue;
+                            var currentTime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k), CultureInfo.InvariantCulture);
+                            if (currentTime < beforeTime)
                             {
-                                if (strDisplayNameOutputLogLines[nTargetLineCounter][k] != ';') continue;
-                                var currentTime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k), CultureInfo.InvariantCulture);
-                                if (currentTime < beforeTime)
-                                {
-                                    HumrUtilities.HumrAssertion("New record line is contained");
-                                }
-                                beforeTime = currentTime;
-                                break;
+                                HumrUtilities.HumrAssertion("New record line is contained");
                             }
+                            beforeTime = currentTime;
+                            break;
                         }
-                        else
-                        {
-                            HumrUtilities.HumrWarning("Log Length is not correct");
-                        }
-                        //Debug.Log(DisplayNameOutputLogLines[nTargetLineCounter]);
-                        var frames = segments[0].Frames;
-                        var frame = frames[nTargetLineCounter];
-
-                        var splitLogFile = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',', ';');
-                        var keyTime = frame.RecordTime;
-                        var rootScale = _animator.transform.localScale;
-                        var armatureScale = _animator.GetBoneTransform(0).parent.localScale;
-                        var hippos = frame.HipPosition;
-                        transform.rotation = Quaternion.identity;//Avatarがrotation(0,0,0)でない可能性があるため
-                        hippos = Quaternion.Inverse(_animator.GetBoneTransform(0).parent.localRotation) * hippos;//armatureがrotation(0,0,0)でない可能性があるため
-                        hippos = new Vector3(hippos.x / rootScale.x/ armatureScale.x, hippos.y / rootScale.y/ armatureScale.y, hippos.z / rootScale.z/ armatureScale.z); //いる
-                        keyframes[0][nTargetLineCounter] = new Keyframe(keyTime, hippos.x);
-                        keyframes[1][nTargetLineCounter] = new Keyframe(keyTime, hippos.y);
-                        keyframes[2][nTargetLineCounter] = new Keyframe(keyTime, hippos.z);
-                        var boneWorldRotation = new Quaternion[(int)HumanBodyBones.LastBone];
-                        for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
-                        {
-                            boneWorldRotation[k] = frame.BoneRotations[k];
-                        }
-                        for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
-                        {
-
-                            if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
-                            {
-                                continue;
-                            }
-                            _animator.GetBoneTransform((HumanBodyBones)k).rotation = boneWorldRotation[k];
-                        }
-
-                        for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
-                        {
-                            if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
-                            {
-                                continue;
-                            }
-                            var localRotation = _animator.GetBoneTransform((HumanBodyBones)k).localRotation;
-                            keyframes[k * 4 + 3][nTargetLineCounter] = new Keyframe(keyTime, localRotation.x);
-                            keyframes[k * 4 + 4][nTargetLineCounter] = new Keyframe(keyTime, localRotation.y);
-                            keyframes[k * 4 + 5][nTargetLineCounter] = new Keyframe(keyTime, localRotation.z);
-                            keyframes[k * 4 + 6][nTargetLineCounter] = new Keyframe(keyTime, localRotation.w);
-                        }
-                        nTargetLineCounter++;
                     }
+                    else
+                    {
+                        HumrUtilities.HumrWarning("Log Length is not correct");
+                    }
+                    //Debug.Log(DisplayNameOutputLogLines[nTargetLineCounter]);
+                    var frames = segments[0].Frames;
+                    var frame = frames[nTargetLineCounter];
+
+                    var keyTime = frame.RecordTime;
+                    var rootScale = _animator.transform.localScale;
+                    var armatureScale = _animator.GetBoneTransform(0).parent.localScale;
+                    var hippos = frame.HipPosition;
+                    transform.rotation = Quaternion.identity;//Avatarがrotation(0,0,0)でない可能性があるため
+                    hippos = Quaternion.Inverse(_animator.GetBoneTransform(0).parent.localRotation) * hippos;//armatureがrotation(0,0,0)でない可能性があるため
+                    hippos = new Vector3(hippos.x / rootScale.x/ armatureScale.x, hippos.y / rootScale.y/ armatureScale.y, hippos.z / rootScale.z/ armatureScale.z); //いる
+                    keyframes[0][nTargetLineCounter] = new Keyframe(keyTime, hippos.x);
+                    keyframes[1][nTargetLineCounter] = new Keyframe(keyTime, hippos.y);
+                    keyframes[2][nTargetLineCounter] = new Keyframe(keyTime, hippos.z);
+                    var boneWorldRotation = new Quaternion[(int)HumanBodyBones.LastBone];
+                    for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
+                    {
+                        boneWorldRotation[k] = frame.BoneRotations[k];
+                    }
+                    for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
+                    {
+                        if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
+                        {
+                            continue;
+                        }
+                        _animator.GetBoneTransform((HumanBodyBones)k).rotation = boneWorldRotation[k];
+                    }
+
+                    for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
+                    {
+                        if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
+                        {
+                            continue;
+                        }
+                        var localRotation = _animator.GetBoneTransform((HumanBodyBones)k).localRotation;
+                        keyframes[k * 4 + 3][nTargetLineCounter] = new Keyframe(keyTime, localRotation.x);
+                        keyframes[k * 4 + 4][nTargetLineCounter] = new Keyframe(keyTime, localRotation.y);
+                        keyframes[k * 4 + 5][nTargetLineCounter] = new Keyframe(keyTime, localRotation.z);
+                        keyframes[k * 4 + 6][nTargetLineCounter] = new Keyframe(keyTime, localRotation.w);
+                    }
+                    nTargetLineCounter++;
                 }
 
                 //AnimationClipにAnimationCurveを設定
@@ -288,39 +284,6 @@ namespace HUMR
                 strValid = strValid.Replace(c, '_');
             }
             return strValid;
-        }
-
-        private void ControllerSetUp(string humrPath)
-        {
-            var tmpAniConPath = humrPath + @"/AnimationController";
-            if (_controller == null)
-            {
-                CreateDirectoryIfNotExist(tmpAniConPath);
-                _controller = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath(tmpAniConPath + "/TmpAniCon.controller");
-            }
-            else if (AssetDatabase.GetAssetPath(_controller) == tmpAniConPath + "/TmpAniCon.controller")
-            {
-                foreach (var layer in _controller.layers)
-                {
-                    foreach (var state in layer.stateMachine.states)
-                    {
-                        layer.stateMachine.RemoveState(state.state);
-                    }
-                }
-            }
-            else
-            {
-                foreach (var layer in _controller.layers)
-                {
-                    foreach (var state in layer.stateMachine.states)
-                    {
-                        if (state.state.motion == null)
-                        {
-                            layer.stateMachine.RemoveState(state.state);
-                        }
-                    }
-                }
-            }
         }
 
         private static void CreateDirectoryIfNotExist(string path)
