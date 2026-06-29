@@ -162,10 +162,10 @@ namespace HUMR
         {
             if (!exportGenericAnimation) return;
 
-            string animFolderPath = $"{HumrPath}/GenericAnimations/{displayName}";
+            var animFolderPath = $"{HumrPath}/GenericAnimations/{displayName}";
             CreateDirectoryIfNotExist(animFolderPath);
 
-            string animAssetPath = $"{animFolderPath}/{baseName}_{segmentIndex}.anim";
+            var animAssetPath = $"{animFolderPath}/{baseName}_{segmentIndex}.anim";
 
             if (File.Exists(animAssetPath))
             {
@@ -198,8 +198,7 @@ namespace HUMR
         private AnimationClip PopulateAnimationClip(MotionSegment segment)
         {
             var frameCount = segment.Frames.Count;
-            var boneCount = HumanTrait.BoneName.Length;
-            var totalCurves = 3 + (boneCount * 4); // 3 for root position, 4 coordinates per bone rotation
+            var totalCurves = 3 + (HumanTrait.BoneName.Length * 4); // 3 for root position, 4 coordinates per bone rotation
 
             var keyframes = InitializeKeyframeArrays(totalCurves, frameCount);
 
@@ -214,7 +213,7 @@ namespace HUMR
                 RecordLocalRotationsToKeyframes(keyframes, frameIdx, frame);
             }
 
-            return CreateAndBindCurves(keyframes, boneCount);
+            return CreateAndBindCurves(keyframes);
         }
 
         private static Keyframe[][] InitializeKeyframeArrays(int totalCurves, int frameCount)
@@ -234,14 +233,14 @@ namespace HUMR
         {
             transform.rotation = Quaternion.identity; // Safe state orientation anchor reset
 
-            Transform hipTransform = _animator.GetBoneTransform(0);
+            var hipTransform = _animator.GetBoneTransform(0);
             if (hipTransform == null || hipTransform.parent == null) return rawHipPos;
 
-            Transform armatureParent = hipTransform.parent;
-            Vector3 processedHipPos = Quaternion.Inverse(armatureParent.localRotation) * rawHipPos;
+            var armatureParent = hipTransform.parent;
+            var processedHipPos = Quaternion.Inverse(armatureParent.localRotation) * rawHipPos;
 
-            Vector3 rootScale = _animator.transform.localScale;
-            Vector3 armatureScale = armatureParent.localScale;
+            var rootScale = _animator.transform.localScale;
+            var armatureScale = armatureParent.localScale;
 
             return new Vector3(
                 processedHipPos.x / rootScale.x / armatureScale.x,
@@ -255,9 +254,7 @@ namespace HUMR
         /// </summary>
         private void ApplyWorldRotationsToAvatar(MotionFrame frame)
         {
-            var boneCount = HumanTrait.BoneName.Length;
-            
-            for (var k = 0; k < boneCount; k++)
+            for (var k = 0; k < HumanTrait.BoneName.Length; k++)
             {
                 // Ensure the frame contains this index
                 if (k >= frame.BoneRotations.Count) break;
@@ -274,9 +271,7 @@ namespace HUMR
         /// </summary>
         private void RecordLocalRotationsToKeyframes(Keyframe[][] keyframes, int frameIdx, MotionFrame frame)
         {
-            var boneCount = HumanTrait.BoneName.Length;
-
-            for (var k = 0; k < boneCount; k++)
+            for (var k = 0; k < HumanTrait.BoneName.Length; k++)
             {
                 var boneTransform = _animator.GetBoneTransform((HumanBodyBones)k);
                 if (boneTransform == null) continue;
@@ -291,7 +286,7 @@ namespace HUMR
             }
         }
 
-        private AnimationClip CreateAndBindCurves(Keyframe[][] keyframes, int boneCount)
+        private AnimationClip CreateAndBindCurves(Keyframe[][] keyframes)
         {
             var clip = new AnimationClip();
             var hipPath = HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0));
@@ -300,7 +295,7 @@ namespace HUMR
             clip.SetCurve(hipPath, typeof(Transform), "localPosition.y", new AnimationCurve(keyframes[1]));
             clip.SetCurve(hipPath, typeof(Transform), "localPosition.z", new AnimationCurve(keyframes[2]));
 
-            for (var m = 0; m < boneCount; m++)
+            for (var m = 0; m < HumanTrait.BoneName.Length; m++)
             {
                 var boneTransform = _animator.GetBoneTransform((HumanBodyBones)m);
                 if (boneTransform == null) continue;
