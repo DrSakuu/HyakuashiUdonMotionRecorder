@@ -63,17 +63,17 @@ VCC_v1.1.1(2026/06/09) 地域による小数点表記の違いに対応。選択
 
 トラブルシューティング　Q&A
 
- Q.Importしたら'TMPro','Chinemachine','Formats'等が書かれたErrorが表示されます
+ Q. Importしたら'TMPro','Chinemachine','Formats'等が書かれたErrorが表示されます
 
- A.PackageManagerのパッケージが正しく認識されていないようです。
+ A. PackageManagerのパッケージが正しく認識されていないようです。
  　FBXExporter等がinstallされていることをご確認の後、
  　下記添付のトラブルシューティング ・認識されないパッケージ(パッケージが認識されない)の項目に記載されている内容を試してみていただけると幸いです。
  　https://docs.unity3d.com/ja/2019.4/Manual/upm-errors.html
 
 
- Q.FBXが出力されません
+ Q. FBXが出力されません
 
- A.C:\Users\username\AppData\LocalLow\VRChat\VRChat\の下にある出力しようとしたoutput_log_xx-xx-xx.txtを開き、
+ A. C:\Users\username\AppData\LocalLow\VRChat\VRChat\の下にある出力しようとしたoutput_log_xx-xx-xx.txtを開き、
  　「2021.04.27 21:43:11 Log        -  HUMR:Hyakuashi…」
  　のようなログを見つけてください。
  　（[Hyakuashi]の部分がDisplayNameです）
@@ -86,9 +86,9 @@ VCC_v1.1.1(2026/06/09) 地域による小数点表記の違いに対応。選択
  　　・VRChatでメニューを開き、メニュー下タブ右端の歯車マークを押します。開かれた「Settings」を下までスクロールし「Debug」の中の「Logging」が有効化されているか
  　を確認してみてください。
 
- Q.出力されたアニメーションがおかしいです
+ Q. 出力されたアニメーションがおかしいです
 
- A.OutputLogLoaderのLoadLogToExportを行うアバターについて、
+ A. OutputLogLoaderのLoadLogToExportを行うアバターについて、
  　ワールド内で使用したアバターを使ってくださいと案内していますが、
  　無改変のアバターにOutputLogLoaderを使用してアニメーションの出力(LoadLogToExportAnim)を試みてください。
  　(ワールドでのモーションレコードには改変アバターを使用していても問題は無いはずです) 
