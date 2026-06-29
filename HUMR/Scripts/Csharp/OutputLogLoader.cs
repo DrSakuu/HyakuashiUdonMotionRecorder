@@ -54,60 +54,32 @@ namespace HUMR
         private UnityEditor.Animations.AnimatorController _controller;
         
         private const int TimeStampLength = 19; //timestamp example/*2021.01.03 20:57:35*/
-        private const string HumrBasePath = "Assets/HUMR";
+        private const string HumrPath = "Assets/HUMR";
         
         private string[] _files;
-        private string _strKeyWord = " Log        -  HUMR:";
-        private const string StrOldKeyWord = " Log        -  HUMR:";
-        private const string StrNewKeyWord = " Debug      -  HUMR:";
+        private string _strKeyWord = " Debug      -  HUMR:";
 
         public void LoadLogToExportAnim()
         {
-            if (displayName == "")
-            {
-                Debug.LogWarning("DisplayName is null");
-                return;
-            }
-            if (_animator == null)
-            {
-                _animator = GetComponent<Animator>();
-            }
-            const string humrPath = @"Assets/HUMR";
-            CreateDirectoryIfNotExist(humrPath);
+            var files = GetLogFiles(logFilePath);
+            if (!ValidateInputs(files)) return;
 
-            ControllerSetUp(humrPath);
-
-            var files = Directory.GetFiles(logFilePath, "*.txt");
-
-            var strOutputLogLines = File.ReadAllLines(files[selectedIndex]);
+            var logLines = File.ReadAllLines(files[selectedIndex]);
+            
             var nTargetCounter = 0;
             var newTargetLines = new List<int>();//ファイルの中での新しく始まった対象の行を格納する
             newTargetLines.Add(0);
             var newLogLines = new List<int>();//抽出したログの中で新しく始まった行を格納する
             newLogLines.Add(0);
             var beforeTime = 0f;
-            var checkedNewKeyWord = false;
-            for (var j = 0; j < strOutputLogLines.Length; j++)
+            for (var j = 0; j < logLines.Length; j++)
             {
-                if (!checkedNewKeyWord)
-                {
-                    if (strOutputLogLines[j].Contains(StrOldKeyWord + displayName))
-                    {
-                        _strKeyWord = StrOldKeyWord;
-                        checkedNewKeyWord = true;
-                    }
-                    else if (strOutputLogLines[j].Contains(StrNewKeyWord + displayName))
-                    {
-                        _strKeyWord = StrNewKeyWord;
-                        checkedNewKeyWord = true;
-                    }
-                }
                 //対象のログの行を抽出
-                if (!strOutputLogLines[j].Contains(_strKeyWord + displayName)) continue;
-                if (strOutputLogLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
+                if (!logLines[j].Contains(_strKeyWord + displayName)) continue;
+                if (logLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
                 {
                     //記録終わりを検知
-                    var strTmpOLL = strOutputLogLines[j].Substring(TimeStampLength + (_strKeyWord + displayName).Length);
+                    var strTmpOLL = logLines[j].Substring(TimeStampLength + (_strKeyWord + displayName).Length);
                     for (var k = 0; k < strTmpOLL.Length; k++)
                     {
                         if (strTmpOLL[k] != ',') continue;
@@ -128,7 +100,7 @@ namespace HUMR
                 }
             }
             newLogLines.Add(nTargetCounter);
-            newTargetLines.Add(strOutputLogLines.Length);
+            newTargetLines.Add(logLines.Length);
             // Keyframeの生成
             if (nTargetCounter == 0)
             {
@@ -153,10 +125,10 @@ namespace HUMR
                     for (var j = newTargetLines[i]; j < newTargetLines[i+1]; j++)
                     {
                         //対象のログの行を抽出
-                        if (!strOutputLogLines[j].Contains(_strKeyWord + displayName)) continue;
-                        if (strOutputLogLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
+                        if (!logLines[j].Contains(_strKeyWord + displayName)) continue;
+                        if (logLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
                         {
-                            strDisplayNameOutputLogLines[nTargetLineCounter] = strOutputLogLines[j].Substring(TimeStampLength + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
+                            strDisplayNameOutputLogLines[nTargetLineCounter] = logLines[j].Substring(TimeStampLength + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
                             for (var k = 0; k < strDisplayNameOutputLogLines[nTargetLineCounter].Length; k++)
                             {
                                 if (strDisplayNameOutputLogLines[nTargetLineCounter][k] != ',') continue;
@@ -258,7 +230,7 @@ namespace HUMR
 
                 //GenericAnimation出力
                 {
-                    const string animFolderPath = humrPath + @"/GenericAnimations";
+                    const string animFolderPath = HumrPath + @"/GenericAnimations";
                     CreateDirectoryIfNotExist(animFolderPath);
                     var displayNameFolderPath = animFolderPath + "/" + displayName;
                     CreateDirectoryIfNotExist(displayNameFolderPath);
@@ -298,12 +270,18 @@ namespace HUMR
             //FBXとして出力
             {
                 _animator.runtimeAnimatorController = _controller;
-                const string exportFolderPath = humrPath + @"/FBXs";
+                const string exportFolderPath = HumrPath + @"/FBXs";
                 CreateDirectoryIfNotExist(exportFolderPath);
                 var displayNameFBXFolderPath = exportFolderPath + "/" + ValidName(displayName);
                 CreateDirectoryIfNotExist(displayNameFBXFolderPath);
                 UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(displayNameFBXFolderPath + "/" + files[selectedIndex].Substring(files[selectedIndex].Length - 23).Remove(19), this.gameObject);
             }
+        }
+
+        private static string[] GetLogFiles(string logFilePathString)
+        {
+            if (string.IsNullOrEmpty(logFilePathString) || !Directory.Exists(logFilePathString)) return null;
+            return Directory.GetFiles(logFilePathString, "*.txt");
         }
 
         //ファイル名やパスに使えない文字を‗に置換
@@ -383,7 +361,7 @@ namespace HUMR
         
         private void SetupAnimatorController()
         {
-            var controllerFolderPath = $"{HumrBasePath}/AnimationController";
+            var controllerFolderPath = $"{HumrPath}/AnimationController";
             var controllerPath = $"{controllerFolderPath}/TmpAniCon.controller";
 
             if (_controller == null)
@@ -417,7 +395,7 @@ namespace HUMR
         {
             if (!exportGenericAnimation) return;
 
-            string animFolderPath = $"{HumrBasePath}/GenericAnimations/{displayName}";
+            string animFolderPath = $"{HumrPath}/GenericAnimations/{displayName}";
             CreateDirectoryIfNotExist(animFolderPath);
 
             string animAssetPath = $"{animFolderPath}/{baseName}_{segmentIndex}.anim";
@@ -443,7 +421,7 @@ namespace HUMR
         {
             _animator.runtimeAnimatorController = _controller;
 
-            var exportFolderPath = $"{HumrBasePath}/FBXs/{HumrUtilities.SanitizeFileName(displayName)}";
+            var exportFolderPath = $"{HumrPath}/FBXs/{HumrUtilities.SanitizeFileName(displayName)}";
             CreateDirectoryIfNotExist(exportFolderPath);
 
             var finalPath = $"{exportFolderPath}/{fileName}";
