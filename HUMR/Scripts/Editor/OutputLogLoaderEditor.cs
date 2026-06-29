@@ -61,7 +61,7 @@ namespace HUMR
             // ラベルの作成
             const string label = "LoadOutputLog";
             // 初期値として表示する項目のインデックス番号
-            var selectedIndex = targetScript.index;
+            var selectedIndex = targetScript.selectedIndex;
             // プルダウンメニューの作成
             var index = files.Length > 0
                 ? EditorGUILayout.Popup(label, selectedIndex, files)
@@ -71,7 +71,7 @@ namespace HUMR
             {
                 // 操作を Undo に登録
                 // インデックス番号を登録
-                targetScript.index = index;
+                targetScript.selectedIndex = index;
             }
 
             GUILayout.Space(15);
