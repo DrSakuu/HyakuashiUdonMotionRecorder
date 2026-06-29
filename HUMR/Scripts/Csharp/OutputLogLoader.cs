@@ -24,27 +24,42 @@ namespace HUMR
     {
         void LoadLogToExportAnim();
     }
+    
+    public class MotionFrame
+    {
+        public float RecordTime { get; set; }
+        public Vector3 HipPosition { get; set; }
+        public List<Quaternion> BoneRotations { get; set; } = new List<Quaternion>();
+    }
+
+    public class MotionSegment
+    {
+        public List<MotionFrame> Frames { get; set; } = new List<MotionFrame>();
+    }
 
     [RequireComponent(typeof(Animator))]
     public class OutputLogLoader : MonoBehaviour, OutputLogLoaderInterface
     {
-        private Animator _animator;
-        private UnityEditor.Animations.AnimatorController _controller;
-        private string[] _files;
-        [HideInInspector]
-        public string logFilePath = "";
-        [HideInInspector]
-        public int index;
-
-        private const int NHeaderStrNum = 19; //timestamp example/*2021.01.03 20:57:35*/
-        private string _strKeyWord = " Log        -  HUMR:";
-        private const string StrOldKeyWord = " Log        -  HUMR:";
-        private const string StrNewKeyWord = " Debug      -  HUMR:";
-
         [Tooltip("GenericAnimationを出力する場合はチェックを入れてください(チェックがないと複数のAnimationを出力できません)")]
         public bool exportGenericAnimation = true;
         [Tooltip("モーションを出力したいユーザーの名前を書いてください")]
         public string displayName = "";
+        
+        [HideInInspector]
+        public string logFilePath = "";
+        [HideInInspector]
+        public int selectedIndex;
+        
+        private Animator _animator;
+        private UnityEditor.Animations.AnimatorController _controller;
+        
+        private const int TimeStampLength = 19; //timestamp example/*2021.01.03 20:57:35*/
+        private const string HumrBasePath = "Assets/HUMR";
+        
+        private string[] _files;
+        private string _strKeyWord = " Log        -  HUMR:";
+        private const string StrOldKeyWord = " Log        -  HUMR:";
+        private const string StrNewKeyWord = " Debug      -  HUMR:";
 
         public void LoadLogToExportAnim()
         {
@@ -64,7 +79,7 @@ namespace HUMR
 
             var files = Directory.GetFiles(logFilePath, "*.txt");
 
-            var strOutputLogLines = File.ReadAllLines(files[index]);
+            var strOutputLogLines = File.ReadAllLines(files[selectedIndex]);
             var nTargetCounter = 0;
             var newTargetLines = new List<int>();//ファイルの中での新しく始まった対象の行を格納する
             newTargetLines.Add(0);
@@ -89,10 +104,10 @@ namespace HUMR
                 }
                 //対象のログの行を抽出
                 if (!strOutputLogLines[j].Contains(_strKeyWord + displayName)) continue;
-                if (strOutputLogLines[j].Length > NHeaderStrNum + (_strKeyWord + displayName).Length)
+                if (strOutputLogLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
                 {
                     //記録終わりを検知
-                    var strTmpOLL = strOutputLogLines[j].Substring(NHeaderStrNum + (_strKeyWord + displayName).Length);
+                    var strTmpOLL = strOutputLogLines[j].Substring(TimeStampLength + (_strKeyWord + displayName).Length);
                     for (var k = 0; k < strTmpOLL.Length; k++)
                     {
                         if (strTmpOLL[k] != ',') continue;
@@ -139,9 +154,9 @@ namespace HUMR
                     {
                         //対象のログの行を抽出
                         if (!strOutputLogLines[j].Contains(_strKeyWord + displayName)) continue;
-                        if (strOutputLogLines[j].Length > NHeaderStrNum + (_strKeyWord + displayName).Length)
+                        if (strOutputLogLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
                         {
-                            strDisplayNameOutputLogLines[nTargetLineCounter] = strOutputLogLines[j].Substring(NHeaderStrNum + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
+                            strDisplayNameOutputLogLines[nTargetLineCounter] = strOutputLogLines[j].Substring(TimeStampLength + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
                             for (var k = 0; k < strDisplayNameOutputLogLines[nTargetLineCounter].Length; k++)
                             {
                                 if (strDisplayNameOutputLogLines[nTargetLineCounter][k] != ',') continue;
@@ -220,22 +235,22 @@ namespace HUMR
                         animCurves[l] = new AnimationCurve(keyframes[l]);
                     }
                     // AnimationCurveの追加
-                    clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.x", animCurves[0]);
-                    clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.y", animCurves[1]);
-                    clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.z", animCurves[2]);
+                    clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.x", animCurves[0]);
+                    clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.y", animCurves[1]);
+                    clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.z", animCurves[2]);
                     for (var m = 0; m < (animCurves.Length - 3) / 4; m++)//[骨数]
                     {
                         if (_animator.GetBoneTransform((HumanBodyBones)m) == null)
                         {
                             continue;
                         }
-                        clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
+                        clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
                             typeof(Transform), "localRotation.x", animCurves[m * 4 + 3]);
-                        clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
+                        clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
                             typeof(Transform), "localRotation.y", animCurves[m * 4 + 4]);
-                        clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
+                        clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
                             typeof(Transform), "localRotation.z", animCurves[m * 4 + 5]);
-                        clip.SetCurve(GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
+                        clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
                             typeof(Transform), "localRotation.w", animCurves[m * 4 + 6]);
                     }
                     clip.EnsureQuaternionContinuity();//これをしないとQuaternion補間してくれない
@@ -248,7 +263,7 @@ namespace HUMR
                     var displayNameFolderPath = animFolderPath + "/" + displayName;
                     CreateDirectoryIfNotExist(displayNameFolderPath);
 
-                    var animationName = files[index].Substring(files[index].Length - 23).Remove(19)+"_"+i.ToString();
+                    var animationName = files[selectedIndex].Substring(files[selectedIndex].Length - 23).Remove(19)+"_"+i.ToString();
                     var animPath = displayNameFolderPath + "/" + animationName + ".anim";
                     Debug.Log(animPath);
 
@@ -287,7 +302,7 @@ namespace HUMR
                 CreateDirectoryIfNotExist(exportFolderPath);
                 var displayNameFBXFolderPath = exportFolderPath + "/" + ValidName(displayName);
                 CreateDirectoryIfNotExist(displayNameFBXFolderPath);
-                UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(displayNameFBXFolderPath + "/" + files[index].Substring(files[index].Length - 23).Remove(19), this.gameObject);
+                UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(displayNameFBXFolderPath + "/" + files[selectedIndex].Substring(files[selectedIndex].Length - 23).Remove(19), this.gameObject);
             }
         }
 
@@ -340,24 +355,100 @@ namespace HUMR
         private static void CreateDirectoryIfNotExist(string path)
         {
             //存在するかどうか判定しなくても良いみたいだが気持ち悪いので
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
+            if (Directory.Exists(path)) return;
+            Directory.CreateDirectory(path);
         }
 
-        private static string GetHierarchyPath(Transform self)
+        private bool ValidateInputs(string[] files)
         {
-            var path = self.gameObject.name;
-            var parent = self.parent;
-            while (parent.parent != null)
+            if (string.IsNullOrEmpty(displayName))
             {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
+                Debug.LogWarning("DisplayName is null or empty.");
+                return false;
             }
-            return path;
+
+            if (files == null || files.Length == 0 || selectedIndex < 0 || selectedIndex >= files.Length)
+            {
+                Debug.LogWarning("Target log file could not be found or index selection is out of range.");
+                return false;
+            }
+
+            if (_animator == null)
+            {
+                _animator = GetComponent<Animator>();
+            }
+
+            return _animator != null;
+        }
+        
+        private void SetupAnimatorController()
+        {
+            var controllerFolderPath = $"{HumrBasePath}/AnimationController";
+            var controllerPath = $"{controllerFolderPath}/TmpAniCon.controller";
+
+            if (_controller == null)
+            {
+                CreateDirectoryIfNotExist(controllerFolderPath);
+                _controller = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
+            }
+            else
+            {
+                var clearAllStates = AssetDatabase.GetAssetPath(_controller) == controllerPath;
+                CleanControllerStates(clearAllStates);
+            }
         }
 
+        private void CleanControllerStates(bool clearAll)
+        {
+            foreach (var layer in _controller.layers)
+            {
+                var states = layer.stateMachine.states;
+                for (var i = states.Length - 1; i >= 0; i--)
+                {
+                    if (clearAll || states[i].state.motion == null)
+                    {
+                        layer.stateMachine.RemoveState(states[i].state);
+                    }
+                }
+            }
+        }
+
+        private void SaveGenericAnimationAsset(AnimationClip clip, string baseName, int segmentIndex)
+        {
+            if (!exportGenericAnimation) return;
+
+            string animFolderPath = $"{HumrBasePath}/GenericAnimations/{displayName}";
+            CreateDirectoryIfNotExist(animFolderPath);
+
+            string animAssetPath = $"{animFolderPath}/{baseName}_{segmentIndex}.anim";
+
+            if (File.Exists(animAssetPath))
+            {
+                AssetDatabase.DeleteAsset(animAssetPath);
+                Debug.LogWarning($"Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
+                CleanControllerStates(clearAll: false);
+            }
+
+            AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(animAssetPath));
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        private void AddClipToController(AnimationClip clip)
+        {
+            _controller.layers[0].stateMachine.AddState(clip.name).motion = clip;
+        }
+
+        private void ExportFBX(string fileName)
+        {
+            _animator.runtimeAnimatorController = _controller;
+
+            var exportFolderPath = $"{HumrBasePath}/FBXs/{HumrUtilities.SanitizeFileName(displayName)}";
+            CreateDirectoryIfNotExist(exportFolderPath);
+
+            var finalPath = $"{exportFolderPath}/{fileName}";
+            UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(finalPath, gameObject);
+        }
     }
 #endif
 }
