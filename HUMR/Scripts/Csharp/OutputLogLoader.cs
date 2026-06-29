@@ -65,6 +65,13 @@ namespace HUMR
             if (!ValidateInputs(files)) return;
 
             var logLines = File.ReadAllLines(files[selectedIndex]);
+
+            var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines, displayName);
+            if (segments.Count == 0)
+            {
+                HumrUtilities.HumrWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
+                return;
+            }
             
             var nTargetCounter = 0;
             var newTargetLines = new List<int>();//ファイルの中での新しく始まった対象の行を格納する
@@ -96,15 +103,18 @@ namespace HUMR
                 }
                 else
                 {
-                    Debug.LogWarning("Length is not correct");
+                    HumrUtilities.HumrWarning("Length is not correct");
                 }
             }
             newLogLines.Add(nTargetCounter);
             newTargetLines.Add(logLines.Length);
+            
+            HumrUtilities.HumrLog($"segments: {segments}, newLogLines: {newLogLines}, newTargetLines: {newTargetLines}");
+            
             // Keyframeの生成
             if (nTargetCounter == 0)
             {
-                Debug.LogWarning("Not exist Motion Data with ["+ displayName + "] (Did you enter correct DisplayName ? or select correct log ?)");
+                HumrUtilities.HumrWarning("Motion Data with ["+ displayName + "] does not exist (Did you enter correct DisplayName ? or select correct log ?)");
                 return;
             }
 
@@ -135,7 +145,7 @@ namespace HUMR
                                 var currentTime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k), CultureInfo.InvariantCulture);
                                 if (currentTime < beforeTime)
                                 {
-                                    Debug.LogAssertion("new record line is contained");
+                                    HumrUtilities.HumrAssertion("New record line is contained");
                                 }
                                 beforeTime = currentTime;
                                 break;
@@ -143,7 +153,7 @@ namespace HUMR
                         }
                         else
                         {
-                            Debug.LogWarning("Log Length is not correct");
+                            HumrUtilities.HumrWarning("Log Length is not correct");
                         }
                         //Debug.Log(DisplayNameOutputLogLines[nTargetLineCounter]);
                         var strSplitOutputLog = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',');
@@ -190,7 +200,7 @@ namespace HUMR
                         else
                         {
                             Debug.Log(strSplitOutputLog.Length);//228
-                            Debug.LogAssertion("Key value length is not correct");
+                            HumrUtilities.HumrAssertion("Key value length is not correct");
                         }
                         nTargetLineCounter++;
                     }
@@ -244,7 +254,7 @@ namespace HUMR
                         if (File.Exists(animPath))
                         {
                             AssetDatabase.DeleteAsset(animPath);
-                            Debug.LogWarning("Same Name Generic Animation is existing. Overwritten!!");
+                            HumrUtilities.HumrWarning("Same Name Generic Animation is existing. Overwritten!!");
                             foreach (var layer in _controller.layers)//アニメーションを消したことにより空のアニメーションステートが出来てたら削除
                             {
                                 foreach (var state in layer.stateMachine.states)
@@ -341,13 +351,13 @@ namespace HUMR
         {
             if (string.IsNullOrEmpty(displayName))
             {
-                Debug.LogWarning("DisplayName is null or empty.");
+                HumrUtilities.HumrWarning("DisplayName is null or empty.");
                 return false;
             }
 
             if (files == null || files.Length == 0 || selectedIndex < 0 || selectedIndex >= files.Length)
             {
-                Debug.LogWarning("Target log file could not be found or index selection is out of range.");
+                HumrUtilities.HumrWarning("Target log file could not be found or index selection is out of range.");
                 return false;
             }
 
@@ -403,7 +413,7 @@ namespace HUMR
             if (File.Exists(animAssetPath))
             {
                 AssetDatabase.DeleteAsset(animAssetPath);
-                Debug.LogWarning($"Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
+                HumrUtilities.HumrWarning($"Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
                 CleanControllerStates(clearAll: false);
             }
 
