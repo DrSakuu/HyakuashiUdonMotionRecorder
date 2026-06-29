@@ -10,8 +10,10 @@
  * 
  * *****/
 
+using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine.EventSystems;
 
@@ -47,10 +49,15 @@ namespace HUMR
         {
             var files = HumrUtilities.GetLogFiles(logFilePath);
             if (!ValidateInputs(files)) return;
+            
+            var selectedLogFile = files[selectedIndex];
 
-            var logLines = File.ReadAllLines(files[selectedIndex]);
+            var logLines = new List<string>();
+            using (var fs = new FileStream(selectedLogFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var sr = new StreamReader(fs))
+                    while (0 <= sr.Peek()) logLines.Add(sr.ReadLine());
 
-            var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines, displayName);
+            var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines.ToArray(), displayName);
             if (segments.Count == 0)
             {
                 Debug.LogWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
