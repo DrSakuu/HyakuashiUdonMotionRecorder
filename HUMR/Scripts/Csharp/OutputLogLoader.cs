@@ -56,12 +56,12 @@ namespace HUMR
 
             var logLines = File.ReadAllLines(files[selectedIndex]);
 
-            // var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines, displayName);
-            // if (segments.Count == 0)
-            // {
-            //     HumrUtilities.HumrWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
-            //     return;
-            // }
+            var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines, displayName);
+            if (segments.Count == 0)
+            {
+                HumrUtilities.HumrWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
+                return;
+            }
             
             var nTargetCounter = 0;
             var newTargetLines = new List<int>();//ファイルの中での新しく始まった対象の行を格納する
@@ -109,7 +109,7 @@ namespace HUMR
             for (var i =0; i<newLogLines.Count-1;i++)
             {
                 var nLineNum = newLogLines[i + 1] - newLogLines[i];
-                var keyframes = new Keyframe[4 * (HumanTrait.BoneName.Length + 1/*time + hip position*/) - 1/*time*/][];//[要素数]
+                var keyframes = new Keyframe[4 * ((int)HumanBodyBones.LastBone + 1/*time + hip position*/) - 1/*time*/][];//[要素数]
                 for (var j = 0; j < keyframes.Length; j++)
                 {
                     keyframes[j] = new Keyframe[nLineNum];//[行数]
@@ -144,51 +144,46 @@ namespace HUMR
                             HumrUtilities.HumrWarning("Log Length is not correct");
                         }
                         //Debug.Log(DisplayNameOutputLogLines[nTargetLineCounter]);
-                        var strSplitOutputLog = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',', ';');
-                        if (strSplitOutputLog.Length == 4 * (HumanTrait.BoneName.Length + 1/*time + hip position*/))
+                        var frames = segments[0].Frames;
+                        var frame = frames[nTargetLineCounter];
+
+                        var splitLogFile = strDisplayNameOutputLogLines[nTargetLineCounter].Split(',', ';');
+                        var keyTime = frame.RecordTime;
+                        var rootScale = _animator.transform.localScale;
+                        var armatureScale = _animator.GetBoneTransform(0).parent.localScale;
+                        var hippos = frame.HipPosition;
+                        transform.rotation = Quaternion.identity;//Avatarがrotation(0,0,0)でない可能性があるため
+                        hippos = Quaternion.Inverse(_animator.GetBoneTransform(0).parent.localRotation) * hippos;//armatureがrotation(0,0,0)でない可能性があるため
+                        hippos = new Vector3(hippos.x / rootScale.x/ armatureScale.x, hippos.y / rootScale.y/ armatureScale.y, hippos.z / rootScale.z/ armatureScale.z); //いる
+                        keyframes[0][nTargetLineCounter] = new Keyframe(keyTime, hippos.x);
+                        keyframes[1][nTargetLineCounter] = new Keyframe(keyTime, hippos.y);
+                        keyframes[2][nTargetLineCounter] = new Keyframe(keyTime, hippos.z);
+                        var boneWorldRotation = new Quaternion[(int)HumanBodyBones.LastBone];
+                        for (var k = 0; k < (int)HumanBodyBones.LastBone - 1; k++)
                         {
-                            var keyTime = float.Parse(strSplitOutputLog[0], CultureInfo.InvariantCulture);
-                            var rootScale = _animator.transform.localScale;
-                            var armatureScale = _animator.GetBoneTransform(0).parent.localScale;
-                            var hippos = new Vector3(float.Parse(strSplitOutputLog[1], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[2], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[3], CultureInfo.InvariantCulture));
-                            transform.rotation = Quaternion.identity;//Avatarがrotation(0,0,0)でない可能性があるため
-                            hippos = Quaternion.Inverse(_animator.GetBoneTransform(0).parent.localRotation) * hippos;//armatureがrotation(0,0,0)でない可能性があるため
-                            hippos = new Vector3(hippos.x / rootScale.x/ armatureScale.x, hippos.y / rootScale.y/ armatureScale.y, hippos.z / rootScale.z/ armatureScale.z); //いる
-                            keyframes[0][nTargetLineCounter] = new Keyframe(keyTime, hippos.x);
-                            keyframes[1][nTargetLineCounter] = new Keyframe(keyTime, hippos.y);
-                            keyframes[2][nTargetLineCounter] = new Keyframe(keyTime, hippos.z);
-                            var boneWorldRotation = new Quaternion[HumanTrait.BoneName.Length];
-                            for (var k = 0; k < HumanTrait.BoneName.Length; k++)
-                            {
-                                boneWorldRotation[k] = new Quaternion(float.Parse(strSplitOutputLog[k * 4 + 4], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[k * 4 + 5], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[k * 4 + 6], CultureInfo.InvariantCulture), float.Parse(strSplitOutputLog[k * 4 + 7], CultureInfo.InvariantCulture));
-                            }
-                            for (var k = 0; k < HumanTrait.BoneName.Length; k++)
-                            {
-
-                                if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
-                                {
-                                    continue;
-                                }
-                                _animator.GetBoneTransform((HumanBodyBones)k).rotation = boneWorldRotation[k];
-                            }
-
-                            for (var k = 0; k < HumanTrait.BoneName.Length; k++)
-                            {
-                                if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
-                                {
-                                    continue;
-                                }
-                                var localRotation = _animator.GetBoneTransform((HumanBodyBones)k).localRotation;
-                                keyframes[k * 4 + 3][nTargetLineCounter] = new Keyframe(keyTime, localRotation.x);
-                                keyframes[k * 4 + 4][nTargetLineCounter] = new Keyframe(keyTime, localRotation.y);
-                                keyframes[k * 4 + 5][nTargetLineCounter] = new Keyframe(keyTime, localRotation.z);
-                                keyframes[k * 4 + 6][nTargetLineCounter] = new Keyframe(keyTime, localRotation.w);
-                            }
+                            boneWorldRotation[k] = new Quaternion(float.Parse(splitLogFile[k * 4 + 4], CultureInfo.InvariantCulture), float.Parse(splitLogFile[k * 4 + 5], CultureInfo.InvariantCulture), float.Parse(splitLogFile[k * 4 + 6], CultureInfo.InvariantCulture), float.Parse(splitLogFile[k * 4 + 7], CultureInfo.InvariantCulture));
                         }
-                        else
+                        for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
                         {
-                            Debug.Log(strSplitOutputLog.Length);//228
-                            HumrUtilities.HumrAssertion("Key value length is not correct");
+
+                            if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
+                            {
+                                continue;
+                            }
+                            _animator.GetBoneTransform((HumanBodyBones)k).rotation = boneWorldRotation[k];
+                        }
+
+                        for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
+                        {
+                            if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
+                            {
+                                continue;
+                            }
+                            var localRotation = _animator.GetBoneTransform((HumanBodyBones)k).localRotation;
+                            keyframes[k * 4 + 3][nTargetLineCounter] = new Keyframe(keyTime, localRotation.x);
+                            keyframes[k * 4 + 4][nTargetLineCounter] = new Keyframe(keyTime, localRotation.y);
+                            keyframes[k * 4 + 5][nTargetLineCounter] = new Keyframe(keyTime, localRotation.z);
+                            keyframes[k * 4 + 6][nTargetLineCounter] = new Keyframe(keyTime, localRotation.w);
                         }
                         nTargetLineCounter++;
                     }

@@ -29,7 +29,7 @@ namespace HUMR
             builder.Append(itemDelimiter);
             builder.Append(hipsPosition.z.ToString("F7", CultureInfo.InvariantCulture));
 
-            for (var i = 0; i < HumanTrait.BoneName.Length; i++)
+            for (var i = 0; i < (int)HumanBodyBones.LastBone; i++)
             {
                 var rotation = player.GetBoneRotation((HumanBodyBones)i);
 
