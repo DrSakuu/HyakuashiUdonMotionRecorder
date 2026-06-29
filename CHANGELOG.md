@@ -93,3 +93,23 @@
 - `OutputLogLoader` を v1.1.1 に更新  
 
 ## [2.0.0-beta.1]
+
+A complete rewrite of the codebase so new features more can be implemented more easily. Not compatible with previous versions.
+
+## Added
+
+- Made into a package for easy installation
+- A new `MotionFrame` structure to hold the recorded data
+- Extract static methods to utility classes
+
+## Changed
+
+- New OutputLog format: semicolons to separate different types
+- Remove hard coded log parsing indexes
+- Remove duplicated code
+- Select newest log file automatically
+
+## Fixed
+
+- Open log file as read-only
+- Restore avatar pose after export
