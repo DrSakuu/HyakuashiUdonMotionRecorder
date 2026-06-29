@@ -1,3 +1,11 @@
+For developing new features. TODO:
+
+- [ ] Only show log files with HUMR data
+- [ ] DisplayName dropdown
+- [ ] Export Mode (Humanoid/Generic) dropdown
+
+# HyakuashiUdonMotionRecorder
+
 HUMR(HyakuashiUdonMotionRecorder)はVRChat上での動きをHumanoidAnimationとして出力するためのunitypackageです。
 
 MITライセンスでの提供ですのでご自由にお使いください。
