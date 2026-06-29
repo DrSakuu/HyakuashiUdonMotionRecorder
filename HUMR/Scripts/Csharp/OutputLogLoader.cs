@@ -45,6 +45,17 @@ namespace HUMR
         
         private string[] _files;
 
+        private struct BoneSnapshot
+        {
+            public Transform Transform;
+            public Vector3 LocalPosition;
+            public Quaternion LocalRotation;
+        }
+
+        private Vector3 _savedRootPosition;
+        private Quaternion _savedRootRotation;
+        private readonly List<BoneSnapshot> _avatarSnapshot = new List<BoneSnapshot>();
+
         public void LoadLogToExportAnim()
         {
             var files = HumrUtilities.GetLogFiles(logFilePath);
@@ -64,21 +75,63 @@ namespace HUMR
                 return;
             }
 
-            CreateDirectoryIfNotExist(HumrPath);
-            SetupAnimatorController();
+            SnapshotAvatarPose();
 
-            var baseAnimName = HumrUtilities.GetBaseAnimationName(files[selectedIndex]);
-
-            for (var i = 0; i < segments.Count; i++)
+            try
             {
-                var clip = PopulateAnimationClip(segments[i]);
-                clip.name = $"{baseAnimName}_{i}";
+                CreateDirectoryIfNotExist(HumrPath);
+                SetupAnimatorController();
 
-                SaveGenericAnimationAsset(clip, baseAnimName, i);
-                AddClipToController(clip);
+                var baseAnimName = HumrUtilities.GetBaseAnimationName(files[selectedIndex]);
+
+                for (var i = 0; i < segments.Count; i++)
+                {
+                    var clip = PopulateAnimationClip(segments[i]);
+                    clip.name = $"{baseAnimName}_{i}";
+
+                    SaveGenericAnimationAsset(clip, baseAnimName, i);
+                    AddClipToController(clip);
+                }
+                
+                ExportFBX(baseAnimName);
             }
+            finally
+            {
+                RestoreAvatarPose();
+            }
+        }
 
-            ExportFBX(baseAnimName);
+        private void SnapshotAvatarPose()
+        {
+            _savedRootPosition = transform.position;
+            _savedRootRotation = transform.rotation;
+            _avatarSnapshot.Clear();
+
+            for (var i = 0; i < HumanTrait.BoneName.Length; i++)
+            {
+                var boneTransform = _animator.GetBoneTransform((HumanBodyBones)i);
+                if (boneTransform == null) continue;
+
+                _avatarSnapshot.Add(new BoneSnapshot
+                {
+                    Transform = boneTransform,
+                    LocalPosition = boneTransform.localPosition,
+                    LocalRotation = boneTransform.localRotation
+                });
+            }
+        }
+
+        private void RestoreAvatarPose()
+        {
+            transform.position = _savedRootPosition;
+            transform.rotation = _savedRootRotation;
+
+            foreach (var snapshot in _avatarSnapshot)
+            {
+                if (snapshot.Transform == null) continue;
+                snapshot.Transform.localPosition = snapshot.LocalPosition;
+                snapshot.Transform.localRotation = snapshot.LocalRotation;
+            }
         }
 
         private static void CreateDirectoryIfNotExist(string path)
