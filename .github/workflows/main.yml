@@ -51,3 +51,11 @@ jobs:
         with:
           package-path: ${{ env.unityPackage }}
           include-files: metaList
+          
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity-Release-Artifacts
+          path: |
+            ${{ env.zipFile }}
+            ${{ env.unityPackage }}
