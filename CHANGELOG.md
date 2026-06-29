@@ -2,13 +2,29 @@
 
 ## [2.0.0-beta.0] - Unreleased
 
-A complete rewrite of the codebase so new features can be implemented more easily.
+A complete rewrite of the codebase so new features can be implemented more easily. Not compatible with previous versions.
 
-### Added
+> [!WARNING]
+> Remove the old HUMR OutputLogLoader package and Prefabs, ReadMe, Scenes and Scripts in `Assets/HUMR` before importing.
 
-### Changed
+## Added
 
-### Fixed
+- Combine Recorder and OutputLogLoader packages
+- A new `MotionFrame` structure to hold the recorded data
+- Extract static methods to utility classes
+- GitHub action to build .unitypackage
+
+## Changed
+
+- New OutputLog format: semicolons to separate different types
+- Remove hard coded log parsing indexes
+- Remove duplicated code
+- Select newest log file automatically
+
+## Fixed
+
+- Open log file as read-only
+- Restore avatar pose after export
 
 ### Removed
 

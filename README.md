@@ -4,10 +4,13 @@
 
 A complete rewrite of the codebase so new features can be implemented more easily.
 
+> [!WARNING]
+> Remove the old HUMR OutputLogLoader package and Prefabs, ReadMe, Scenes and Scripts in `Assets/HUMR` before importing.
+
+- Combine Recorder and OutputLogLoader packages
 - New OutputLog format: semicolons to separate different types
-- Remove hard coded log parsing indexes
 - A new `MotionFrame` structure to hold the recorded data
-- Remove duplicated code, extract static methods to utility classes
+- Remove duplicated code
 
 ## Installation
 

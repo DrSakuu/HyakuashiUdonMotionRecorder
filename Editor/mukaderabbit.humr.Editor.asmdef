@@ -1,0 +1,16 @@
+{
+    "name": "mukaderabbit.humr.Editor",
+    "rootNamespace": "HUMR",
+    "references": [
+        "GUID:4156b7325025f45479ad99b85e7efd7c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

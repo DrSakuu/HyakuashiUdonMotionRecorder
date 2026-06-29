@@ -1,0 +1,13 @@
+{
+  "name": "mukaderabbit.humr",
+  "version": "2.0.0-beta.1",  
+  "displayName": "Hyakuashi Udon Motion Recorder",
+  "description": "Motion capture solution for VRChat with Udon.",
+  "unity": "2022.3",
+  "dependencies": {
+    "com.unity.formats.fbx": "4.2.1"
+  },
+  "vpmDependencies": {
+    "com.vrchat.worlds": ">=3.8.1"
+  }
+}
