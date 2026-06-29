@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -45,13 +46,13 @@ namespace HUMR
             var currentSegment = new MotionSegment();
     
             var beforeTime = -1f;
-            const string matchTarget = "[HUMR] ";
+            const string matchTarget = "-  [HUMR] ";
 
             foreach (var line in lines)
             {
                 if (!line.Contains(matchTarget)) continue;
 
-                var tagIndex = line.IndexOf(matchTarget);
+                var tagIndex = line.IndexOf(matchTarget, StringComparison.Ordinal);
                 var payload = line.Substring(tagIndex + matchTarget.Length);
 
                 var parts = payload.Split(';');
@@ -83,8 +84,8 @@ namespace HUMR
 
             return segments;
         }
-        
-        public static MotionFrame ParseMotionFrame(string[] parts)
+
+        private static MotionFrame ParseMotionFrame(string[] parts)
         {
             var frame = new MotionFrame
             {

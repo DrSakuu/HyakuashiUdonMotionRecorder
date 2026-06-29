@@ -10,12 +10,10 @@
  * 
  * *****/
 
-using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using UnityEditor;
 using UnityEngine.EventSystems;
-using System.Globalization;
 
 namespace HUMR
 {
@@ -41,15 +39,13 @@ namespace HUMR
         private Animator _animator;
         private UnityEditor.Animations.AnimatorController _controller;
         
-        private const int TimeStampLength = 19; //timestamp example/*2021.01.03 20:57:35*/
         private const string HumrPath = "Assets/HUMR";
         
         private string[] _files;
-        private string _strKeyWord = "-  [HUMR] ";
 
         public void LoadLogToExportAnim()
         {
-            var files = GetLogFiles(logFilePath);
+            var files = HumrUtilities.GetLogFiles(logFilePath);
             if (!ValidateInputs(files)) return;
 
             var logLines = File.ReadAllLines(files[selectedIndex]);
@@ -76,25 +72,6 @@ namespace HUMR
             }
 
             ExportFBX(baseAnimName);
-        }
-
-        private static string[] GetLogFiles(string logFilePathString)
-        {
-            if (string.IsNullOrEmpty(logFilePathString) || !Directory.Exists(logFilePathString)) return null;
-            return Directory.GetFiles(logFilePathString, "*.txt");
-        }
-
-        //ファイル名やパスに使えない文字を‗に置換
-        private static string ValidName(string str)
-        {
-            var strValid = str;
-            var chInvalid = Path.GetInvalidFileNameChars();
-
-            foreach (var c in chInvalid)
-            {
-                strValid = strValid.Replace(c, '_');
-            }
-            return strValid;
         }
 
         private static void CreateDirectoryIfNotExist(string path)

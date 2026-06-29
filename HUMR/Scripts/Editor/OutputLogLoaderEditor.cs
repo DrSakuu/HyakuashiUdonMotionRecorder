@@ -63,9 +63,7 @@ namespace HUMR
             // 初期値として表示する項目のインデックス番号
             var selectedIndex = targetScript.selectedIndex;
             // プルダウンメニューの作成
-            var index = files.Length > 0
-                ? EditorGUILayout.Popup(label, selectedIndex, files)
-                : -1;
+            var index = files.Length > 0 ? EditorGUILayout.Popup(label, selectedIndex, files) : -1;
 
             if (EditorGUI.EndChangeCheck())
             {
