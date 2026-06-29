@@ -159,9 +159,9 @@ namespace HUMR
                         keyframes[1][nTargetLineCounter] = new Keyframe(keyTime, hippos.y);
                         keyframes[2][nTargetLineCounter] = new Keyframe(keyTime, hippos.z);
                         var boneWorldRotation = new Quaternion[(int)HumanBodyBones.LastBone];
-                        for (var k = 0; k < (int)HumanBodyBones.LastBone - 1; k++)
+                        for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
                         {
-                            boneWorldRotation[k] = new Quaternion(float.Parse(splitLogFile[k * 4 + 4], CultureInfo.InvariantCulture), float.Parse(splitLogFile[k * 4 + 5], CultureInfo.InvariantCulture), float.Parse(splitLogFile[k * 4 + 6], CultureInfo.InvariantCulture), float.Parse(splitLogFile[k * 4 + 7], CultureInfo.InvariantCulture));
+                            boneWorldRotation[k] = frame.BoneRotations[k];
                         }
                         for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
                         {

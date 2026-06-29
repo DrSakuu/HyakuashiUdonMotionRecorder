@@ -101,7 +101,7 @@ namespace HUMR
                 );
             }
 
-            for (var i = 4; i < parts.Length; i++)
+            for (var i = 3; i < parts.Length; i++)
             {
                 if (string.IsNullOrWhiteSpace(parts[i])) continue;
 
