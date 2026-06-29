@@ -16,8 +16,6 @@ namespace HUMR
             const string itemDelimiter = ",";
             var displayName = player.displayName; 
             
-            builder.Append(displayName.Length);
-            builder.Append(partDelimiter);
             builder.Append(displayName);
             builder.Append(partDelimiter);
             builder.Append(time.ToString(CultureInfo.InvariantCulture));
@@ -45,10 +43,10 @@ namespace HUMR
                 builder.Append(rotation.w.ToString("F7", CultureInfo.InvariantCulture));
             }
 
-            HUMRLog(builder.ToString());
+            HumrLog(builder.ToString());
         }
         
-        public static void HUMRLog(object message)
+        public static void HumrLog(object message)
         {
             Debug.Log($"[HUMR] {message}");
         }
