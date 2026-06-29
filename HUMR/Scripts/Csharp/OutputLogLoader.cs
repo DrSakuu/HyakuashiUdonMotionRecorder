@@ -49,8 +49,6 @@ namespace HUMR
 
         public void LoadLogToExportAnim()
         {
-            SetupAnimatorController();
-            
             var files = GetLogFiles(logFilePath);
             if (!ValidateInputs(files)) return;
 
@@ -59,212 +57,25 @@ namespace HUMR
             var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines, displayName);
             if (segments.Count == 0)
             {
-                HumrUtilities.HumrWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
-                return;
-            }
-            
-            var nTargetCounter = 0;
-            var newTargetLines = new List<int>();//ファイルの中での新しく始まった対象の行を格納する
-            newTargetLines.Add(0);
-            var newLogLines = new List<int>();//抽出したログの中で新しく始まった行を格納する
-            newLogLines.Add(0);
-            var beforeTime = 0f;
-            for (var j = 0; j < logLines.Length; j++)
-            {
-                //対象のログの行を抽出
-                if (!logLines[j].Contains(_strKeyWord + displayName)) continue;
-                if (logLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
-                {
-                    //記録終わりを検知
-                    var strTmpOLL = logLines[j].Substring(TimeStampLength + 13 + (_strKeyWord + displayName).Length);
-                    for (var k = 0; k < strTmpOLL.Length; k++)
-                    {
-                        if (strTmpOLL[k] != ';') continue;
-                        var currentTime = float.Parse(strTmpOLL.Substring(0, k), CultureInfo.InvariantCulture);
-                        if (currentTime < beforeTime)
-                        {
-                            newLogLines.Add(nTargetCounter);
-                            newTargetLines.Add(j);
-                        }
-                        beforeTime = currentTime;
-                        break;
-                    }
-                    nTargetCounter++;//目的の行が何行あるか。
-                }
-                else
-                {
-                    HumrUtilities.HumrWarning("Length is not correct");
-                }
-            }
-            newLogLines.Add(nTargetCounter);
-            newTargetLines.Add(logLines.Length);
-            
-            // Keyframeの生成
-            if (nTargetCounter == 0)
-            {
-                HumrUtilities.HumrWarning("Motion Data with ["+ displayName + "] does not exist (Did you enter correct DisplayName ? or select correct log ?)");
+                Debug.LogWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
                 return;
             }
 
-            for (var i =0; i<newLogLines.Count-1;i++)
+            CreateDirectoryIfNotExist(HumrPath);
+            SetupAnimatorController();
+
+            var baseAnimName = HumrUtilities.GetBaseAnimationName(files[selectedIndex]);
+
+            for (var i = 0; i < segments.Count; i++)
             {
-                var nLineNum = newLogLines[i + 1] - newLogLines[i];
-                var keyframes = new Keyframe[4 * ((int)HumanBodyBones.LastBone + 1/*time + hip position*/) - 1/*time*/][];//[要素数]
-                for (var j = 0; j < keyframes.Length; j++)
-                {
-                    keyframes[j] = new Keyframe[nLineNum];//[行数]
-                }
+                var clip = PopulateAnimationClip(segments[i]);
+                clip.name = $"{baseAnimName}_{i}";
 
-                //Keyframeにログの値を入れていく
-                var strDisplayNameOutputLogLines = new string[nLineNum];//目的の行の配列
-                var nTargetLineCounter = 0;
-                beforeTime = 0;
-                for (var j = newTargetLines[i]; j < newTargetLines[i+1]; j++)
-                {
-                    //対象のログの行を抽出
-                    if (!logLines[j].Contains(_strKeyWord + displayName)) continue;
-                    if (logLines[j].Length > TimeStampLength + (_strKeyWord + displayName).Length)
-                    {
-                        strDisplayNameOutputLogLines[nTargetLineCounter] = logLines[j].Substring(TimeStampLength + 13 + (_strKeyWord + displayName).Length);//時間,position,rotation,rotation,…
-                        for (var k = 0; k < strDisplayNameOutputLogLines[nTargetLineCounter].Length; k++)
-                        {
-                            if (strDisplayNameOutputLogLines[nTargetLineCounter][k] != ';') continue;
-                            var currentTime = float.Parse(strDisplayNameOutputLogLines[nTargetLineCounter].Substring(0, k), CultureInfo.InvariantCulture);
-                            if (currentTime < beforeTime)
-                            {
-                                HumrUtilities.HumrAssertion("New record line is contained");
-                            }
-                            beforeTime = currentTime;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        HumrUtilities.HumrWarning("Log Length is not correct");
-                    }
-                    //Debug.Log(DisplayNameOutputLogLines[nTargetLineCounter]);
-                    var frames = segments[0].Frames;
-                    var frame = frames[nTargetLineCounter];
-
-                    var keyTime = frame.RecordTime;
-                    var rootScale = _animator.transform.localScale;
-                    var armatureScale = _animator.GetBoneTransform(0).parent.localScale;
-                    var hippos = frame.HipPosition;
-                    transform.rotation = Quaternion.identity;//Avatarがrotation(0,0,0)でない可能性があるため
-                    hippos = Quaternion.Inverse(_animator.GetBoneTransform(0).parent.localRotation) * hippos;//armatureがrotation(0,0,0)でない可能性があるため
-                    hippos = new Vector3(hippos.x / rootScale.x/ armatureScale.x, hippos.y / rootScale.y/ armatureScale.y, hippos.z / rootScale.z/ armatureScale.z); //いる
-                    keyframes[0][nTargetLineCounter] = new Keyframe(keyTime, hippos.x);
-                    keyframes[1][nTargetLineCounter] = new Keyframe(keyTime, hippos.y);
-                    keyframes[2][nTargetLineCounter] = new Keyframe(keyTime, hippos.z);
-                    var boneWorldRotation = new Quaternion[(int)HumanBodyBones.LastBone];
-                    for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
-                    {
-                        boneWorldRotation[k] = frame.BoneRotations[k];
-                    }
-                    for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
-                    {
-                        if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
-                        {
-                            continue;
-                        }
-                        _animator.GetBoneTransform((HumanBodyBones)k).rotation = boneWorldRotation[k];
-                    }
-
-                    for (var k = 0; k < (int)HumanBodyBones.LastBone; k++)
-                    {
-                        if (_animator.GetBoneTransform((HumanBodyBones)k) == null)
-                        {
-                            continue;
-                        }
-                        var localRotation = _animator.GetBoneTransform((HumanBodyBones)k).localRotation;
-                        keyframes[k * 4 + 3][nTargetLineCounter] = new Keyframe(keyTime, localRotation.x);
-                        keyframes[k * 4 + 4][nTargetLineCounter] = new Keyframe(keyTime, localRotation.y);
-                        keyframes[k * 4 + 5][nTargetLineCounter] = new Keyframe(keyTime, localRotation.z);
-                        keyframes[k * 4 + 6][nTargetLineCounter] = new Keyframe(keyTime, localRotation.w);
-                    }
-                    nTargetLineCounter++;
-                }
-
-                //AnimationClipにAnimationCurveを設定
-                var clip = new AnimationClip();
-                {
-                    // AnimationCurveの生成
-                    var animCurves = new AnimationCurve[keyframes.Length];
-
-                    for (var l = 0; l < animCurves.Length; l++)//[行数-1]
-                    {
-                        animCurves[l] = new AnimationCurve(keyframes[l]);
-                    }
-                    // AnimationCurveの追加
-                    clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.x", animCurves[0]);
-                    clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.y", animCurves[1]);
-                    clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0)), typeof(Transform), "localPosition.z", animCurves[2]);
-                    for (var m = 0; m < (animCurves.Length - 3) / 4; m++)//[骨数]
-                    {
-                        if (_animator.GetBoneTransform((HumanBodyBones)m) == null)
-                        {
-                            continue;
-                        }
-                        clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
-                            typeof(Transform), "localRotation.x", animCurves[m * 4 + 3]);
-                        clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
-                            typeof(Transform), "localRotation.y", animCurves[m * 4 + 4]);
-                        clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
-                            typeof(Transform), "localRotation.z", animCurves[m * 4 + 5]);
-                        clip.SetCurve(HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform((HumanBodyBones)m)),
-                            typeof(Transform), "localRotation.w", animCurves[m * 4 + 6]);
-                    }
-                    clip.EnsureQuaternionContinuity();//これをしないとQuaternion補間してくれない
-                }
-
-                //GenericAnimation出力
-                {
-                    const string animFolderPath = HumrPath + @"/GenericAnimations";
-                    CreateDirectoryIfNotExist(animFolderPath);
-                    var displayNameFolderPath = animFolderPath + "/" + displayName;
-                    CreateDirectoryIfNotExist(displayNameFolderPath);
-
-                    var animationName = files[selectedIndex].Substring(files[selectedIndex].Length - 23).Remove(19)+"_"+i.ToString();
-                    var animPath = displayNameFolderPath + "/" + animationName + ".anim";
-                    Debug.Log(animPath);
-
-                    if (exportGenericAnimation)
-                    {
-                        if (File.Exists(animPath))
-                        {
-                            AssetDatabase.DeleteAsset(animPath);
-                            HumrUtilities.HumrWarning("Same Name Generic Animation is existing. Overwritten!!");
-                            foreach (var layer in _controller.layers)//アニメーションを消したことにより空のアニメーションステートが出来てたら削除
-                            {
-                                foreach (var state in layer.stateMachine.states)
-                                {
-                                    if (state.state.motion == null)
-                                    {
-                                        layer.stateMachine.RemoveState(state.state);
-                                    }
-                                }
-                            }
-                        }
-                        AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(animPath));
-                        AssetDatabase.SaveAssets();
-                        AssetDatabase.Refresh();
-                    }
-                }
-
-                //アニメーションをアバターのアニメーターに入れる
-                {
-                    _controller.layers[0].stateMachine.AddState(clip.name).motion = clip;
-                }
+                SaveGenericAnimationAsset(clip, baseAnimName, i);
+                AddClipToController(clip);
             }
-            //FBXとして出力
-            {
-                _animator.runtimeAnimatorController = _controller;
-                const string exportFolderPath = HumrPath + @"/FBXs";
-                CreateDirectoryIfNotExist(exportFolderPath);
-                var displayNameFBXFolderPath = exportFolderPath + "/" + ValidName(displayName);
-                CreateDirectoryIfNotExist(displayNameFBXFolderPath);
-                UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(displayNameFBXFolderPath + "/" + files[selectedIndex].Substring(files[selectedIndex].Length - 23).Remove(19), this.gameObject);
-            }
+
+            ExportFBX(baseAnimName);
         }
 
         private static string[] GetLogFiles(string logFilePathString)
@@ -382,6 +193,129 @@ namespace HUMR
 
             var finalPath = $"{exportFolderPath}/{fileName}";
             UnityEditor.Formats.Fbx.Exporter.ModelExporter.ExportObject(finalPath, gameObject);
+        }
+        
+        private AnimationClip PopulateAnimationClip(MotionSegment segment)
+        {
+            var frameCount = segment.Frames.Count;
+            var boneCount = HumanTrait.BoneName.Length;
+            var totalCurves = 3 + (boneCount * 4); // 3 for root position, 4 coordinates per bone rotation
+
+            var keyframes = InitializeKeyframeArrays(totalCurves, frameCount);
+
+            for (var frameIdx = 0; frameIdx < frameCount; frameIdx++)
+            {
+                var frame = segment.Frames[frameIdx];
+                var localHipPos = ProcessHipPosition(frame.HipPosition);
+                keyframes[0][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.x);
+                keyframes[1][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.y);
+                keyframes[2][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.z);
+                ApplyWorldRotationsToAvatar(frame);
+                RecordLocalRotationsToKeyframes(keyframes, frameIdx, frame);
+            }
+
+            return CreateAndBindCurves(keyframes, boneCount);
+        }
+
+        private static Keyframe[][] InitializeKeyframeArrays(int totalCurves, int frameCount)
+        {
+            var keyframes = new Keyframe[totalCurves][];
+            for (var i = 0; i < totalCurves; i++)
+            {
+                keyframes[i] = new Keyframe[frameCount];
+            }
+            return keyframes;
+        }
+
+        /// <summary>
+        /// Converts a raw world hip position into normalized spaces relative to the parent armature's transform rotation and local scale metrics.
+        /// </summary>
+        private Vector3 ProcessHipPosition(Vector3 rawHipPos)
+        {
+            transform.rotation = Quaternion.identity; // Safe state orientation anchor reset
+
+            Transform hipTransform = _animator.GetBoneTransform(0);
+            if (hipTransform == null || hipTransform.parent == null) return rawHipPos;
+
+            Transform armatureParent = hipTransform.parent;
+            Vector3 processedHipPos = Quaternion.Inverse(armatureParent.localRotation) * rawHipPos;
+
+            Vector3 rootScale = _animator.transform.localScale;
+            Vector3 armatureScale = armatureParent.localScale;
+
+            return new Vector3(
+                processedHipPos.x / rootScale.x / armatureScale.x,
+                processedHipPos.y / rootScale.y / armatureScale.y,
+                processedHipPos.z / rootScale.z / armatureScale.z
+            );
+        }
+
+        /// <summary>
+        /// Iterates across the active avatar bones applying the pre-parsed world quaternions.
+        /// </summary>
+        private void ApplyWorldRotationsToAvatar(MotionFrame frame)
+        {
+            var boneCount = HumanTrait.BoneName.Length;
+            
+            for (var k = 0; k < boneCount; k++)
+            {
+                // Ensure the frame contains this index
+                if (k >= frame.BoneRotations.Count) break;
+
+                var boneTransform = _animator.GetBoneTransform((HumanBodyBones)k);
+                if (boneTransform == null) continue;
+
+                boneTransform.rotation = frame.BoneRotations[k];
+            }
+        }
+
+        /// <summary>
+        /// Records current frame-state local transforms down out into curve reference arrays.
+        /// </summary>
+        private void RecordLocalRotationsToKeyframes(Keyframe[][] keyframes, int frameIdx, MotionFrame frame)
+        {
+            var boneCount = HumanTrait.BoneName.Length;
+
+            for (var k = 0; k < boneCount; k++)
+            {
+                var boneTransform = _animator.GetBoneTransform((HumanBodyBones)k);
+                if (boneTransform == null) continue;
+
+                var localRotation = boneTransform.localRotation;
+                var curveBaseIndex = (k * 4) + 3;
+
+                keyframes[curveBaseIndex][frameIdx]     = new Keyframe(frame.RecordTime, localRotation.x);
+                keyframes[curveBaseIndex + 1][frameIdx] = new Keyframe(frame.RecordTime, localRotation.y);
+                keyframes[curveBaseIndex + 2][frameIdx] = new Keyframe(frame.RecordTime, localRotation.z);
+                keyframes[curveBaseIndex + 3][frameIdx] = new Keyframe(frame.RecordTime, localRotation.w);
+            }
+        }
+
+        private AnimationClip CreateAndBindCurves(Keyframe[][] keyframes, int boneCount)
+        {
+            var clip = new AnimationClip();
+            var hipPath = HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0));
+
+            clip.SetCurve(hipPath, typeof(Transform), "localPosition.x", new AnimationCurve(keyframes[0]));
+            clip.SetCurve(hipPath, typeof(Transform), "localPosition.y", new AnimationCurve(keyframes[1]));
+            clip.SetCurve(hipPath, typeof(Transform), "localPosition.z", new AnimationCurve(keyframes[2]));
+
+            for (var m = 0; m < boneCount; m++)
+            {
+                var boneTransform = _animator.GetBoneTransform((HumanBodyBones)m);
+                if (boneTransform == null) continue;
+
+                var bonePath = HumrUtilities.GetHierarchyPath(boneTransform);
+                var curveBaseIndex = (m * 4) + 3;
+
+                clip.SetCurve(bonePath, typeof(Transform), "localRotation.x", new AnimationCurve(keyframes[curveBaseIndex]));
+                clip.SetCurve(bonePath, typeof(Transform), "localRotation.y", new AnimationCurve(keyframes[curveBaseIndex + 1]));
+                clip.SetCurve(bonePath, typeof(Transform), "localRotation.z", new AnimationCurve(keyframes[curveBaseIndex + 2]));
+                clip.SetCurve(bonePath, typeof(Transform), "localRotation.w", new AnimationCurve(keyframes[curveBaseIndex + 3]));
+            }
+
+            clip.EnsureQuaternionContinuity();
+            return clip;
         }
     }
 #endif
