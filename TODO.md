@@ -17,11 +17,12 @@
 - [ ] Add user interface with record button
 - [ ] T-pose on recording start
 
-## OutputLogLoader.cs
+## RecordLogLoader.cs
 
 - [ ] Make compatible with previous Log syntax
+- [ ] Fix toes rotation
 
-## OutputLogLoaderEditor.cs
+## RecordLogLoaderEditor.cs
 
 - [ ] Only show log files with HUMR data
 - [ ] Choose DisplayName from dropdown

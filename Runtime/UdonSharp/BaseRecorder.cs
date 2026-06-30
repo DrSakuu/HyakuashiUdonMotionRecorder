@@ -105,29 +105,37 @@ namespace HUMR
 
         private static string FormatVector3Components(Vector3 vector3)
         {
-            return string.Join(ComponentDelimiter,
-                vector3.x.ToString("F6", CultureInfo.InvariantCulture),
-                vector3.y.ToString("F6", CultureInfo.InvariantCulture),
-                vector3.z.ToString("F6", CultureInfo.InvariantCulture));
+            var trimmedVector3 = vector3.ToString().Trim('(',')');
+            return trimmedVector3.Replace(" ", "");
         }
 
         private static string FormatQuaternionComponents(Quaternion quaternion)
         {
-            return string.Join(ComponentDelimiter,
-                quaternion.x.ToString("F6", CultureInfo.InvariantCulture),
-                quaternion.y.ToString("F6", CultureInfo.InvariantCulture),
-                quaternion.z.ToString("F6", CultureInfo.InvariantCulture),
-                quaternion.w.ToString("F6", CultureInfo.InvariantCulture));
+            var trimmedQuaternion = quaternion.ToString().Trim('(',')');
+            return trimmedQuaternion.Replace(" ", "");
         }
 
-        protected static void RecordStart(RecordingType recordingType, string recordingName)
+        protected static void RecordStart(RecordingType recType, string recName)
         {
-            HumrLog(string.Join(VariableDelimiter, "START RECORDING", recordingType.ToString(), recordingName));
+            HumrLog(string.Join(VariableDelimiter, "START RECORDING", RecTypeToString(recType), recName));
         }
 
-        protected static void RecordStop(RecordingType recordingType, string recordingName)
+        protected static void RecordStop(RecordingType recType, string recName)
         {
-            HumrLog(string.Join(VariableDelimiter, "STOP RECORDING", recordingType.ToString(), recordingName));
+            HumrLog(string.Join(VariableDelimiter, "STOP RECORDING", RecTypeToString(recType), recName));
+        }
+
+        private static string RecTypeToString(RecordingType recordingType)
+        {
+            switch (recordingType)
+            {
+                case RecordingType.Object:
+                    return "OBJECT";
+                case RecordingType.Player:
+                    return "PLAYER";
+                default:
+                    return "UNKNOWN";
+            }
         }
 
         private static void HumrLog(object message)
