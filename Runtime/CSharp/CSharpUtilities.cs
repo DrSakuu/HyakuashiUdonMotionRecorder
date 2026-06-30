@@ -7,6 +7,12 @@ using UnityEngine;
 
 namespace HUMR
 {
+    public enum RecordingType
+    {
+        Object,
+        Player
+    }
+    
     public class MotionFrame
     {
         public float RecordTime { get; set; }
@@ -19,7 +25,7 @@ namespace HUMR
         public List<MotionFrame> Frames { get; set; } = new List<MotionFrame>();
     }
     
-    public class HumrUtilities : MonoBehaviour
+    public class CSharpUtilities : MonoBehaviour
     {
 
         public static string GetHierarchyPath(Transform self)
@@ -137,6 +143,19 @@ namespace HUMR
                 sanitized = sanitized.Replace(c, '_');
             }
             return sanitized;
+        }
+
+        public static string RecTypeToString(RecordingType recordingType)
+        {
+            switch (recordingType)
+            {
+                case RecordingType.Object:
+                    return "OBJECT";
+                case RecordingType.Player:
+                    return "PLAYER";
+                default:
+                    return "UNKNOWN";
+            }
         }
         
         public static void HumrLog(object message)
