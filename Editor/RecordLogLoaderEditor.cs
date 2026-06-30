@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace HUMR
 {
@@ -66,8 +69,22 @@ namespace HUMR
             }
             else
             {
+                //TODO: Found x logfiles, but they don't contain HUMR data
                 var emptyOptions = new string[] { "Log files not Found" };
                 EditorGUI.Popup(popupRect, 0, emptyOptions);
+                return;
+            }
+            var recordListStr = recordLoader.UniqueRecords
+                .Select(entry => $"{entry.Type}: {entry.Name}")
+                .ToArray();
+            recordLoader.recordIndex = EditorGUILayout.Popup("Recording", recordLoader.recordIndex, recordListStr);
+            
+            if (GUILayout.Button("LoadLogToExportAnim"))
+            {
+                ExecuteEvents.Execute<OutputLogLoaderInterface>(
+                    target: recordLoader.gameObject,
+                    eventData: null,
+                    functor: (receiveTarget, _) => receiveTarget.LoadLogToExportAnim());
             }
         }
     }
