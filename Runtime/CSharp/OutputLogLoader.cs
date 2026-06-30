@@ -57,20 +57,17 @@ namespace HUMR
 
         public void LoadLogToExportAnim()
         {
-            var files = HumrUtilities.GetLogFiles(logFilePath);
-            if (!ValidateInputs(files)) return;
+            if (!Validate()) return;
             
-            var selectedLogFile = files[selectedIndex];
-
             var logLines = new List<string>();
-            using (var fs = new FileStream(selectedLogFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var fs = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (var sr = new StreamReader(fs))
                     while (0 <= sr.Peek()) logLines.Add(sr.ReadLine());
 
             var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines.ToArray(), displayName);
             if (segments.Count == 0)
             {
-                Debug.LogWarning($"Motion Data with [{displayName}] does not exist (Did you enter the correct DisplayName? or select the correct log ?)");
+                Debug.LogWarning($"Motion Data with [{displayName}] does not exist in {logFilePath}");
                 return;
             }
 
@@ -81,7 +78,7 @@ namespace HUMR
                 CreateDirectoryIfNotExist(HumrPath);
                 SetupAnimatorController();
 
-                var baseAnimName = HumrUtilities.GetBaseAnimationName(files[selectedIndex]);
+                var baseAnimName = HumrUtilities.GetBaseAnimationName(logFilePath);
 
                 for (var i = 0; i < segments.Count; i++)
                 {
@@ -98,6 +95,20 @@ namespace HUMR
             {
                 RestoreAvatarPose();
             }
+        }
+
+        private bool Validate()
+        {
+            if (string.IsNullOrEmpty(displayName))
+            {
+                HumrUtilities.HumrWarning("DisplayName is null or empty.");
+                return false;
+            }
+            if (_animator == null)
+            {
+                _animator = GetComponent<Animator>();
+            }
+            return _animator != null;
         }
 
         private void SnapshotAvatarPose()
@@ -138,28 +149,6 @@ namespace HUMR
             //存在するかどうか判定しなくても良いみたいだが気持ち悪いので
             if (Directory.Exists(path)) return;
             Directory.CreateDirectory(path);
-        }
-
-        private bool ValidateInputs(string[] files)
-        {
-            if (string.IsNullOrEmpty(displayName))
-            {
-                HumrUtilities.HumrWarning("DisplayName is null or empty.");
-                return false;
-            }
-
-            if (files == null || files.Length == 0 || selectedIndex < 0 || selectedIndex >= files.Length)
-            {
-                HumrUtilities.HumrWarning("Target log file could not be found or index selection is out of range.");
-                return false;
-            }
-
-            if (_animator == null)
-            {
-                _animator = GetComponent<Animator>();
-            }
-
-            return _animator != null;
         }
         
         private void SetupAnimatorController()
