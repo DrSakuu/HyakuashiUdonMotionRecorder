@@ -12,7 +12,7 @@ namespace HUMR
         Humanoid
     }
     
-    public class UdonUtilities : UdonSharpBehaviour
+    public class RecorderUtilities : UdonSharpBehaviour
     {
         private const string VariableDelimiter = ";";
         private const string ComponentDelimiter = ",";
@@ -30,7 +30,7 @@ namespace HUMR
             HumrLog(outputString);
         }
 
-        public static void LogPlayerBoneRotations(VRCPlayerApi player, float time)
+        public static void RecordPlayerBoneRotations(VRCPlayerApi player, float time)
         {
             // TODO: Extend LogObjectTransform
             var builder = new StringBuilder(4096);

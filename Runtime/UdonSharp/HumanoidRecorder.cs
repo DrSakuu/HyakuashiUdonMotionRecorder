@@ -15,7 +15,7 @@ using VRC.Udon;
 
 namespace HUMR
 {
-    public class Recorder : UdonSharpBehaviour
+    public class HumanoidRecorder : UdonSharpBehaviour
     {
         [SerializeField, Tooltip("チェックを入れるとワールド内の全ての人のモーションが記録されます（周知を推奨）")]
         private bool recordAllPlayers;
@@ -50,12 +50,12 @@ namespace HUMR
                 foreach (var player in _players)
                 {
                     if (!Utilities.IsValid(player)) continue;
-                    UdonUtilities.LogPlayerBoneRotations(player, _recordTime);
+                    RecorderUtilities.RecordPlayerBoneRotations(player, _recordTime);
                 }
             }
             else
             {
-                UdonUtilities.LogPlayerBoneRotations(_localPlayer, _recordTime);
+                RecorderUtilities.RecordPlayerBoneRotations(_localPlayer, _recordTime);
             }
         }
 

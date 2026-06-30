@@ -2,10 +2,15 @@
 
 - [ ] English and Japanese localization
 
-## Recorder.cs
+## ObjectRecorder.cs
 
-- [ ] Add begin and end tags to logs with data structures
-- [ ] Merge `InteractRecorder.cs`
+- [x] Add begin and end tags to logs with data structures
+- [x] Replace `InteractRecorder.cs`
+- [ ] Option for world relative or start position relative recording
+
+## HumanoidRecorder.cs
+
+- [ ] Option for world relative or start position relative recording
 
 ## Recorder.prefab
 
@@ -22,3 +27,4 @@
 - [ ] Choose DisplayName from dropdown
 - [ ] Only show log files with HUMR data
 - [ ] Export Mode (Humanoid/Generic) dropdown
+- [ ] Open log file path in advanced foldout
