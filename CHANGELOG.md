@@ -94,7 +94,10 @@
 
 ## [2.0.0-beta.1] - Unreleased
 
-A complete rewrite of the codebase so new features more can be implemented more easily. Not compatible with previous versions.
+A complete rewrite of the codebase so new features can be implemented more easily. Not compatible with previous versions.
+
+> [!WARNING]
+> Remove the old HUMR OutputLogLoader package and Prefabs, ReadMe, Scenes and Scripts in `Assets/HUMR` before importing. 
 
 ## Added
 
