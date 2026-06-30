@@ -33,7 +33,7 @@ namespace HUMR
             if (_recordTime < _nextRecordTime) return;
             _nextRecordTime = _recordTime + _recordInterval;
 
-            UdonUtilities.RecordObjectTransform(transform, objectName, _recordTime);
+            RecorderUtilities.RecordObjectTransform(transform, objectName, _recordTime);
         }
 
         public void StartRecording()
@@ -42,21 +42,26 @@ namespace HUMR
             _nextRecordTime = _recordTime;
             _recordInterval = 1f / recordFramerate;
 
-            UdonUtilities.StartRecording(RecordingType.Object, objectName);
-            UdonUtilities.RecordObjectTransform(transform, objectName, _recordTime);
+            RecorderUtilities.StartRecording(RecordingType.Object, objectName);
+            RecorderUtilities.RecordObjectTransform(transform, objectName, _recordTime);
             _isRecording = true;
         }
-
-
+        
         public void StopRecording()
         {
-            UdonUtilities.RecordObjectTransform(transform, objectName, _recordTime);
-            UdonUtilities.StopRecording(RecordingType.Object, objectName);
+            RecorderUtilities.RecordObjectTransform(transform, objectName, _recordTime);
+            RecorderUtilities.StopRecording(RecordingType.Object, objectName);
         }
 
         private void OnDestroy()
         {
             if (_isRecording) StopRecording();
+        }
+
+        public override void Interact()
+        {
+            if (_isRecording) StopRecording();
+            else StartRecording();
         }
     }
     
