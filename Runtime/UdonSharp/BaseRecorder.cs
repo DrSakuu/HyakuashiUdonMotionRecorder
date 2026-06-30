@@ -7,11 +7,6 @@ using VRC.SDKBase;
 
 namespace HUMR
 {
-    public enum RecordingType
-    {
-        Object,
-        Player
-    }
     
     public class BaseRecorder : UdonSharpBehaviour
     {
@@ -81,7 +76,7 @@ namespace HUMR
 
             var outputString = string.Join(VariableDelimiter, name, timeStr, positionStr, rotationStr, scaleStr);
     
-            HumrLog(outputString);
+            CSharpUtilities.HumrLog(outputString);
         }
 
         protected static void RecordPlayerBones(VRCPlayerApi player, float time)
@@ -100,7 +95,7 @@ namespace HUMR
                 outputString = string.Join(VariableDelimiter, outputString, rotationStr);
             }
             
-            HumrLog(outputString);
+            CSharpUtilities.HumrLog(outputString);
         }
 
         private static string FormatVector3Components(Vector3 vector3)
@@ -117,30 +112,12 @@ namespace HUMR
 
         protected static void RecordStart(RecordingType recType, string recName)
         {
-            HumrLog(string.Join(VariableDelimiter, "START RECORDING", RecTypeToString(recType), recName));
+            CSharpUtilities.HumrLog(string.Join(VariableDelimiter, "START RECORDING", CSharpUtilities.RecTypeToString(recType), recName));
         }
 
         protected static void RecordStop(RecordingType recType, string recName)
         {
-            HumrLog(string.Join(VariableDelimiter, "STOP RECORDING", RecTypeToString(recType), recName));
-        }
-
-        private static string RecTypeToString(RecordingType recordingType)
-        {
-            switch (recordingType)
-            {
-                case RecordingType.Object:
-                    return "OBJECT";
-                case RecordingType.Player:
-                    return "PLAYER";
-                default:
-                    return "UNKNOWN";
-            }
-        }
-
-        private static void HumrLog(object message)
-        {
-            Debug.Log($"[HUMR] {message}");
+            CSharpUtilities.HumrLog(string.Join(VariableDelimiter, "STOP RECORDING", CSharpUtilities.RecTypeToString(recType), recName));
         }
     }
 }
