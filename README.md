@@ -7,6 +7,15 @@ This fork is a complete rewrite of the codebase so new features can be implement
 - A new `MotionFrame` structure to hold the recorded data
 - Remove duplicated code
 
+## TODO
+
+- [ ] Make compatible with previous versions
+- [ ] Fix hip position so feet are on the ground
+- [ ] Choose DisplayName from dropdown
+- [ ] Merge `InteractRecorder.cs`
+- [ ] Only show log files with HUMR data
+- [ ] Export Mode (Humanoid/Generic) dropdown
+
 ## Original Readme
 
 HUMR(HyakuashiUdonMotionRecorder)はVRChat上での動きをHumanoidAnimationとして出力するためのunitypackageです。
