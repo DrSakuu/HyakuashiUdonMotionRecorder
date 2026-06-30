@@ -21,10 +21,11 @@
 
 - [ ] Make compatible with previous Log syntax
 - [ ] Fix toes rotation
+- [ ] Include displayname in exported FBX
 
 ## RecordLogLoaderEditor.cs
 
-- [ ] Only show log files with HUMR data
-- [ ] Choose DisplayName from dropdown
+- [x] Only show log files with HUMR data
+- [x] Choose DisplayName from dropdown
 - [ ] Export Mode (Humanoid/Generic) dropdown
-- [ ] Open log file path in advanced foldout
+- [x] Open log file path in advanced foldout

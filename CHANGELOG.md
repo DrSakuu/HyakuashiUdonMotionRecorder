@@ -99,21 +99,24 @@ A complete rewrite of the codebase so new features can be implemented more easil
 > [!WARNING]
 > Remove the old HUMR OutputLogLoader package and Prefabs, ReadMe, Scenes and Scripts in `Assets/HUMR` before importing. 
 
-## Added
+### Added
 
 - Combine Recorder and OutputLogLoader packages
 - A new `MotionFrame` structure to hold the recorded data
 - Extract static methods to utility classes
 - GitHub action to build .unitypackage
+- Choose DisplayName from dropdown
+- Open log file path in advanced foldout
 
-## Changed
+### Changed
 
-- New OutputLog format: semicolons to separate different types
-- Remove hard coded log parsing indexes
+- New OutputLog format: Semicolons to separate different types, start and end markers
+- Remove hard-coded log parsing indexes
 - Remove duplicated code
 - Select newest log file automatically
+- Only show log files with HUMR data
 
-## Fixed
+### Fixed
 
 - Open log file as read-only
 - Restore avatar pose after export
