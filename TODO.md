@@ -20,7 +20,6 @@
 ## OutputLogLoader.cs
 
 - [ ] Make compatible with previous Log syntax
-- [ ] Fix hip position so feet are on the ground
 
 ## OutputLogLoaderEditor.cs
 

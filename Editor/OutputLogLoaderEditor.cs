@@ -67,22 +67,21 @@ namespace HUMR
             }
             
             if (targetScript == null) return;
-            targetScript.logFilePath = _path;
 
             CollectLogFilePaths();
 
             // ラベルの作成
             const string label = "LoadOutputLog";
             // 初期値として表示する項目のインデックス番号
-             var scriptIndex = targetScript.selectedIndex;
-             // プルダウンメニューの作成
-             var newIndex = _logFileNames.Length > 0 ? EditorGUILayout.Popup(label, scriptIndex, _logFileNames) : -1;
-             targetScript.selectedIndex = newIndex;
+            var scriptIndex = targetScript.selectedIndex;
+            // プルダウンメニューの作成
+            var newIndex = _logFileNames.Length > 0 ? EditorGUILayout.Popup(label, scriptIndex, _logFileNames) : -1;
+            targetScript.logFilePath = _logFilePaths[newIndex];
             if (EditorGUI.EndChangeCheck())
             {
                 // 操作を Undo に登録
                 // インデックス番号を登録
-                targetScript.selectedIndex = newIndex;
+                targetScript.logFilePath = _logFilePaths[newIndex];
             }
 
             GUILayout.Space(15);
