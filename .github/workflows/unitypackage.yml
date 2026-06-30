@@ -3,9 +3,6 @@ name: Build Unity Package
 on: 
   workflow_dispatch:
 
-env:
-  packageName: "dev.drsakuu.humr"
-
 permissions:
   contents: write
 
@@ -13,20 +10,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    
       - name: Checkout
         uses: actions/checkout@v3
-    
-      - name: get version
-        id: version
-        uses: notiz-dev/github-action-json-property@7c8cf5cc36eb85d8d287a8086a39dac59628eb31
-        with: 
-            path: "package.json"
-            prop_path: "version"
-    
-      - name: Set Environment Variables
+
+      - name: Read package.json & Set Environment Variables
         run: |
-          echo "unityPackage=${{ env.packageName }}-${{ steps.version.outputs.prop }}.unitypackage" >> $GITHUB_ENV\
+          PACKAGE_NAME=$(jq -r '.name' package.json)
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          
+          echo "packageName=$PACKAGE_NAME" >> $GITHUB_ENV
+          echo "unityPackage=${PACKAGE_NAME}-${PACKAGE_VERSION}.unitypackage" >> $GITHUB_ENV
       
       - name: Make Package Folder
         run: |
@@ -38,7 +31,7 @@ jobs:
         run: find "Packages/${{ env.packageName }}/" -name \*.meta >> metaList
 
       - name: Create UnityPackage
-        uses: pCYSl5EDgo/create-unitypackage@cfcd3cf0391a5ef1306342794866a9897c32af0b
+        uses: pCYSl5EDgo/create-unitypackage@1.2.3
         with:
           package-path: ${{ env.unityPackage }}
           include-files: metaList
