@@ -19,10 +19,6 @@ namespace HUMR
             var recordLoader = (RecordLogLoader)target;
             if (recordLoader == null) return;
 
-            // TODO: Retrieve serialized values
-            // serializedObject.Update();
-            // var outputPathProp = serializedObject.FindProperty("logFileDirectory");
-
             _showAdvanced = EditorGUILayout.Foldout(_showAdvanced, "Advanced: Custom Log Path");
             if (_showAdvanced)
             {
@@ -69,7 +65,7 @@ namespace HUMR
 
             if (recordLoader.recordFileNames != null && recordLoader.recordFileNames.Length > 0)
             {
-                recordLoader.logFileIndex = EditorGUI.Popup(popupRect, recordLoader.logFileIndex, recordLoader.recordFileNames);
+                recordLoader.recordFileIndex = EditorGUI.Popup(popupRect, recordLoader.recordFileIndex, recordLoader.recordFileNames);
             }
             else
             {
@@ -83,15 +79,13 @@ namespace HUMR
                 .Select(entry => $"{entry.type}: {entry.name}")
                 .ToArray();
             recordLoader.recordIndex = EditorGUILayout.Popup("Recording", recordLoader.recordIndex, recordListStr);
+
+            if (!GUILayout.Button("LoadLogToExportAnim")) return;
             
-            if (GUILayout.Button("LoadLogToExportAnim"))
+            if (recordLoader.TryGetComponent<RecordLogLoaderInterface>(out var receiver))
             {
-                ExecuteEvents.Execute<OutputLogLoaderInterface>(
-                    target: recordLoader.gameObject,
-                    eventData: null,
-                    functor: (receiveTarget, _) => receiveTarget.LoadLogToExportAnim());
+                receiver.LoadRecordingAndExportAnim();
             }
-            // TODO: serializedObject.ApplyModifiedProperties();
         }
     }
 }
