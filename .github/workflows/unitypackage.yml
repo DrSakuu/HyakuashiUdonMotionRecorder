@@ -1,4 +1,4 @@
-name: Build Unity Package
+name: Build .unitypackage
 
 on: 
   workflow_dispatch:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Read package.json & Set Environment Variables
         run: |
@@ -31,13 +31,13 @@ jobs:
         run: find "Packages/${{ env.packageName }}/" -name \*.meta >> metaList
 
       - name: Create UnityPackage
-        uses: pCYSl5EDgo/create-unitypackage@cfcd3cf0391a5ef1306342794866a9897c32af0b
+        uses: pCYSl5EDgo/create-unitypackage@b5c57408698b1fab8b3a84d4b67f767b8b7c0be9
         with:
           package-path: ${{ env.unityPackage }}
           include-files: metaList
           
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           archive: false
           path: ${{ env.unityPackage }}

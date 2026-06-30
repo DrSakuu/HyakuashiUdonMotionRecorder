@@ -101,6 +101,7 @@ A complete rewrite of the codebase so new features more can be implemented more 
 - Combine Recorder and OutputLogLoader packages
 - A new `MotionFrame` structure to hold the recorded data
 - Extract static methods to utility classes
+- GitHub action to build .unitypackage
 
 ## Changed
 
