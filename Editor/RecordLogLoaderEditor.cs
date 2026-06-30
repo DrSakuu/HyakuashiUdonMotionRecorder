@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,12 +19,17 @@ namespace HUMR
             var recordLoader = (RecordLogLoader)target;
             if (recordLoader == null) return;
 
+            // TODO: Retrieve serialized values
+            // serializedObject.Update();
+            // var outputPathProp = serializedObject.FindProperty("logFileDirectory");
+
             _showAdvanced = EditorGUILayout.Foldout(_showAdvanced, "Advanced: Custom Log Path");
             if (_showAdvanced)
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.BeginHorizontal();
-                recordLoader.path = EditorGUILayout.TextField("OutputLogPath", recordLoader.path);
+                
+                recordLoader.logFileDirectory = EditorGUILayout.TextField("OutputLogPath", recordLoader.logFileDirectory);
                 if (GUILayout.Button("Explore", GUILayout.Width(100)))
                 {
                     var path = Environment.GetEnvironmentVariable("USERPROFILE") + @"\AppData\LocalLow\VRChat\VRChat";
@@ -48,13 +52,13 @@ namespace HUMR
             }
             else
             {
-                recordLoader.path = Environment.GetEnvironmentVariable("USERPROFILE");
-                recordLoader.path += @"\AppData\LocalLow\VRChat\VRChat";
+                recordLoader.logFileDirectory = Environment.GetEnvironmentVariable("USERPROFILE");
+                recordLoader.logFileDirectory += @"\AppData\LocalLow\VRChat\VRChat";
             }
             
-            if (recordLoader.logFileNames == null) recordLoader.CollectLogFiles();
+            if (recordLoader.recordFileNames == null) recordLoader.CollectLogFiles();
 
-            const string label = "Record Log";
+            const string label = "Record Log File";
             var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
             var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent(label));
 
@@ -63,19 +67,20 @@ namespace HUMR
                 recordLoader.CollectLogFiles();
             }
 
-            if (recordLoader.logFileNames != null && recordLoader.logFileNames.Length > 0)
+            if (recordLoader.recordFileNames != null && recordLoader.recordFileNames.Length > 0)
             {
-                recordLoader.logFileIndex = EditorGUI.Popup(popupRect, recordLoader.logFileIndex, recordLoader.logFileNames);
+                recordLoader.logFileIndex = EditorGUI.Popup(popupRect, recordLoader.logFileIndex, recordLoader.recordFileNames);
             }
             else
             {
-                //TODO: Found x logfiles, but they don't contain HUMR data
-                var emptyOptions = new string[] { "Log files not Found" };
+                var logFilesCount = recordLoader.logFilePaths.Length;
+                var noRecordsMessage = logFilesCount > 0 ? $"Found {logFilesCount} log files but they don't have HUMR recordings." : "No logs found.";
+                var emptyOptions = new string[] { noRecordsMessage };
                 EditorGUI.Popup(popupRect, 0, emptyOptions);
                 return;
             }
-            var recordListStr = recordLoader.UniqueRecords
-                .Select(entry => $"{entry.Type}: {entry.Name}")
+            var recordListStr = recordLoader.uniqueRecords
+                .Select(entry => $"{entry.type}: {entry.name}")
                 .ToArray();
             recordLoader.recordIndex = EditorGUILayout.Popup("Recording", recordLoader.recordIndex, recordListStr);
             
@@ -86,6 +91,7 @@ namespace HUMR
                     eventData: null,
                     functor: (receiveTarget, _) => receiveTarget.LoadLogToExportAnim());
             }
+            // TODO: serializedObject.ApplyModifiedProperties();
         }
     }
 }

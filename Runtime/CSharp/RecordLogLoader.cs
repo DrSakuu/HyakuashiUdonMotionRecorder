@@ -6,37 +6,46 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace HUMR
-{public class LogEntry
+{
+    [Serializable]
+    public class LogEntry
     {
-        public RecordingType Type;
-        public string Name;
+        public RecordingType type;
+        public string name;
     }
     
     
     public class RecordLogLoader : MonoBehaviour
     {
-        public string path;
+        public string logFileDirectory;
         public string[] logFilePaths;
-        public string[] logFileNames;
+        public string[] recordFilePaths;
+        public string[] recordFileNames;
         public int logFileIndex;
         
         private static readonly Regex FilenameRegex = new Regex(@"^output_log_|\.txt$");
-        public List<LogEntry> UniqueRecords = new List<LogEntry>();
+        public List<LogEntry> uniqueRecords = new List<LogEntry>();
         public int recordIndex;
         
         public void CollectLogFiles()
         {
-            if (!Directory.Exists(path)) return;
-            var foundEntries = new HashSet<string>();
-            UniqueRecords.Clear();
-
-            logFilePaths = Directory.GetFiles(path, "*.txt")
-                .OrderByDescending(File.GetLastWriteTime)
+            if (!Directory.Exists(logFileDirectory)) return;
+            
+            logFilePaths = Directory.GetFiles(logFileDirectory, "*.txt");
+            recordFilePaths = logFilePaths
+                .Where(file => File.ReadLines(file).Any(line => line.Contains("-  [HUMR] ")))
+                .OrderBy(file => File.GetLastWriteTime(file))
+                .Reverse()
+                .ToArray();
+            recordFileNames = recordFilePaths
+                .Select(p => FilenameRegex.Replace(Path.GetFileName(p), ""))
                 .ToArray();
 
-            foreach (var file in logFilePaths)
+            var foundEntries = new HashSet<string>();
+            uniqueRecords.Clear();
+            foreach (var recordFile in recordFilePaths)
             {
-                foreach (var line in File.ReadLines(file))
+                foreach (var line in File.ReadLines(recordFile))
                 {
                     if (!line.Contains("-  [HUMR] START RECORDING")) continue;
                     
@@ -51,22 +60,9 @@ namespace HUMR
                     {
                         type = RecordingType.Object;
                     }
-                    UniqueRecords.Add(new LogEntry { Type = type, Name = parts[2] });
+                    uniqueRecords.Add(new LogEntry { type = type, name = parts[2] });
                 }
             }
-
-            logFileNames = logFilePaths
-                .Select(p => FilenameRegex.Replace(Path.GetFileName(p), ""))
-                .ToArray();
-            logFilePaths = Directory.GetFiles(path, "*.txt")
-                .Where(file => File.ReadLines(file).Any(line => line.Contains("-  [HUMR] ")))
-                .OrderBy(file => File.GetLastWriteTime(file))
-                .Reverse()
-                .ToArray();
-
-            logFileNames = logFilePaths
-                .Select(p => FilenameRegex.Replace(Path.GetFileName(p), ""))
-                .ToArray();
         }
     }
 }
