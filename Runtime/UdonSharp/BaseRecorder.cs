@@ -89,14 +89,15 @@ namespace HUMR
             var timeStr = time.ToString(CultureInfo.InvariantCulture);
             
             var hipsPosition = player.GetBonePosition(HumanBodyBones.Hips);
-            var hipPositionStr = FormatVector3Components(hipsPosition);
+            var hipsPositionStr = FormatVector3Components(hipsPosition);
             
-            var outputString = string.Join(VariableDelimiter, player.displayName, timeStr, hipPositionStr);
+            var outputString = string.Join(VariableDelimiter, player.displayName, timeStr, hipsPositionStr);
             
             for (var i = 0; i < (int)HumanBodyBones.LastBone; i++)
             {
                 var rotation = player.GetBoneRotation((HumanBodyBones)i);
-                outputString = string.Join(ComponentDelimiter, outputString, rotation);
+                var rotationStr = FormatQuaternionComponents(rotation);
+                outputString = string.Join(VariableDelimiter, outputString, rotationStr);
             }
             
             HumrLog(outputString);
