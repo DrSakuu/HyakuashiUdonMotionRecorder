@@ -92,13 +92,13 @@
 - 地域による小数点表記の違いに対応。選択と出力に日時を含める変更。
 - `OutputLogLoader` を v1.1.1 に更新  
 
-## [2.0.0-beta.1]
+## [2.0.0-beta.1] - Unreleased
 
 A complete rewrite of the codebase so new features more can be implemented more easily. Not compatible with previous versions.
 
 ## Added
 
-- Made into a package for easy installation
+- Combine Recorder and OutputLogLoader packages
 - A new `MotionFrame` structure to hold the recorded data
 - Extract static methods to utility classes
 
