@@ -64,7 +64,7 @@ namespace HUMR
                 using (var sr = new StreamReader(fs))
                     while (0 <= sr.Peek()) logLines.Add(sr.ReadLine());
 
-            var segments = HumrUtilities.PartitionLogLinesIntoSegments(logLines.ToArray(), displayName);
+            var segments = CSharpUtilities.PartitionLogLinesIntoSegments(logLines.ToArray(), displayName);
             if (segments.Count == 0)
             {
                 Debug.LogWarning($"Motion Data with [{displayName}] does not exist in {logFilePath}");
@@ -78,7 +78,7 @@ namespace HUMR
                 CreateDirectoryIfNotExist(HumrPath);
                 SetupAnimatorController();
 
-                var baseAnimName = HumrUtilities.GetBaseAnimationName(logFilePath);
+                var baseAnimName = CSharpUtilities.GetBaseAnimationName(logFilePath);
 
                 for (var i = 0; i < segments.Count; i++)
                 {
@@ -101,7 +101,7 @@ namespace HUMR
         {
             if (string.IsNullOrEmpty(displayName))
             {
-                HumrUtilities.HumrWarning("DisplayName is null or empty.");
+                CSharpUtilities.HumrWarning("DisplayName is null or empty.");
                 return false;
             }
             if (_animator == null)
@@ -195,7 +195,7 @@ namespace HUMR
             if (File.Exists(animAssetPath))
             {
                 AssetDatabase.DeleteAsset(animAssetPath);
-                HumrUtilities.HumrWarning($"Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
+                CSharpUtilities.HumrWarning($"Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
                 CleanControllerStates(clearAll: false);
             }
 
@@ -213,7 +213,7 @@ namespace HUMR
         {
             _animator.runtimeAnimatorController = _controller;
 
-            var exportFolderPath = $"{HumrPath}/FBXs/{HumrUtilities.SanitizeFileName(displayName)}";
+            var exportFolderPath = $"{HumrPath}/FBXs/{CSharpUtilities.SanitizeFileName(displayName)}";
             CreateDirectoryIfNotExist(exportFolderPath);
 
             var finalPath = $"{exportFolderPath}/{fileName}";
@@ -304,7 +304,7 @@ namespace HUMR
         private AnimationClip CreateAndBindCurves(Keyframe[][] keyframes)
         {
             var clip = new AnimationClip();
-            var hipPath = HumrUtilities.GetHierarchyPath(_animator.GetBoneTransform(0));
+            var hipPath = CSharpUtilities.GetHierarchyPath(_animator.GetBoneTransform(0));
 
             clip.SetCurve(hipPath, typeof(Transform), "localPosition.x", new AnimationCurve(keyframes[0]));
             clip.SetCurve(hipPath, typeof(Transform), "localPosition.y", new AnimationCurve(keyframes[1]));
@@ -315,7 +315,7 @@ namespace HUMR
                 var boneTransform = _animator.GetBoneTransform((HumanBodyBones)m);
                 if (boneTransform == null) continue;
 
-                var bonePath = HumrUtilities.GetHierarchyPath(boneTransform);
+                var bonePath = CSharpUtilities.GetHierarchyPath(boneTransform);
                 var curveBaseIndex = (m * 4) + 3;
 
                 clip.SetCurve(bonePath, typeof(Transform), "localRotation.x", new AnimationCurve(keyframes[curveBaseIndex]));
