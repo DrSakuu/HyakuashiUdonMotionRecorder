@@ -118,6 +118,14 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 - Changed all class and prefab names
 - New OutputLog format: Semicolons to separate different types, start and end markers
+
+```
+-  [HUMR] Recording started;Player;DisplayName
+-  [HUMR] DisplayName;recordTime;hipsPosition;HumanBoneRotations;
+-  [HUMR] Recording stopped;Player;DisplayName
+```
+
+
 - Remove hard-coded log parsing indexes
 - Remove duplicated code
 - Only show log files with HUMR data
