@@ -1,6 +1,6 @@
 {
   "name": "mukaderabbit.humr",
-  "version": "2.0.0-beta.1",  
+  "version": "2.0.0-alpha.1",  
   "displayName": "Hyakuashi Udon Motion Recorder",
   "description": "Motion capture solution for VRChat with Udon.",
   "unity": "2022.3",

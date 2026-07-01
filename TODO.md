@@ -1,44 +1,40 @@
 # TODO
 
 - [ ] English and Japanese localization
-- [ ] Update scene
 
 ## BaseRecorder.cs
 
 - [ ] Set hierarchy path as TargetName
 - [ ] Add take number and framerate to start tags
-- [ ] Add take number and frame count to end tags
-- [ ] Analyze frame times on recording end
+- [ ] Add take number, frame count and duration to end tags
 - [ ] Option for world relative or start position relative recording
 
 ## PlayerRecorder.cs
 
-- [x] Do not start recording before avatar loads
-- [ ] Record all players
+- [ ] T-pose on avatar change to calibrate hip height, save as first frame
 - [ ] Restart recording on avatar change or eye height change
+- [ ] Record hand and feet positions for IK
+- [ ] Record all players
 
 ## PlayerRecorder.prefab
 
-- [x] Add user interface with record button
-- [ ] T-pose on recording start
+- [ ] Add recording overlay
 
-## RecordLogLoader.cs
+## PlayerRecordingLoader.cs
 
-- [ ] Make compatible with previous Log syntax
-- [x] Export Generic animation
-- [ ] Load separate takes
+- [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations
+- [ ] Detect Avatar height mismatch, scale from calibrated first frame
 - [ ] Fix toes rotation
-- [ ] Include displayname and take number in exported FBX
-- [ ] Load Object recordings
+- [ ] Include displayname and take number in exported animations
 
-## RecordLogLoaderEditor.cs
+## PlayerRecordingLoaderEditor.cs
 
-- [x] Only show log files with HUMR data
-- [x] Choose DisplayName from dropdown
+- [ ] List all log files, but show if they have None, Standard or Legacy recordings
+- [ ] Rename button "LoadLogToExportAnim" -> "Load recording and export `.fbx`"
 - [ ] Export Mode (Humanoid/Generic) dropdown
-- [x] Explore log file path in advanced foldout
-- [ ] Take selector
+- [ ] List takes with durations and checkmarks to include them
 
-## HumrSampleScene.unity
+## Samples
 
+- [ ] Make `Humr Sample Scene.unity` into a package sample
 - [ ] Add canvas with instructions

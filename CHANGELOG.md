@@ -9,33 +9,33 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 ### Added
 
-- Combine Recorder and OutputLogLoader .unitypackages
+- Select player DisplayName from a dropdown
+- Button to explore log file path button in advanced foldout
+- Add recording button to `PlayerRecorder.prefab`
+- Load separate takes
 - GitHub action to build .unitypackage
 - A new `MotionFrame` structure to hold the recorded data
-- Extract static methods to utility classes
-- Choose DisplayName from dropdown
-- Explore log file path button in advanced foldout
 
 ### Changed
 
-- Changed all class and prefab names
+- Complete rewrite of the codebase
+- Combine Recorder and OutputLogLoader `.unitypackage`s
+- List only log files with HUMR data
 - New OutputLog format: Semicolons to separate different types, start and end markers
 
+```txt
+[HUMR] Recording started;{RecordingType};{DisplayName}
+[HUMR] {DisplayName};{RecordTime};{HipsPosition};{HumanBoneRotations}
+[HUMR] Recording stopped;{RecordingType};{DisplayName}
 ```
--  [HUMR] Recording started;Player;DisplayName
--  [HUMR] DisplayName;RecordTime;HipsPosition;HumanBoneRotations;
--  [HUMR] Recording stopped;Player;DisplayName
-```
-
 
 - Remove hard-coded log parsing indexes
 - Remove duplicated code
-- Only show log files with HUMR data
 - Select newest log file automatically, sort in reverse order
 
 ### Fixed
 
-- Delay recording until avatar loads
+- Do not start recording until avatar loads
 - Open log file as read-only
 - Restore avatar pose after export
 
