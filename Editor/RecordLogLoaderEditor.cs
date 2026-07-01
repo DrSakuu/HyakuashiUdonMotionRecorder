@@ -25,7 +25,7 @@ namespace HUMR
             InitializeLogs(recordLoader);
 
             DrawLogFileDropdown(recordLoader);
-            DrawRecordingTargetDropdown(recordLoader);
+            if (!DrawRecordingTargetDropdown(recordLoader)) return;
 
             recordLoader.exportGenericAnimation = GUILayout.Toggle(recordLoader.exportGenericAnimation, "Export Generic Animation");
             
@@ -37,7 +37,7 @@ namespace HUMR
             if (_showAdvanced) return;
             
             var defaultPath = Environment.GetEnvironmentVariable("USERPROFILE") + @"\AppData\LocalLow\VRChat\VRChat";
-            if (recordLoader.logFileDirectory != defaultPath)
+            if (recordLoader != null && recordLoader.logFileDirectory != defaultPath)
             {
                 recordLoader.logFileDirectory = defaultPath;
             }
@@ -125,7 +125,7 @@ namespace HUMR
             }
         }
 
-        private static void DrawRecordingTargetDropdown(RecordLogLoader recordLoader)
+        private static bool DrawRecordingTargetDropdown(RecordLogLoader recordLoader)
         {
             var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
             var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Recording Target"));
@@ -143,11 +143,12 @@ namespace HUMR
 
                 recordLoader.recordingIndex = Mathf.Clamp(recordLoader.recordingIndex, 0, recordListStr.Length - 1);
                 recordLoader.recordingIndex = EditorGUI.Popup(popupRect, recordLoader.recordingIndex, recordListStr);
+                return true;
             }
-            else
-            {
-                EditorGUI.Popup(popupRect, 0, new string[] { "Recording data is corrupted." });
-            }
+
+            EditorGUI.Popup(popupRect, 0, new string[] { "Recording data is corrupted." });
+            return false;
+
         }
 
         private static void DrawExportButton(RecordLogLoader recordLoader)
