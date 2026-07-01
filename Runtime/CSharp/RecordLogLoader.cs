@@ -31,7 +31,7 @@ namespace HUMR
         public string[] recordFilePaths;
         public string[] recordFileNames;
         public int recordFileIndex;
-        public List<LogEntry> uniqueRecordings = new List<LogEntry>();
+        public List<LogEntry> recordings = new List<LogEntry>();
         public int recordingIndex;
         public bool exportGenericAnimation;
         
@@ -66,36 +66,37 @@ namespace HUMR
             recordFileNames = recordFilePaths
                 .Select(p => FilenameRegex.Replace(Path.GetFileName(p), ""))
                 .ToArray();
+        }
 
+        public void CollectRecordings()
+        {
+            var recordFile =  recordFilePaths[recordFileIndex];
             var foundEntries = new HashSet<string>();
-            uniqueRecordings.Clear();
-            foreach (var recordFile in recordFilePaths)
+            recordings.Clear();
+            foreach (var line in File.ReadLines(recordFile))
             {
-                foreach (var line in File.ReadLines(recordFile))
+                if (!line.Contains("-  [HUMR] START RECORDING")) continue;
+
+                var content = line.Split(new[] { "-  [HUMR] START RECORDING" }, StringSplitOptions.None)[1];
+                if (!foundEntries.Add(content)) continue;
+
+                var parts = content.Split(';');
+                if (parts.Length < 3) continue;
+
+                var typeStr = parts[1];
+                if (!Enum.TryParse<RecordingType>(typeStr, true, out var type))
                 {
-                    if (!line.Contains("-  [HUMR] START RECORDING")) continue;
-
-                    var content = line.Split(new[] { "-  [HUMR] START RECORDING" }, StringSplitOptions.None)[1];
-                    if (!foundEntries.Add(content)) continue;
-
-                    var parts = content.Split(';');
-                    if (parts.Length < 3) continue;
-
-                    var typeStr = parts[1];
-                    if (!Enum.TryParse<RecordingType>(typeStr, true, out var type))
-                    {
-                        type = RecordingType.Object;
-                    }
-
-                    uniqueRecordings.Add(new LogEntry { type = type, name = parts[2] });
+                    type = RecordingType.Object;
                 }
+
+                recordings.Add(new LogEntry { type = type, name = parts[2] });
             }
         }
 
         public void LoadRecordingAndExportAnim()
         {
             var recordFile = recordFilePaths[recordFileIndex];
-            _displayName = uniqueRecordings[recordingIndex].name;
+            _displayName = recordings[recordingIndex].name;
             if (!Validate()) return;
 
             var logLines = new List<string>();
