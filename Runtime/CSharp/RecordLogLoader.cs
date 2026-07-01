@@ -31,16 +31,16 @@ namespace HUMR
         public string[] recordFilePaths;
         public string[] recordFileNames;
         public int recordFileIndex;
-        public int recordIndex;
-        public List<LogEntry> uniqueRecords = new List<LogEntry>();
+        public List<LogEntry> uniqueRecordings = new List<LogEntry>();
+        public int recordingIndex;
+        public bool exportGenericAnimation;
         
         private Animator _animator;
         private UnityEditor.Animations.AnimatorController _controller;
         private static readonly Regex FilenameRegex = new Regex(@"^output_log_|\.txt$");
-
         private const string HumrPath = "Assets/HUMR";
         
-        private string[] _files;
+        private string _displayName;
 
         private struct BoneSnapshot
         {
@@ -68,7 +68,7 @@ namespace HUMR
                 .ToArray();
 
             var foundEntries = new HashSet<string>();
-            uniqueRecords.Clear();
+            uniqueRecordings.Clear();
             foreach (var recordFile in recordFilePaths)
             {
                 foreach (var line in File.ReadLines(recordFile))
@@ -87,7 +87,7 @@ namespace HUMR
                         type = RecordingType.Object;
                     }
 
-                    uniqueRecords.Add(new LogEntry { type = type, name = parts[2] });
+                    uniqueRecordings.Add(new LogEntry { type = type, name = parts[2] });
                 }
             }
         }
@@ -95,6 +95,7 @@ namespace HUMR
         public void LoadRecordingAndExportAnim()
         {
             var recordFile = recordFilePaths[recordFileIndex];
+            _displayName = uniqueRecordings[recordingIndex].name;
             if (!Validate()) return;
 
             var logLines = new List<string>();
@@ -103,11 +104,10 @@ namespace HUMR
                 while (0 <= sr.Peek())
                     logLines.Add(sr.ReadLine());
 
-            var displayName = uniqueRecords[0].name;
-            var segments = CSharpUtilities.PartitionLogLinesIntoSegments(logLines.ToArray(), displayName);
+            var segments = CSharpUtilities.PartitionLogLinesIntoSegments(logLines.ToArray(), _displayName);
             if (segments.Count == 0)
             {
-                Debug.LogWarning($"Motion Data with [{displayName}] does not exist in {recordFile}");
+                Debug.LogWarning($"Motion Data with [{_displayName}] does not exist in {recordFile}");
                 return;
             }
 
@@ -124,7 +124,8 @@ namespace HUMR
                 {
                     var clip = PopulateAnimationClip(segments[i]);
                     clip.name = $"{baseAnimName}_{i}";
-
+                    
+                    SaveGenericAnimationAsset(clip, baseAnimName, i);
                     AddClipToController(clip);
                 }
 
@@ -220,10 +221,9 @@ namespace HUMR
         
         private void SaveGenericAnimationAsset(AnimationClip clip, string baseName, int segmentIndex)
         {
-            var displayName = uniqueRecords[0].name;
-            // if (!exportGenericAnimation) return;
+            if (!exportGenericAnimation) return;
 
-            var animFolderPath = $"{HumrPath}/GenericAnimations/{displayName}";
+            var animFolderPath = $"{HumrPath}/GenericAnimations/{_displayName}";
             CreateDirectoryIfNotExist(animFolderPath);
 
             var animAssetPath = $"{animFolderPath}/{baseName}_{segmentIndex}.anim";
@@ -247,10 +247,9 @@ namespace HUMR
 
         private void ExportFBX(string fileName)
         {
-            var displayName = uniqueRecords[0].name;
             _animator.runtimeAnimatorController = _controller;
 
-            var exportFolderPath = $"{HumrPath}/FBXs/{CSharpUtilities.SanitizeFileName(displayName)}";
+            var exportFolderPath = $"{HumrPath}/FBXs/{CSharpUtilities.SanitizeFileName(_displayName)}";
             CreateDirectoryIfNotExist(exportFolderPath);
 
             var finalPath = $"{exportFolderPath}/{fileName}";
