@@ -23,14 +23,14 @@ namespace HUMR
         protected override void OnRecordTick()
         {
             if (!Utilities.IsValid(_player)) return;
-            
+
             RecordPlayerBones(_player, RecordTime);
         }
 
         public override void OnAvatarChanged(VRCPlayerApi player)
         {
             if (!player.isLocal || _avatarLoaded) return;
-            
+
             _avatarLoaded = true;
             if (recordOnStart) StartRecording();
         }

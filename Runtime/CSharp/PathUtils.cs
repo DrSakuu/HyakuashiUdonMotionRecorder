@@ -1,0 +1,45 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+using UnityEngine;
+
+namespace HUMR
+{
+    public static class PathUtils
+    {
+        public static void CreateDirectoryIfNotExist(string path)
+        {
+            if (Directory.Exists(path)) return;
+            Directory.CreateDirectory(path);
+        }
+
+        public static string SanitizeFileName(string input)
+        {
+            var sanitized = input;
+            foreach (var c in Path.GetInvalidFileNameChars()) sanitized = sanitized.Replace(c, '_');
+            return sanitized;
+        }
+
+        public static string GetBaseAnimationName(string filePath)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(filePath);
+            var match = Regex.Match(fileName, @"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}");
+
+            return match.Success ? match.Value : fileName;
+        }
+
+        public static string GetHierarchyPath(Transform self)
+        {
+            var path = self.gameObject.name;
+            var parent = self.parent;
+            while (parent.parent != null)
+            {
+                path = parent.name + "/" + path;
+                parent = parent.parent;
+            }
+
+            return path;
+        }
+    }
+}
