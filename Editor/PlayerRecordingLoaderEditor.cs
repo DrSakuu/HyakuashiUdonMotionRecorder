@@ -27,6 +27,8 @@ namespace HUMR
             DrawLogFileDropdown(recordLoader);
             if (!DrawRecordingTargetDropdown(recordLoader)) return;
         
+            GUILayout.Space(EditorGUIUtility.singleLineHeight);
+            
             recordLoader.exportGenericAnimation = GUILayout.Toggle(recordLoader.exportGenericAnimation, "Export Generic Animation");
             
             DrawExportButton(recordLoader);
@@ -51,7 +53,7 @@ namespace HUMR
             EditorGUI.indentLevel++;
             EditorGUILayout.BeginHorizontal();
             
-            recordLoader.logFileDirectory = EditorGUILayout.TextField("OutputLogPath", recordLoader.logFileDirectory);
+            recordLoader.logFileDirectory = EditorGUILayout.TextField("Output Log Path (resets when closed)", recordLoader.logFileDirectory);
             
             if (GUILayout.Button("Explore", GUILayout.Width(100)))
             {
@@ -96,7 +98,7 @@ namespace HUMR
         private static void DrawLogFileDropdown(PlayerRecordingLoader recordLoader)
         {
             var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
-            var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Record Log File"));
+            var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Recording Log File"));
             
             if (IsContextClick(popupRect))
             {
@@ -153,7 +155,7 @@ namespace HUMR
         
         private static void DrawExportButton(PlayerRecordingLoader recordLoader)
         {
-            if (!GUILayout.Button("LoadLogToExportAnim")) return;
+            if (!GUILayout.Button("Load recording and export .fbx")) return;
             
             if (recordLoader.TryGetComponent<RecordLogLoaderInterface>(out var receiver))
             {
