@@ -16,53 +16,89 @@ namespace HUMR
         
         public override void OnInspectorGUI()
         {
-            
             var recordLoader = (RecordLogLoader)target;
             if (recordLoader == null) return;
 
-            _showAdvanced = EditorGUILayout.Foldout(_showAdvanced, "Advanced: Custom Log Path");
-            if (_showAdvanced)
+            UpdateLogDirectory(recordLoader);
+            DrawAdvancedPathSection(recordLoader);
+            
+            InitializeLogs(recordLoader);
+
+            DrawLogFileDropdown(recordLoader);
+            DrawRecordingTargetDropdown(recordLoader);
+
+            recordLoader.exportGenericAnimation = GUILayout.Toggle(recordLoader.exportGenericAnimation, "Export Generic Animation");
+            
+            DrawExportButton(recordLoader);
+        }
+
+        private void UpdateLogDirectory(RecordLogLoader recordLoader)
+        {
+            if (_showAdvanced) return;
+            
+            var defaultPath = Environment.GetEnvironmentVariable("USERPROFILE") + @"\AppData\LocalLow\VRChat\VRChat";
+            if (recordLoader.logFileDirectory != defaultPath)
             {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.BeginHorizontal();
-                
-                recordLoader.logFileDirectory = EditorGUILayout.TextField("OutputLogPath", recordLoader.logFileDirectory);
-                if (GUILayout.Button("Explore", GUILayout.Width(100)))
+                recordLoader.logFileDirectory = defaultPath;
+            }
+        }
+
+        private void DrawAdvancedPathSection(RecordLogLoader recordLoader)
+        {
+            _showAdvanced = EditorGUILayout.Foldout(_showAdvanced, "Advanced: Custom Log Path");
+            if (!_showAdvanced) return;
+
+            EditorGUI.indentLevel++;
+            EditorGUILayout.BeginHorizontal();
+            
+            recordLoader.logFileDirectory = EditorGUILayout.TextField("OutputLogPath", recordLoader.logFileDirectory);
+            
+            if (GUILayout.Button("Explore", GUILayout.Width(100)))
+            {
+                OpenLogFolder(recordLoader.logFileDirectory);
+            }
+            
+            EditorGUILayout.EndHorizontal();
+            EditorGUI.indentLevel--;
+        }
+
+        private static void OpenLogFolder(string path)
+        {
+            if (Directory.Exists(path))
+            {
+                Process.Start(new ProcessStartInfo
                 {
-                    var path = Environment.GetEnvironmentVariable("USERPROFILE") + @"\AppData\LocalLow\VRChat\VRChat";
-                    if (Directory.Exists(path))
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = path,
-                            UseShellExecute = true,
-                            Verb = "open"
-                        });
-                    }
-                    else
-                    {
-                        UnityEngine.Debug.LogError($"Log path does not exist: {path}");
-                    }
-                }
-                EditorGUILayout.EndHorizontal();
-                EditorGUI.indentLevel--;
+                    FileName = path,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
             }
             else
             {
-                recordLoader.logFileDirectory = Environment.GetEnvironmentVariable("USERPROFILE");
-                recordLoader.logFileDirectory += @"\AppData\LocalLow\VRChat\VRChat";
+                UnityEngine.Debug.LogError($"Log path does not exist: {path}");
             }
-            
+        }
+
+        private static void InitializeLogs(RecordLogLoader recordLoader)
+        {
             if (recordLoader.recordFileNames == null)
             {
                 recordLoader.CollectLogFiles();
                 recordLoader.CollectRecordings();
             }
 
-            const string recordFileLabel = "Record Log File";
-            var recordFileControlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
-            var recordFilePopupRect = EditorGUI.PrefixLabel(recordFileControlRect, new GUIContent(recordFileLabel));
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && recordFilePopupRect.Contains(Event.current.mousePosition))
+            if (recordLoader.recordings == null)
+            {
+                recordLoader.CollectRecordings();
+            }
+        }
+
+        private static void DrawLogFileDropdown(RecordLogLoader recordLoader)
+        {
+            var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+            var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Record Log File"));
+            
+            if (IsContextClick(popupRect))
             {
                 recordLoader.CollectLogFiles();
                 recordLoader.CollectRecordings();
@@ -70,40 +106,65 @@ namespace HUMR
 
             if (recordLoader.recordFileNames != null && recordLoader.recordFileNames.Length > 0)
             {
-                recordLoader.recordFileIndex = EditorGUI.Popup(recordFilePopupRect, recordLoader.recordFileIndex, recordLoader.recordFileNames);
+                EditorGUI.BeginChangeCheck();
+                var selectedIndex = EditorGUI.Popup(popupRect, recordLoader.recordFileIndex, recordLoader.recordFileNames);
+                if (!EditorGUI.EndChangeCheck()) return;
+                
+                recordLoader.recordFileIndex = selectedIndex;
+                recordLoader.CollectRecordings();
+                recordLoader.recordingIndex = 0;
             }
             else
             {
-                var logFilesCount = recordLoader.logFilePaths.Length;
-                var noRecordsMessage = logFilesCount > 0 ? $"Found {logFilesCount} log files but they don't have HUMR recordings." : "No logs found.";
-                var emptyOptions = new string[] { noRecordsMessage };
-                EditorGUI.Popup(recordFilePopupRect, 0, emptyOptions);
-                return;
+                var logFilesCount = recordLoader.logFilePaths?.Length ?? 0;
+                var noRecordsMessage = logFilesCount > 0 
+                    ? $"Found {logFilesCount} log files but they don't have HUMR recordings." 
+                    : "No logs found.";
+                
+                EditorGUI.Popup(popupRect, 0, new string[] { noRecordsMessage });
             }
+        }
+
+        private static void DrawRecordingTargetDropdown(RecordLogLoader recordLoader)
+        {
+            var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+            var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Recording Target"));
             
-            if (recordLoader.recordings == null) recordLoader.CollectRecordings();
-            
-            const string recordingsLabel = "Recording Target";
-            var recordingControlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
-            var recordingPopupRect = EditorGUI.PrefixLabel(recordingControlRect, new GUIContent(recordingsLabel));
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && recordingPopupRect.Contains(Event.current.mousePosition))
+            if (IsContextClick(popupRect))
             {
                 recordLoader.CollectRecordings();
             }
 
-            var recordListStr = recordLoader.recordings
-                .Select(entry => $"{entry.type}: {entry.name}")
-                .ToArray();
-            recordLoader.recordingIndex = EditorGUI.Popup(recordingPopupRect, recordLoader.recordingIndex, recordListStr);
+            if (recordLoader.recordings != null && recordLoader.recordings.Count > 0)
+            {
+                var recordListStr = recordLoader.recordings
+                    .Select(entry => $"{entry.type}: {entry.name}")
+                    .ToArray();
 
-            recordLoader.exportGenericAnimation = GUILayout.Toggle(recordLoader.exportGenericAnimation, "Export Generic Animation");
-            
+                recordLoader.recordingIndex = Mathf.Clamp(recordLoader.recordingIndex, 0, recordListStr.Length - 1);
+                recordLoader.recordingIndex = EditorGUI.Popup(popupRect, recordLoader.recordingIndex, recordListStr);
+            }
+            else
+            {
+                EditorGUI.Popup(popupRect, 0, new string[] { "Recording data is corrupted." });
+            }
+        }
+
+        private static void DrawExportButton(RecordLogLoader recordLoader)
+        {
             if (!GUILayout.Button("LoadLogToExportAnim")) return;
             
             if (recordLoader.TryGetComponent<RecordLogLoaderInterface>(out var receiver))
             {
                 receiver.LoadRecordingAndExportAnim();
             }
+        }
+
+        private static bool IsContextClick(Rect rect)
+        {
+            return Event.current.type == EventType.MouseDown && 
+                   Event.current.button == 0 && 
+                   rect.Contains(Event.current.mousePosition);
         }
     }
 #endif
