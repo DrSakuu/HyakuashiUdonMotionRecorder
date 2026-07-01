@@ -150,9 +150,9 @@ namespace HUMR
             switch (recordingType)
             {
                 case RecordingType.Object:
-                    return "OBJECT";
+                    return "Object";
                 case RecordingType.Player:
-                    return "PLAYER";
+                    return "Player";
                 default:
                     return "UNKNOWN";
             }

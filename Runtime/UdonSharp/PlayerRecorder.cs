@@ -1,5 +1,3 @@
-// HumanoidRecorder.cs
-using UnityEngine;
 using VRC.SDKBase;
 
 namespace HUMR
@@ -12,12 +10,13 @@ namespace HUMR
         public override void Start()
         {
             _player = Networking.LocalPlayer;
+            RecordType = RecordingType.Player;
+            ObjectName = _player.displayName;
         }
 
         public override void StartRecording()
         {
             base.StartRecording();
-            RecordStart(RecordingType.Player, _player.displayName); 
             RecordPlayerBones(_player, RecordTime);
         }
 
@@ -28,18 +27,12 @@ namespace HUMR
             RecordPlayerBones(_player, RecordTime);
         }
 
-        public override void StopRecording()
-        {
-            RecordStop(RecordingType.Player, _player.displayName);
-            base.StopRecording();
-        }
-
         public override void OnAvatarChanged(VRCPlayerApi player)
         {
-            if (!player.isLocal || _avatarLoaded || !recordOnStart) return;
+            if (!player.isLocal || _avatarLoaded) return;
             
-            StartRecording();
             _avatarLoaded = true;
+            if (recordOnStart) StartRecording();
         }
     }
 }
