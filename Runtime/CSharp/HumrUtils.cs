@@ -25,8 +25,12 @@ namespace HUMR
         public List<MotionFrame> Frames { get; set; } = new List<MotionFrame>();
     }
     
-    public class CSharpUtilities : MonoBehaviour
+    public static class HumrUtils
     {
+        public const string HumrTag = "[HUMR]";
+        public const string LogMatchTarget = "-  [HUMR] ";
+        public const string RecordingStarted = "Recording started";
+        public const string RecordingStopped = "Recording stopped";
 
         public static string GetHierarchyPath(Transform self)
         {
@@ -52,14 +56,13 @@ namespace HUMR
             var currentSegment = new MotionSegment();
     
             var beforeTime = -1f;
-            const string matchTarget = "-  [HUMR] ";
 
             foreach (var line in lines)
             {
-                if (!line.Contains(matchTarget)) continue;
+                if (!line.Contains(LogMatchTarget)) continue;
 
-                var tagIndex = line.IndexOf(matchTarget, StringComparison.Ordinal);
-                var payload = line.Substring(tagIndex + matchTarget.Length);
+                var tagIndex = line.IndexOf(LogMatchTarget, StringComparison.Ordinal);
+                var payload = line.Substring(tagIndex + LogMatchTarget.Length);
 
                 var parts = payload.Split(';');
                 if (parts.Length < 4) continue; 
@@ -160,17 +163,17 @@ namespace HUMR
         
         public static void HumrLog(object message)
         {
-            Debug.Log($"[HUMR] {message}");
+            Debug.Log($"{HumrTag} {message}");
         }
         
         public static void HumrWarning(object message)
         {
-            Debug.LogWarning($"[HUMR] {message}");
+            Debug.LogWarning($"{HumrTag} {message}");
         }
         
         public static void HumrAssertion(object message)
         {
-            Debug.LogAssertion($"[HUMR] {message}");
+            Debug.LogAssertion($"{HumrTag} {message}");
         }
     }
 }

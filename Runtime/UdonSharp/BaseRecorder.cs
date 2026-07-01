@@ -91,7 +91,7 @@ namespace HUMR
 
             var outputString = string.Join(VariableDelimiter, name, timeStr, positionStr, rotationStr, scaleStr);
     
-            CSharpUtilities.HumrLog(outputString);
+            HumrUtils.HumrLog(outputString);
         }
 
         protected static void RecordPlayerBones(VRCPlayerApi player, float time)
@@ -110,7 +110,7 @@ namespace HUMR
                 outputString = string.Join(VariableDelimiter, outputString, rotationStr);
             }
             
-            CSharpUtilities.HumrLog(outputString);
+            HumrUtils.HumrLog(outputString);
         }
 
         private static string FormatVector3Components(Vector3 vector3)
@@ -127,12 +127,12 @@ namespace HUMR
 
         private static void RecordStart(RecordingType recType, string recName)
         {
-            CSharpUtilities.HumrLog(string.Join(VariableDelimiter, "Recording started", CSharpUtilities.RecTypeToString(recType), recName));
+            HumrUtils.HumrLog(string.Join(VariableDelimiter, HumrUtils.RecordingStarted, HumrUtils.RecTypeToString(recType), recName));
         }
 
         private static void RecordStop(RecordingType recType, string recName)
         {
-            CSharpUtilities.HumrLog(string.Join(VariableDelimiter, "Recording stopped", CSharpUtilities.RecTypeToString(recType), recName));
+            HumrUtils.HumrLog(string.Join(VariableDelimiter, HumrUtils.RecordingStopped, HumrUtils.RecTypeToString(recType), recName));
         }
     }
 }
