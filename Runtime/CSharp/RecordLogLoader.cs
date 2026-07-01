@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -10,10 +11,17 @@ using UnityEngine.EventSystems;
 namespace HUMR
 {
     [Serializable]
+    public class RecordFileEntry
+    {
+        public string path;
+        public LogFileType type;
+    }
+    
+    [Serializable]
     public class LogEntry
     {
-        public RecordingType type;
         public string name;
+        public RecordingType type;
     }
 
     public interface RecordLogLoaderInterface : IEventSystemHandler
@@ -28,7 +36,8 @@ namespace HUMR
     {
         public string logFileDirectory;
         public string[] logFilePaths;
-        public string[] recordFilePaths;
+        
+        public List<RecordFileEntry> recordFiles = new List<RecordFileEntry>();
         public string[] recordFileNames;
         public int recordFileIndex;
         public List<LogEntry> recordings = new List<LogEntry>();
@@ -37,8 +46,7 @@ namespace HUMR
         
         private Animator _animator;
         private UnityEditor.Animations.AnimatorController _controller;
-        private static readonly Regex FilenameRegex = new Regex(@"^output_log_|\.txt$");
-        private const string HumrPath = "Assets/HUMR";
+        private static readonly Regex LogFileRegex = new Regex(@"^output_log_|\.txt$");
         
         private string _displayName;
 
@@ -58,59 +66,133 @@ namespace HUMR
             if (!Directory.Exists(logFileDirectory)) return;
 
             logFilePaths = Directory.GetFiles(logFileDirectory, "*.txt");
-            recordFilePaths = logFilePaths
-                .Where(file => File.ReadLines(file).Any(line => line.Contains(HumrUtils.LogMatchTarget)))
-                .OrderBy(file => File.GetLastWriteTime(file))
-                .Reverse()
-                .ToArray();
-            recordFileNames = recordFilePaths
-                .Select(p => FilenameRegex.Replace(Path.GetFileName(p), ""))
+            
+            var discoveredEntries = new List<RecordFileEntry>();
+
+            foreach (var file in logFilePaths)
+            {
+                var isStandard = false;
+                var isLegacy = false;
+
+                foreach (var line in File.ReadLines(file))
+                {
+                    if (line.Contains(HumrUtils.LogMatchTarget)) isStandard = true;
+                    if (line.Contains(HumrUtils.LegacyLogMatchTarget)) isLegacy = true;
+                    if (isStandard || isLegacy) break; 
+                }
+
+                if (isStandard)
+                {
+                    discoveredEntries.Add(new RecordFileEntry { path = file, type = LogFileType.Standard });
+                }
+                else if (isLegacy)
+                {
+                    discoveredEntries.Add(new RecordFileEntry { path = file, type = LogFileType.Legacy });
+                }
+            }
+
+            recordFiles = discoveredEntries
+                .OrderByDescending(e => File.GetLastWriteTime(e.path))
+                .ToList();
+
+            recordFileNames = recordFiles
+                .Select(e => LogFileRegex.Replace(Path.GetFileName(e.path), ""))
                 .ToArray();
         }
 
         public void CollectRecordings()
         {
-            var recordFile =  recordFilePaths[recordFileIndex];
-            var foundEntries = new HashSet<string>();
+            if (recordFileIndex < 0 || recordFileIndex >= recordFiles.Count) return;
+
+            var currentFile = recordFiles[recordFileIndex];
             recordings.Clear();
-            foreach (var line in File.ReadLines(recordFile))
+
+            if (currentFile.type == LogFileType.Legacy)
             {
+                var matchTarget = HumrUtils.LegacyLogMatchTarget;
+                
+                foreach (var line in File.ReadLines(currentFile.path))
+                {
+                    int prefixIdx = line.IndexOf(matchTarget);
+                    if (prefixIdx == -1) continue;
+
+                    string dataSegment = line.Substring(prefixIdx + matchTarget.Length).Trim();
+                    
+                    int digitIdx = -1;
+                    for (int i = 0; i < dataSegment.Length; i++)
+                    {
+                        if (char.IsDigit(dataSegment[i]))
+                        {
+                            digitIdx = i;
+                            break;
+                        }
+                    }
+
+                    if (digitIdx != -1)
+                    {
+                        string displayName = dataSegment.Substring(0, digitIdx);
+                        // Legacy recordings are always processed as Player type
+                        recordings.Add(new LogEntry { type = RecordingType.Player, name = displayName });
+                        break; 
+                    }
+                }
+            }
+            else
+            {
+                var foundEntries = new HashSet<string>();
                 var recordingStartLogMatch = $"{HumrUtils.LogMatchTarget}{HumrUtils.RecordingStarted}";
                 
-                if (!line.Contains(recordingStartLogMatch)) continue;
-                
-                var content = line.Split(new[] { recordingStartLogMatch }, StringSplitOptions.None)[1];
-                if (!foundEntries.Add(content)) continue;
-
-                var parts = content.Split(';');
-                if (parts.Length < 3) continue;
-
-                var typeStr = parts[1];
-                if (!Enum.TryParse<RecordingType>(typeStr, true, out var type))
+                foreach (var line in File.ReadLines(currentFile.path))
                 {
-                    type = RecordingType.Object;
-                }
+                    if (!line.Contains(recordingStartLogMatch)) continue;
+                    
+                    var content = line.Split(new[] { recordingStartLogMatch }, StringSplitOptions.None)[1];
+                    if (!foundEntries.Add(content)) continue;
 
-                recordings.Add(new LogEntry { type = type, name = parts[2] });
+                    ParseAndAddLogEntry(content);
+                }
             }
+        }
+        
+        private void ParseAndAddLogEntry(string content)
+        {
+            var parts = content.Split(';');
+            if (parts.Length < 3) return;
+
+            var typeStr = parts[1];
+            if (!Enum.TryParse<RecordingType>(typeStr, true, out var type))
+            {
+                type = RecordingType.Object;
+            }
+
+            recordings.Add(new LogEntry { type = type, name = parts[2] });
         }
 
         public void LoadRecordingAndExportAnim()
         {
-            var recordFile = recordFilePaths[recordFileIndex];
+            if (recordFileIndex < 0 || recordFileIndex >= recordFiles.Count) return;
+            if (recordingIndex < 0 || recordingIndex >= recordings.Count) return;
+
+            var currentFile = recordFiles[recordFileIndex];
             _displayName = recordings[recordingIndex].name;
             if (!Validate()) return;
 
-            var logLines = new List<string>();
-            using (var fs = new FileStream(recordFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var sr = new StreamReader(fs))
-                while (0 <= sr.Peek())
-                    logLines.Add(sr.ReadLine());
+            var logLines = LoadLogFileLines(currentFile.path);
 
-            var segments = HumrUtils.PartitionLogLinesIntoSegments(logLines.ToArray(), _displayName);
-            if (segments.Count == 0)
+            List<MotionSegment> segments;
+
+            if (currentFile.type == LogFileType.Legacy)
             {
-                Debug.LogWarning($"Motion Data with [{_displayName}] does not exist in {recordFile}");
+                segments = ParseLegacySegments(logLines, _displayName);
+            }
+            else
+            {
+                segments = HumrUtils.PartitionLogLinesIntoSegments(logLines.ToArray(), _displayName);
+            }
+
+            if (segments == null || segments.Count == 0)
+            {
+                Debug.LogWarning($"Motion Data with [{_displayName}] does not exist in {currentFile.path}");
                 return;
             }
 
@@ -118,26 +200,114 @@ namespace HUMR
 
             try
             {
-                CreateDirectoryIfNotExist(HumrPath);
-                SetupAnimatorController();
-
-                var baseAnimName = HumrUtils.GetBaseAnimationName(recordFile);
-
-                for (var i = 0; i < segments.Count; i++)
-                {
-                    var clip = PopulateAnimationClip(segments[i]);
-                    clip.name = $"{baseAnimName}_{i}";
-                    
-                    SaveGenericAnimationAsset(clip, baseAnimName, i);
-                    AddClipToController(clip);
-                }
-
-                ExportFBX(baseAnimName);
+                ExecuteExportPipeline(segments, currentFile.path);
             }
             finally
             {
                 RestoreAvatarPose();
             }
+        }
+        
+        private List<MotionSegment> ParseLegacySegments(List<string> logLines, string targetName)
+        {
+            var segments = new List<MotionSegment>();
+            var currentFrames = new List<MotionFrame>();
+            float lastTime = -1f;
+            var matchTarget = HumrUtils.LegacyLogMatchTarget;
+
+            foreach (var line in logLines)
+            {
+                int prefixIdx = line.IndexOf(matchTarget);
+                if (prefixIdx == -1) continue;
+
+                string dataSegment = line.Substring(prefixIdx + matchTarget.Length).Trim();
+                
+                if (!dataSegment.StartsWith(targetName)) continue;
+
+                string numericDataRaw = dataSegment.Substring(targetName.Length);
+                string[] tokens = numericDataRaw.Split(',');
+                if (tokens.Length < 4) continue;
+
+                var frame = new MotionFrame
+                {
+                    RecordTime = float.Parse(tokens[0], CultureInfo.InvariantCulture),
+                    HipPosition = new Vector3(
+                        float.Parse(tokens[1], CultureInfo.InvariantCulture),
+                        float.Parse(tokens[2], CultureInfo.InvariantCulture),
+                        float.Parse(tokens[3], CultureInfo.InvariantCulture)
+                    ),
+                    BoneRotations = new List<Quaternion>()
+                };
+                
+                try
+                {
+                    for (int i = 4; i + 3 < tokens.Length; i += 4)
+                    {
+                        frame.BoneRotations.Add(new Quaternion(
+                            float.Parse(tokens[i], CultureInfo.InvariantCulture),
+                            float.Parse(tokens[i + 1], CultureInfo.InvariantCulture),
+                            float.Parse(tokens[i + 2], CultureInfo.InvariantCulture),
+                            float.Parse(tokens[i + 3], CultureInfo.InvariantCulture)
+                        ));
+                    }
+
+                    if (lastTime >= 0 && (frame.RecordTime < lastTime || frame.RecordTime - lastTime > 1.0f))
+                    {
+                        if (currentFrames.Count > 0)
+                        {
+                            segments.Add(new MotionSegment { Frames = new List<MotionFrame>(currentFrames) });
+                            currentFrames.Clear();
+                        }
+                    }
+
+                    currentFrames.Add(frame);
+                    lastTime = frame.RecordTime;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Failed to interpret legacy sequential data array line: {ex.Message}");
+                }
+            }
+
+            if (currentFrames.Count > 0)
+            {
+                segments.Add(new MotionSegment { Frames = currentFrames });
+            }
+
+            return segments;
+        }
+
+        private static List<string> LoadLogFileLines(string path)
+        {
+            var lines = new List<string>();
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var sr = new StreamReader(fs))
+            {
+                while (0 <= sr.Peek())
+                {
+                    lines.Add(sr.ReadLine());
+                }
+            }
+            return lines;
+        }
+
+        private void ExecuteExportPipeline(List<MotionSegment> segments, string filePath)
+        {
+            CreateDirectoryIfNotExist(HumrUtils.HumrPath);
+            SetupAnimatorController();
+
+            var baseAnimName = HumrUtils.GetBaseAnimationName(filePath);
+
+            for (var i = 0; i < segments.Count; i++)
+            {
+                var clip = PopulateAnimationClip(segments[i]);
+                clip.name = $"{baseAnimName}_{i}";
+                
+                SaveGenericAnimationAsset(clip, baseAnimName, i);
+                AddClipToController(clip);
+            }
+
+            ExportFBX(baseAnimName);
         }
 
         private bool Validate()
@@ -185,14 +355,13 @@ namespace HUMR
 
         private static void CreateDirectoryIfNotExist(string path)
         {
-            //存在するかどうか判定しなくても良いみたいだが気持ち悪いので
             if (Directory.Exists(path)) return;
             Directory.CreateDirectory(path);
         }
 
         private void SetupAnimatorController()
         {
-            var controllerFolderPath = $"{HumrPath}/AnimationController";
+            var controllerFolderPath = $"{HumrUtils.HumrPath}/AnimationController";
             var controllerPath = $"{controllerFolderPath}/TmpAniCon.controller";
 
             if (_controller == null)
@@ -226,7 +395,7 @@ namespace HUMR
         {
             if (!exportGenericAnimation) return;
 
-            var animFolderPath = $"{HumrPath}/GenericAnimations/{_displayName}";
+            var animFolderPath = $"{HumrUtils.HumrPath}/GenericAnimations/{_displayName}";
             CreateDirectoryIfNotExist(animFolderPath);
 
             var animAssetPath = $"{animFolderPath}/{baseName}_{segmentIndex}.anim";
@@ -252,7 +421,7 @@ namespace HUMR
         {
             _animator.runtimeAnimatorController = _controller;
 
-            var exportFolderPath = $"{HumrPath}/FBXs/{HumrUtils.SanitizeFileName(_displayName)}";
+            var exportFolderPath = $"{HumrUtils.HumrPath}/FBXs/{HumrUtils.SanitizeFileName(_displayName)}";
             CreateDirectoryIfNotExist(exportFolderPath);
 
             var finalPath = $"{exportFolderPath}/{fileName}";
@@ -262,22 +431,28 @@ namespace HUMR
         private AnimationClip PopulateAnimationClip(MotionSegment segment)
         {
             var frameCount = segment.Frames.Count;
-            var totalCurves = 3 + (HumanTrait.BoneName.Length * 4); // 3 for root position, 4 coordinates per bone rotation
+            var totalCurves = 3 + (HumanTrait.BoneName.Length * 4); 
 
             var keyframes = InitializeKeyframeArrays(totalCurves, frameCount);
 
             for (var frameIdx = 0; frameIdx < frameCount; frameIdx++)
             {
                 var frame = segment.Frames[frameIdx];
-                var localHipPos = ProcessHipPosition(frame.HipPosition);
-                keyframes[0][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.x);
-                keyframes[1][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.y);
-                keyframes[2][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.z);
-                ApplyWorldRotationsToAvatar(frame);
-                RecordLocalRotationsToKeyframes(keyframes, frameIdx, frame);
+                ProcessFrameKeyframes(frame, keyframes, frameIdx);
             }
 
             return CreateAndBindCurves(keyframes);
+        }
+        
+        private void ProcessFrameKeyframes(MotionFrame frame, Keyframe[][] keyframes, int frameIdx)
+        {
+            var localHipPos = ProcessHipPosition(frame.HipPosition);
+            keyframes[0][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.x);
+            keyframes[1][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.y);
+            keyframes[2][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.z);
+            
+            ApplyWorldRotationsToAvatar(frame);
+            RecordLocalRotationsToKeyframes(keyframes, frameIdx, frame);
         }
 
         private static Keyframe[][] InitializeKeyframeArrays(int totalCurves, int frameCount)
@@ -290,12 +465,8 @@ namespace HUMR
             return keyframes;
         }
 
-        /// <summary>
-        /// Converts a raw world hip position into the local space of the parent armature.
-        /// </summary>
         private Vector3 ProcessHipPosition(Vector3 rawHipPos)
         {
-            //TODO: fix feet sinking into the ground
             var hipTransform = _animator.GetBoneTransform(HumanBodyBones.Hips);
             if (hipTransform == null || hipTransform.parent == null) return rawHipPos;
 
@@ -303,14 +474,10 @@ namespace HUMR
             return armatureParent.InverseTransformPoint(rawHipPos);
         }
 
-        /// <summary>
-        /// Iterates across the active avatar bones applying the pre-parsed world quaternions.
-        /// </summary>
         private void ApplyWorldRotationsToAvatar(MotionFrame frame)
         {
             for (var k = 0; k < HumanTrait.BoneName.Length; k++)
             {
-                // Ensure the frame contains this index
                 if (k >= frame.BoneRotations.Count) break;
 
                 var boneTransform = _animator.GetBoneTransform((HumanBodyBones)k);
@@ -320,9 +487,6 @@ namespace HUMR
             }
         }
 
-        /// <summary>
-        /// Records current frame-state local transforms down out into curve reference arrays.
-        /// </summary>
         private void RecordLocalRotationsToKeyframes(Keyframe[][] keyframes, int frameIdx, MotionFrame frame)
         {
             for (var k = 0; k < HumanTrait.BoneName.Length; k++)
