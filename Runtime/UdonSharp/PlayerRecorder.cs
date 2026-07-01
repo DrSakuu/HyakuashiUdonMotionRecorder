@@ -7,6 +7,7 @@ namespace HUMR
     public class PlayerRecorder : BaseRecorder
     {
         private VRCPlayerApi _player;
+        private bool _avatarLoaded;
 
         public override void Start()
         {
@@ -33,11 +34,12 @@ namespace HUMR
             base.StopRecording();
         }
 
-        public override void OnPlayerJoined(VRCPlayerApi player)
+        public override void OnAvatarChanged(VRCPlayerApi player)
         {
-            if (!player.isLocal) return;
+            if (!player.isLocal || _avatarLoaded || !recordOnStart) return;
             
-            if (recordOnStart) StartRecording();
+            StartRecording();
+            _avatarLoaded = true;
         }
     }
 }
