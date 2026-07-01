@@ -4,10 +4,11 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace HUMR
 {
+    // Editor components prevent world build 
+#if UNITY_EDITOR
     [CustomEditor(typeof(RecordLogLoader))]
     public class RecordLogLoaderEditor : Editor
     {
@@ -88,4 +89,5 @@ namespace HUMR
             }
         }
     }
+#endif
 }

@@ -21,6 +21,8 @@ namespace HUMR
         void LoadRecordingAndExportAnim();
     }
 
+    // Editor components prevent world build 
+#if UNITY_EDITOR
     [RequireComponent(typeof(Animator))]
     public class RecordLogLoader : MonoBehaviour, RecordLogLoaderInterface
     {
@@ -363,4 +365,5 @@ namespace HUMR
             return clip;
         }
     }
+#endif 
 }
