@@ -5,31 +5,36 @@
 A complete rewrite of the codebase so new features can be implemented more easily. Not compatible with previous versions.
 
 > [!WARNING]
-> Remove the old HUMR OutputLogLoader package and Prefabs, ReadMe, Scenes and Scripts in `Assets/HUMR` before importing.
+> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing. 
 
 ### Added
 
-- Combine Recorder and OutputLogLoader packages
+- Combine Recorder and OutputLogLoader .unitypackages
+- GitHub action to build .unitypackage
 - A new `MotionFrame` structure to hold the recorded data
 - Extract static methods to utility classes
-- GitHub action to build .unitypackage
 - Choose DisplayName from dropdown
-- Open log file path in advanced foldout
+- Explore log file path button in advanced foldout
 
 ### Changed
 
+- Changed all class and prefab names
 - New OutputLog format: Semicolons to separate different types, start and end markers
 - Remove hard-coded log parsing indexes
 - Remove duplicated code
-- Select newest log file automatically
 - Only show log files with HUMR data
+- Select newest log file automatically, sort in reverse order
 
 ### Fixed
 
+- Delay recording until avatar loads
 - Open log file as read-only
 - Restore avatar pose after export
 
 ### Removed
+
+- `InteractRecorder.cs`
+- `Recorder.prefab`
 
 ## [VCC_1.1.1] - 2026-06-09
 
