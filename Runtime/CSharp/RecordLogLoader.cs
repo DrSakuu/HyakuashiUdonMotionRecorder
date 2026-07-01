@@ -59,7 +59,7 @@ namespace HUMR
 
             logFilePaths = Directory.GetFiles(logFileDirectory, "*.txt");
             recordFilePaths = logFilePaths
-                .Where(file => File.ReadLines(file).Any(line => line.Contains("-  [HUMR] ")))
+                .Where(file => File.ReadLines(file).Any(line => line.Contains(HumrUtils.LogMatchTarget)))
                 .OrderBy(file => File.GetLastWriteTime(file))
                 .Reverse()
                 .ToArray();
@@ -75,9 +75,11 @@ namespace HUMR
             recordings.Clear();
             foreach (var line in File.ReadLines(recordFile))
             {
-                if (!line.Contains("-  [HUMR] START RECORDING")) continue;
-
-                var content = line.Split(new[] { "-  [HUMR] START RECORDING" }, StringSplitOptions.None)[1];
+                var recordingStartLogMatch = $"{HumrUtils.LogMatchTarget}{HumrUtils.RecordingStarted}";
+                
+                if (!line.Contains(recordingStartLogMatch)) continue;
+                
+                var content = line.Split(new[] { recordingStartLogMatch }, StringSplitOptions.None)[1];
                 if (!foundEntries.Add(content)) continue;
 
                 var parts = content.Split(';');
@@ -105,7 +107,7 @@ namespace HUMR
                 while (0 <= sr.Peek())
                     logLines.Add(sr.ReadLine());
 
-            var segments = CSharpUtilities.PartitionLogLinesIntoSegments(logLines.ToArray(), _displayName);
+            var segments = HumrUtils.PartitionLogLinesIntoSegments(logLines.ToArray(), _displayName);
             if (segments.Count == 0)
             {
                 Debug.LogWarning($"Motion Data with [{_displayName}] does not exist in {recordFile}");
@@ -119,7 +121,7 @@ namespace HUMR
                 CreateDirectoryIfNotExist(HumrPath);
                 SetupAnimatorController();
 
-                var baseAnimName = CSharpUtilities.GetBaseAnimationName(recordFile);
+                var baseAnimName = HumrUtils.GetBaseAnimationName(recordFile);
 
                 for (var i = 0; i < segments.Count; i++)
                 {
@@ -232,7 +234,7 @@ namespace HUMR
             if (File.Exists(animAssetPath))
             {
                 AssetDatabase.DeleteAsset(animAssetPath);
-                CSharpUtilities.HumrWarning($"Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
+                HumrUtils.HumrWarning($"Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
                 CleanControllerStates(clearAll: false);
             }
 
@@ -250,7 +252,7 @@ namespace HUMR
         {
             _animator.runtimeAnimatorController = _controller;
 
-            var exportFolderPath = $"{HumrPath}/FBXs/{CSharpUtilities.SanitizeFileName(_displayName)}";
+            var exportFolderPath = $"{HumrPath}/FBXs/{HumrUtils.SanitizeFileName(_displayName)}";
             CreateDirectoryIfNotExist(exportFolderPath);
 
             var finalPath = $"{exportFolderPath}/{fileName}";
@@ -341,7 +343,7 @@ namespace HUMR
         private AnimationClip CreateAndBindCurves(Keyframe[][] keyframes)
         {
             var clip = new AnimationClip();
-            var hipPath = CSharpUtilities.GetHierarchyPath(_animator.GetBoneTransform(0));
+            var hipPath = HumrUtils.GetHierarchyPath(_animator.GetBoneTransform(0));
 
             clip.SetCurve(hipPath, typeof(Transform), "localPosition.x", new AnimationCurve(keyframes[0]));
             clip.SetCurve(hipPath, typeof(Transform), "localPosition.y", new AnimationCurve(keyframes[1]));
@@ -352,7 +354,7 @@ namespace HUMR
                 var boneTransform = _animator.GetBoneTransform((HumanBodyBones)m);
                 if (boneTransform == null) continue;
 
-                var bonePath = CSharpUtilities.GetHierarchyPath(boneTransform);
+                var bonePath = HumrUtils.GetHierarchyPath(boneTransform);
                 var curveBaseIndex = (m * 4) + 3;
 
                 clip.SetCurve(bonePath, typeof(Transform), "localRotation.x", new AnimationCurve(keyframes[curveBaseIndex]));
