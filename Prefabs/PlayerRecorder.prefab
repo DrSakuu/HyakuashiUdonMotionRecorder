@@ -191,7 +191,7 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 2198187421064365204}
   startRecordButton: {fileID: 3404536332706373457}
   stopRecordButton: {fileID: 4156275033612179845}
-  recordOnStart: 1
+  recordOnStart: 0
   recordFramerate: 30
 --- !u!114 &2198187421064365204
 MonoBehaviour:
