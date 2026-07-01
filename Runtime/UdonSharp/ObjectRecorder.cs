@@ -1,29 +1,28 @@
-﻿// ObjectRecorder.cs
-using UnityEngine;
-
-namespace HUMR
+﻿namespace HUMR
 {
     public class ObjectRecorder : BaseRecorder
     {
-        [SerializeField, Tooltip("Identifier for the object to record.")]
-        private string objectName = "Object";
+        public override void Start()
+        {
+            base.Start();
+            RecordType = RecordingType.Object;
+            ObjectName = gameObject.name;
+        }
 
         public override void StartRecording()
         {
             base.StartRecording();
-            RecordStart(RecordingType.Object, objectName);
-            RecordObjectTransform(transform, objectName, RecordTime);
+            RecordObjectTransform(transform, ObjectName, RecordTime);
         }
 
         protected override void OnRecordTick()
         {
-            RecordObjectTransform(transform, objectName, RecordTime);
+            RecordObjectTransform(transform, ObjectName, RecordTime);
         }
 
         public override void StopRecording()
         {
-            RecordObjectTransform(transform, objectName, RecordTime);
-            RecordStop(RecordingType.Object, objectName);
+            RecordObjectTransform(transform, ObjectName, RecordTime);
             base.StopRecording();
         }
     }
