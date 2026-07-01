@@ -1,8 +1,7 @@
-﻿// BaseRecorder.cs
-
-using System.Globalization;
+﻿using System.Globalization;
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.UI;
 using VRC.SDKBase;
 
 namespace HUMR
@@ -10,12 +9,18 @@ namespace HUMR
     
     public class BaseRecorder : UdonSharpBehaviour
     {
+        [SerializeField, Tooltip("Start recording button, connect to StartRecording event.")]
+        private Button startRecordButton;
+        [SerializeField, Tooltip("Stop recording button, connect to StartRecording event.")]
+        private Button stopRecordButton;
         [SerializeField, Tooltip("Start recording immediately on scene load.")]
         protected bool recordOnStart = true;
         [SerializeField, Tooltip("Frames per second for recording.")]
         protected float recordFramerate = 30;
         
         protected float RecordTime;
+        protected RecordingType RecordType = RecordingType.Object;
+        protected string ObjectName = "Object";
 
         private bool _isRecording;
         private float _recordInterval;
@@ -45,12 +50,22 @@ namespace HUMR
             RecordTime = 0f;
             _nextRecordTime = RecordTime;
             _recordInterval = 1f / recordFramerate;
+            RecordStart(RecordType, ObjectName);
             _isRecording = true;
+            UpdateUI();
         }
         
         public virtual void StopRecording()
         {
+            RecordStop(RecordType, ObjectName);
             _isRecording = false;
+            UpdateUI();
+        }
+
+        private void UpdateUI()
+        {
+            if (startRecordButton != null) startRecordButton.gameObject.SetActive(!_isRecording);
+            if (stopRecordButton != null) stopRecordButton.gameObject.SetActive(_isRecording);
         }
 
         protected virtual void OnRecordTick() { }
@@ -110,14 +125,14 @@ namespace HUMR
             return trimmedQuaternion.Replace(" ", "");
         }
 
-        protected static void RecordStart(RecordingType recType, string recName)
+        private static void RecordStart(RecordingType recType, string recName)
         {
-            CSharpUtilities.HumrLog(string.Join(VariableDelimiter, "START RECORDING", CSharpUtilities.RecTypeToString(recType), recName));
+            CSharpUtilities.HumrLog(string.Join(VariableDelimiter, "Recording started", CSharpUtilities.RecTypeToString(recType), recName));
         }
 
-        protected static void RecordStop(RecordingType recType, string recName)
+        private static void RecordStop(RecordingType recType, string recName)
         {
-            CSharpUtilities.HumrLog(string.Join(VariableDelimiter, "STOP RECORDING", CSharpUtilities.RecTypeToString(recType), recName));
+            CSharpUtilities.HumrLog(string.Join(VariableDelimiter, "Recording stopped", CSharpUtilities.RecTypeToString(recType), recName));
         }
     }
 }
