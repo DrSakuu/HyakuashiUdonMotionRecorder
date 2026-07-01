@@ -53,33 +53,48 @@ namespace HUMR
                 recordLoader.logFileDirectory += @"\AppData\LocalLow\VRChat\VRChat";
             }
             
-            if (recordLoader.recordFileNames == null) recordLoader.CollectLogFiles();
-
-            const string label = "Record Log File";
-            var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
-            var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent(label));
-
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && popupRect.Contains(Event.current.mousePosition))
+            if (recordLoader.recordFileNames == null)
             {
                 recordLoader.CollectLogFiles();
+                recordLoader.CollectRecordings();
+            }
+
+            const string recordFileLabel = "Record Log File";
+            var recordFileControlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+            var recordFilePopupRect = EditorGUI.PrefixLabel(recordFileControlRect, new GUIContent(recordFileLabel));
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && recordFilePopupRect.Contains(Event.current.mousePosition))
+            {
+                recordLoader.CollectLogFiles();
+                recordLoader.CollectRecordings();
             }
 
             if (recordLoader.recordFileNames != null && recordLoader.recordFileNames.Length > 0)
             {
-                recordLoader.recordFileIndex = EditorGUI.Popup(popupRect, recordLoader.recordFileIndex, recordLoader.recordFileNames);
+                recordLoader.recordFileIndex = EditorGUI.Popup(recordFilePopupRect, recordLoader.recordFileIndex, recordLoader.recordFileNames);
             }
             else
             {
                 var logFilesCount = recordLoader.logFilePaths.Length;
                 var noRecordsMessage = logFilesCount > 0 ? $"Found {logFilesCount} log files but they don't have HUMR recordings." : "No logs found.";
                 var emptyOptions = new string[] { noRecordsMessage };
-                EditorGUI.Popup(popupRect, 0, emptyOptions);
+                EditorGUI.Popup(recordFilePopupRect, 0, emptyOptions);
                 return;
             }
-            var recordListStr = recordLoader.uniqueRecordings
+            
+            if (recordLoader.recordings == null) recordLoader.CollectRecordings();
+            
+            const string recordingsLabel = "Recording Target";
+            var recordingControlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+            var recordingPopupRect = EditorGUI.PrefixLabel(recordingControlRect, new GUIContent(recordingsLabel));
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && recordingPopupRect.Contains(Event.current.mousePosition))
+            {
+                recordLoader.CollectRecordings();
+            }
+
+            var recordListStr = recordLoader.recordings
                 .Select(entry => $"{entry.type}: {entry.name}")
                 .ToArray();
-            recordLoader.recordingIndex = EditorGUILayout.Popup("Recording", recordLoader.recordingIndex, recordListStr);
+            recordLoader.recordingIndex = EditorGUI.Popup(recordingPopupRect, recordLoader.recordingIndex, recordListStr);
 
             recordLoader.exportGenericAnimation = GUILayout.Toggle(recordLoader.exportGenericAnimation, "Export Generic Animation");
             

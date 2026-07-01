@@ -121,7 +121,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 ```
 -  [HUMR] Recording started;Player;DisplayName
--  [HUMR] DisplayName;recordTime;hipsPosition;HumanBoneRotations;
+-  [HUMR] DisplayName;RecordTime;HipsPosition;HumanBoneRotations;
 -  [HUMR] Recording stopped;Player;DisplayName
 ```
 
