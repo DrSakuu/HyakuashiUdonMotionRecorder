@@ -6,23 +6,23 @@
         {
             base.Start();
             RecordType = RecordingType.Object;
-            ObjectName = gameObject.name;
+            TargetName = gameObject.name;
         }
 
         public override void StartRecording()
         {
             base.StartRecording();
-            RecordObjectTransform(transform, ObjectName, RecordTime);
+            RecordObjectTransform(transform, TargetName, RecordTime);
         }
 
         protected override void OnRecordTick()
         {
-            RecordObjectTransform(transform, ObjectName, RecordTime);
+            RecordObjectTransform(transform, TargetName, RecordTime);
         }
 
         public override void StopRecording()
         {
-            RecordObjectTransform(transform, ObjectName, RecordTime);
+            RecordObjectTransform(transform, TargetName, RecordTime);
             base.StopRecording();
         }
     }
