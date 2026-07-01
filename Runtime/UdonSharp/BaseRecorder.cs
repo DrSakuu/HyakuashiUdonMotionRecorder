@@ -20,7 +20,7 @@ namespace HUMR
         
         protected float RecordTime;
         protected RecordingType RecordType = RecordingType.Object;
-        protected string ObjectName = "Object";
+        protected string TargetName = "Target";
 
         private bool _isRecording;
         private float _recordInterval;
@@ -50,14 +50,14 @@ namespace HUMR
             RecordTime = 0f;
             _nextRecordTime = RecordTime;
             _recordInterval = 1f / recordFramerate;
-            RecordStart(RecordType, ObjectName);
+            RecordStart(RecordType, TargetName);
             _isRecording = true;
             UpdateUI();
         }
         
         public virtual void StopRecording()
         {
-            RecordStop(RecordType, ObjectName);
+            RecordStop(RecordType, TargetName);
             _isRecording = false;
             UpdateUI();
         }

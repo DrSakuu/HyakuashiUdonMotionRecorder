@@ -11,7 +11,7 @@ namespace HUMR
         {
             _player = Networking.LocalPlayer;
             RecordType = RecordingType.Player;
-            ObjectName = _player.displayName;
+            TargetName = _player.displayName;
         }
 
         public override void StartRecording()
