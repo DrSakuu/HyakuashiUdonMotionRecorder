@@ -76,11 +76,13 @@ namespace HUMR
                 EditorGUI.Popup(popupRect, 0, emptyOptions);
                 return;
             }
-            var recordListStr = recordLoader.uniqueRecords
+            var recordListStr = recordLoader.uniqueRecordings
                 .Select(entry => $"{entry.type}: {entry.name}")
                 .ToArray();
-            recordLoader.recordIndex = EditorGUILayout.Popup("Recording", recordLoader.recordIndex, recordListStr);
+            recordLoader.recordingIndex = EditorGUILayout.Popup("Recording", recordLoader.recordingIndex, recordListStr);
 
+            recordLoader.exportGenericAnimation = GUILayout.Toggle(recordLoader.exportGenericAnimation, "Export Generic Animation");
+            
             if (!GUILayout.Button("LoadLogToExportAnim")) return;
             
             if (recordLoader.TryGetComponent<RecordLogLoaderInterface>(out var receiver))

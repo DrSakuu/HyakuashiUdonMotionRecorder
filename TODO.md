@@ -22,7 +22,7 @@
 ## RecordLogLoader.cs
 
 - [ ] Make compatible with previous Log syntax
-- [ ] Create Generic animation
+- [x] Export Generic animation
 - [ ] Load separate takes
 - [ ] Fix toes rotation
 - [ ] Include displayname and take number in exported FBX
