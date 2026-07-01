@@ -9,7 +9,6 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 - Combine Recorder and OutputLogLoader packages
 - New OutputLog format: semicolons to separate different types
-- A new `MotionFrame` structure to hold the recorded data
 - Remove duplicated code
 
 ## Installation
