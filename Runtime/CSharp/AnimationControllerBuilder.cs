@@ -1,11 +1,11 @@
-﻿using UnityEditor;
+﻿// Editor animators prevent world build
+#if UNITY_EDITOR
+using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
 namespace HUMR
 {
-    // Editor animators prevent world build
-#if UNITY_EDITOR
     internal class AnimationControllerBuilder
     {
         private AnimatorController _controller;
@@ -48,5 +48,5 @@ namespace HUMR
             _controller.layers[0].stateMachine.AddState(clip.name).motion = clip;
         }
     }
-#endif
 }
+#endif

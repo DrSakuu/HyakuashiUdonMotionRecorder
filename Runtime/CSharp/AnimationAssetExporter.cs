@@ -1,4 +1,6 @@
-﻿using System.IO;
+// Editor animators prevent world build
+#if UNITY_EDITOR
+using System.IO;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.Formats.Fbx.Exporter;
@@ -6,8 +8,6 @@ using UnityEngine;
 
 namespace HUMR
 {
-    // Editor animators prevent world build
-#if UNITY_EDITOR
     internal static class AnimationAssetExporter
     {
         public static void SaveGenericAnimationAsset(AnimationClip clip, string humrPath, string displayName, string baseName, int segmentIndex, AnimationControllerBuilder controllerBuilder)
@@ -40,5 +40,5 @@ namespace HUMR
             ModelExporter.ExportObject(finalPath, targetObject);
         }
     }
-#endif
 }
+#endif

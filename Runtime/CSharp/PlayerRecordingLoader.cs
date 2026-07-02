@@ -134,6 +134,10 @@ namespace HUMR
         
         public void LoadRecordingAndExportAnim()
         {
+#if !UNITY_EDITOR
+            RecorderUtils.HumrError("Exporting animations is only possible in editor.");
+            return;
+#else
             if (!ValidateIndices()) return;
         
             var currentFile = recordFiles[recordFileIndex];
@@ -163,7 +167,8 @@ namespace HUMR
             finally
             {
                 poseSnapshot.Restore(transform);
-            }
+            } 
+#endif
         }
         
         private bool ValidateIndices()
@@ -172,6 +177,7 @@ namespace HUMR
             return recordingIndex >= 0 && recordingIndex < recordings.Count;
         }
         
+#if UNITY_EDITOR
         private void ExecuteExportPipeline(List<MotionSegment> segments, string filePath, string displayName)
         {
             PathUtils.CreateDirectoryIfNotExist(HumrPath);
@@ -196,6 +202,7 @@ namespace HUMR
         
             AnimationAssetExporter.ExportFBX(_animator, controllerBuilder.Controller, HumrPath, displayName, baseAnimName, gameObject);
         }
+#endif
         
         private bool Validate()
         {
