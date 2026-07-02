@@ -5,30 +5,16 @@
         public override void Start()
         {
             base.Start();
-            RecordingType = RecordingType.Object;
+            FrameType = FrameType.Object;
             TargetName = gameObject.name;
+            RecordingObjects = new object[3];
         }
 
-        public override void StartRecording()
+        protected override void UpdateRecordingObjects()
         {
-            base.StartRecording();
-            RecordObjectTransform();
-        }
-
-        protected override void OnRecordTick()
-        {
-            RecordObjectTransform();
-        }
-
-        public override void StopRecording()
-        {
-            RecordObjectTransform();
-            base.StopRecording();
-        }
-
-        private void RecordObjectTransform()
-        {
-            RecordObjects(new object[]{transform.position, transform.rotation, transform.localScale});
+            RecordingObjects[0] = transform.position;
+            RecordingObjects[1] = transform.rotation;
+            RecordingObjects[2] = transform.localScale;
         }
     }
 }

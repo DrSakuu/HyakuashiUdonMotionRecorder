@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace HUMR
 {
@@ -13,6 +14,7 @@ namespace HUMR
     public class HumrRecordingLoaderEditor : Editor
     {
         private bool _showAdvanced;
+        private const string VrcLogPathSuffix = @"\AppData\LocalLow\VRChat\VRChat";
         
         public override void OnInspectorGUI()
         {
@@ -29,6 +31,8 @@ namespace HUMR
         
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             
+            GUILayout.Label($"Found ");
+            
             recordLoader.exportGenericAnimation = GUILayout.Toggle(recordLoader.exportGenericAnimation, "Export Generic Animation");
             
             DrawExportButton(recordLoader);
@@ -38,8 +42,10 @@ namespace HUMR
         {
             if (_showAdvanced) return;
             
-            var defaultPath = Environment.GetEnvironmentVariable("USERPROFILE") + @"\AppData\LocalLow\VRChat\VRChat";
-            if (recordLoader != null && recordLoader.logFileDirectory != defaultPath)
+            var userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
+            var defaultPath = $"{userProfile}{VrcLogPathSuffix}";
+            
+            if (recordLoader.logFileDirectory != null && recordLoader.logFileDirectory != defaultPath)
             {
                 recordLoader.logFileDirectory = defaultPath;
             }
@@ -83,74 +89,71 @@ namespace HUMR
         
         private static void InitializeLogs(HumrRecordingLoader recordLoader)
         {
-            if (recordLoader.recordingFileNames == null)
-            {
-                recordLoader.CollectLogFiles();
-                recordLoader.CollectRecordings();
-            }
-        
-            if (recordLoader.recordings == null)
-            {
-                recordLoader.CollectRecordings();
-            }
+            if (recordLoader.recordingFiles != null) return; // Inverted if
+            
+            recordLoader.CollectLogFiles();
         }
         
         private static void DrawLogFileDropdown(HumrRecordingLoader recordLoader)
         {
-            var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
-            var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Recording Log File"));
+            var rect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+            var popupRect = EditorGUI.PrefixLabel(rect, new GUIContent("Recording Log File"));
             
             if (IsContextClick(popupRect))
             {
                 recordLoader.CollectLogFiles();
-                recordLoader.CollectRecordings();
             }
         
-            if (recordLoader.recordingFileNames != null && recordLoader.recordingFileNames.Length > 0)
+            if (recordLoader.recordingFiles == null || recordLoader.recordingFiles.Count == 0)
             {
-                EditorGUI.BeginChangeCheck();
-                var selectedIndex = EditorGUI.Popup(popupRect, recordLoader.recordingFileIndex, recordLoader.recordingFileNames);
-                if (!EditorGUI.EndChangeCheck()) return;
-                
-                recordLoader.recordingFileIndex = selectedIndex;
-                recordLoader.CollectRecordings();
-                recordLoader.recordingIndex = 0;
+                EditorGUI.Popup(popupRect, 0, new string[] { "No logs found." });
+                return;
             }
-            else
+
+            EditorGUI.BeginChangeCheck();
+            var fileNames = new List<string>();
+            foreach (var recordingFile in recordLoader.recordingFiles)
             {
-                var logFilesCount = recordLoader.logFilePaths?.Length ?? 0;
-                var noRecordsMessage = logFilesCount > 0 
-                    ? $"Found {logFilesCount} log files but they don't have HUMR recordings." 
-                    : "No logs found.";
-                
-                EditorGUI.Popup(popupRect, 0, new string[] { noRecordsMessage });
+                fileNames.Add(recordingFile.fileName);
             }
+            var selectedIndex = EditorGUI.Popup(popupRect, recordLoader.fileIndex, fileNames.ToArray());
+            
+            if (!EditorGUI.EndChangeCheck()) return; // Only update if value changed
+            
+            recordLoader.currentFile = recordLoader.recordingFiles[selectedIndex];
+            recordLoader.CollectTargetNames();
+            recordLoader.targetIndex = 0;
+            recordLoader.CollectTakes();
         }
         
         private static bool DrawRecordingTargetDropdown(HumrRecordingLoader recordLoader)
         {
-            var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
-            var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Recording Target"));
+            var rect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+            var popupRect = EditorGUI.PrefixLabel(rect, new GUIContent("Recording Target"));
             
             if (IsContextClick(popupRect))
             {
-                recordLoader.CollectRecordings();
+                recordLoader.CollectTargetNames();
+                recordLoader.CollectTakes();
             }
-        
-            if (recordLoader.recordings != null && recordLoader.recordings.Count > 0)
+
+            var targets = recordLoader.recordingFiles[recordLoader.targetIndex].targetNames;
+            if (targets == null || targets.Length == 0)
             {
-                var recordListStr = recordLoader.recordings
-                    .Select(entry => $"{entry.type}: {entry.target}")
-                    .ToArray();
-        
-                recordLoader.recordingIndex = Mathf.Clamp(recordLoader.recordingIndex, 0, recordListStr.Length - 1);
-                recordLoader.recordingIndex = EditorGUI.Popup(popupRect, recordLoader.recordingIndex, recordListStr);
-                return true;
+                EditorGUI.Popup(popupRect, 0, new string[] { "Recording data is corrupted." });
+                return false;
             }
-        
-            EditorGUI.Popup(popupRect, 0, new string[] { "Recording data is corrupted." });
-            return false;
-        
+
+            EditorGUI.BeginChangeCheck();
+            var index = Mathf.Clamp(recordLoader.targetIndex, 0, targets.Length - 1);
+            recordLoader.targetIndex = EditorGUI.Popup(popupRect, index, targets);
+            
+            if (EditorGUI.EndChangeCheck())
+            {
+                recordLoader.CollectTakes();
+            }
+            
+            return true;
         }
         
         private static void DrawExportButton(HumrRecordingLoader recordLoader)
