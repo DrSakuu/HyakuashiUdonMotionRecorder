@@ -6,7 +6,31 @@ using UnityEngine;
 
 namespace HUMR
 {
-public static class LogDataParser
+    [Serializable]
+    public class Recording
+    {
+        public string target;
+        public RecordingType type;
+    }
+
+    public class RecordingTake
+    {
+        public RecordingTake()
+        {
+            Frames = new List<RecordingFrame>();
+        }
+
+        public List<RecordingFrame> Frames { get; set; }
+    }
+
+    public class RecordingFrame
+    {
+        public float RecordTime { get; set; }
+        public Vector3 HipPosition { get; set; }
+        public List<Quaternion> BoneRotations { get; set; } = new List<Quaternion>();
+    }
+
+    public static class LogDataParser
     {
         public static string ExtractLegacyDisplayName(string line, string matchTarget)
         {
@@ -28,15 +52,15 @@ public static class LogDataParser
             return -1;
         }
 
-        public static LogEntry ParseLogEntry(string content)
+        public static Recording ParseRecordingEntry(string content)
         {
             var parts = content.Split(';');
             if (parts.Length < 3) return null;
 
             var typeStr = parts[1];
-            if (!Enum.TryParse<RecordingType>(typeStr, true, out var type)) type = RecordingType.Object;
+            if (!Enum.TryParse<RecordingType>(typeStr, true, out var type)) type = RecordingType.Unknown;
 
-            return new LogEntry { type = type, name = parts[2] };
+            return new Recording { type = type, target = parts[2] };
         }
 
         public static List<string> LoadLogFileLines(string path)
@@ -51,19 +75,19 @@ public static class LogDataParser
             return lines;
         }
 
-        public static List<MotionSegment> PartitionLogLinesIntoSegments(string[] lines, string targetDisplayName)
+        public static List<RecordingTake> PartitionLogLinesIntoTakes(string[] lines, string targetDisplayName)
         {
-            var segments = new List<MotionSegment>();
-            var currentSegment = new MotionSegment();
+            var takes = new List<RecordingTake>();
+            var currentTake = new RecordingTake();
 
             var beforeTime = -1f;
 
             foreach (var line in lines)
             {
-                if (!line.Contains(PlayerRecordingLoader.LogMatchTarget)) continue;
+                if (!line.Contains(HumrRecordingLoader.LogMatchTarget)) continue;
 
-                var tagIndex = line.IndexOf(PlayerRecordingLoader.LogMatchTarget, StringComparison.Ordinal);
-                var payload = line.Substring(tagIndex + PlayerRecordingLoader.LogMatchTarget.Length);
+                var tagIndex = line.IndexOf(HumrRecordingLoader.LogMatchTarget, StringComparison.Ordinal);
+                var payload = line.Substring(tagIndex + HumrRecordingLoader.LogMatchTarget.Length);
 
                 var parts = payload.Split(';');
                 if (parts.Length < 4) continue;
@@ -71,29 +95,30 @@ public static class LogDataParser
                 var rowDisplayName = parts[0];
                 if (rowDisplayName != targetDisplayName) continue;
 
-                if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var currentTime)) continue;
+                if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture,
+                        out var currentTime)) continue;
 
-                if (currentTime < beforeTime && currentSegment.Frames.Count > 0)
+                if (currentTime < beforeTime && currentTake.Frames.Count > 0)
                 {
-                    segments.Add(currentSegment);
-                    currentSegment = new MotionSegment();
+                    takes.Add(currentTake);
+                    currentTake = new RecordingTake();
                 }
 
                 var frame = ParseMotionFrame(parts);
                 if (frame == null) continue;
 
-                currentSegment.Frames.Add(frame);
+                currentTake.Frames.Add(frame);
                 beforeTime = currentTime;
             }
 
-            if (currentSegment.Frames.Count > 0) segments.Add(currentSegment);
+            if (currentTake.Frames.Count > 0) takes.Add(currentTake);
 
-            return segments;
+            return takes;
         }
 
-        private static MotionFrame ParseMotionFrame(string[] parts)
+        private static RecordingFrame ParseMotionFrame(string[] parts)
         {
-            var frame = new MotionFrame
+            var frame = new RecordingFrame
             {
                 RecordTime = float.Parse(parts[1], CultureInfo.InvariantCulture)
             };
@@ -124,28 +149,30 @@ public static class LogDataParser
             return frame;
         }
 
-        public static List<MotionSegment> ParseLegacySegments(List<string> logLines, string targetName)
+        public static List<RecordingTake> ParseLegacyTakes(List<string> logLines, string targetName)
         {
-            var segments = new List<MotionSegment>();
-            var currentFrames = new List<MotionFrame>();
+            var take = new List<RecordingTake>();
+            var currentFrames = new List<RecordingFrame>();
             var lastTime = -1f;
 
             foreach (var line in logLines)
             {
-                if (!TryParseLegacyFrame(line, PlayerRecordingLoader.LegacyLogMatchTarget, targetName, out var frame)) continue;
+                if (!TryParseLegacyFrame(line, HumrRecordingLoader.LegacyLogMatchTarget, targetName,
+                        out var frame)) continue;
 
-                HandleSegmentBreak(frame, currentFrames, segments, ref lastTime);
+                HandleTakeBreak(frame, currentFrames, take, ref lastTime);
 
                 currentFrames.Add(frame);
                 lastTime = frame.RecordTime;
             }
 
-            if (currentFrames.Count > 0) segments.Add(new MotionSegment { Frames = currentFrames });
+            if (currentFrames.Count > 0) take.Add(new RecordingTake { Frames = currentFrames });
 
-            return segments;
+            return take;
         }
 
-        private static bool TryParseLegacyFrame(string line, string matchTarget, string targetName, out MotionFrame frame)
+        private static bool TryParseLegacyFrame(string line, string matchTarget, string targetName,
+            out RecordingFrame frame)
         {
             frame = null;
             var prefixIdx = line.IndexOf(matchTarget, StringComparison.Ordinal);
@@ -160,7 +187,7 @@ public static class LogDataParser
 
             try
             {
-                frame = new MotionFrame
+                frame = new RecordingFrame
                 {
                     RecordTime = float.Parse(tokens[0], CultureInfo.InvariantCulture),
                     HipPosition = new Vector3(
@@ -181,7 +208,7 @@ public static class LogDataParser
             }
         }
 
-        private static void ParseBoneRotations(string[] tokens, MotionFrame frame)
+        private static void ParseBoneRotations(string[] tokens, RecordingFrame frame)
         {
             for (var i = 4; i + 3 < tokens.Length; i += 4)
                 frame.BoneRotations.Add(new Quaternion(
@@ -192,17 +219,18 @@ public static class LogDataParser
                 ));
         }
 
-        private static void HandleSegmentBreak(MotionFrame frame, List<MotionFrame> currentFrames, List<MotionSegment> segments, ref float lastTime)
+        private static void HandleTakeBreak(RecordingFrame frame, List<RecordingFrame> currentFrames,
+            List<RecordingTake> takes, ref float lastTime)
         {
             if (lastTime < 0) return;
-            
+
             var isRewind = frame.RecordTime < lastTime;
             var isGap = frame.RecordTime - lastTime > 1.0f;
-            
+
             if (!isRewind && !isGap) return;
             if (currentFrames.Count <= 0) return;
 
-            segments.Add(new MotionSegment { Frames = new List<MotionFrame>(currentFrames) });
+            takes.Add(new RecordingTake { Frames = new List<RecordingFrame>(currentFrames) });
             currentFrames.Clear();
         }
     }

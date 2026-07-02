@@ -2,12 +2,21 @@
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
-using VRC.SDKBase;
 
 namespace HUMR
 {
+    public enum RecordingType
+    {
+        Unknown,
+        Legacy,
+        BoneRotations,
+        Object
+    }
+
     public class BaseRecorder : UdonSharpBehaviour
     {
+        private const string VariableDelimiter = ";";
+
         [SerializeField] [Tooltip("Start recording button, connect to StartRecording event.")]
         private Button startRecordButton;
 
@@ -20,16 +29,13 @@ namespace HUMR
         [SerializeField] [Tooltip("Frames per second for recording.")]
         protected float recordFramerate = 30;
 
-        protected float RecordTime;
-        protected RecordingType RecordType = RecordingType.Object;
-        protected string TargetName = "Target";
-
         private bool _isRecording;
-        private float _recordInterval;
         private float _nextRecordTime;
+        private float _recordInterval;
+        protected RecordingType RecordingType = RecordingType.Object;
 
-        private const string VariableDelimiter = ";";
-        private const string ComponentDelimiter = ",";
+        private float _recordTime;
+        protected string TargetName = "Target";
 
         public virtual void Start()
         {
@@ -40,26 +46,31 @@ namespace HUMR
         {
             if (!_isRecording) return;
 
-            RecordTime += Time.deltaTime;
-            if (RecordTime < _nextRecordTime) return;
-            _nextRecordTime = RecordTime + _recordInterval;
+            _recordTime += Time.deltaTime;
+            if (_recordTime < _nextRecordTime) return;
+            _nextRecordTime = _recordTime + _recordInterval;
 
             OnRecordTick();
         }
 
+        private void OnDestroy()
+        {
+            if (_isRecording) StopRecording();
+        }
+
         public virtual void StartRecording()
         {
-            RecordTime = 0f;
-            _nextRecordTime = RecordTime;
+            _recordTime = 0f;
+            _nextRecordTime = _recordTime;
             _recordInterval = 1f / recordFramerate;
-            RecordStart(RecordType, TargetName);
+            RecordStart(RecordingType, TargetName);
             _isRecording = true;
             UpdateUI();
         }
 
         public virtual void StopRecording()
         {
-            RecordStop(RecordType, TargetName);
+            RecordStop(RecordingType, TargetName);
             _isRecording = false;
             UpdateUI();
         }
@@ -74,47 +85,42 @@ namespace HUMR
         {
         }
 
-        private void OnDestroy()
-        {
-            if (_isRecording) StopRecording();
-        }
-
         public override void Interact()
         {
             if (_isRecording) StopRecording();
             else StartRecording();
         }
 
-        protected static void RecordObjectTransform(Transform transform, string name, float time)
+        protected void RecordObjects(object[] objectList)
         {
-            var timeStr = time.ToString(CultureInfo.InvariantCulture);
+            var timeStr = _recordTime.ToString(CultureInfo.InvariantCulture);
+            var outputString = string.Join(VariableDelimiter, TargetName, timeStr);
 
-            var positionStr = FormatVector3Components(transform.position);
-            var rotationStr = FormatQuaternionComponents(transform.rotation);
-            var scaleStr = FormatVector3Components(transform.localScale);
-
-            var outputString = string.Join(VariableDelimiter, name, timeStr, positionStr, rotationStr, scaleStr);
-
-            RecorderUtils.HumrLog(outputString);
-        }
-
-        protected static void RecordPlayerBones(VRCPlayerApi player, float time)
-        {
-            var timeStr = time.ToString(CultureInfo.InvariantCulture);
-
-            var hipsPosition = player.GetBonePosition(HumanBodyBones.Hips);
-            var hipsPositionStr = FormatVector3Components(hipsPosition);
-
-            var outputString = string.Join(VariableDelimiter, player.displayName, timeStr, hipsPositionStr);
-
-            for (var i = 0; i < (int)HumanBodyBones.LastBone; i++)
+            foreach (var obj in objectList)
             {
-                var rotation = player.GetBoneRotation((HumanBodyBones)i);
-                var rotationStr = FormatQuaternionComponents(rotation);
-                outputString = string.Join(VariableDelimiter, outputString, rotationStr);
+                if (obj == null) continue;
+
+                switch (obj.GetType().Name)
+                {
+                    case "Vector3":
+                    {
+                        var vector3Str = FormatVector3Components((Vector3)obj);
+                        outputString = string.Join(VariableDelimiter, outputString, vector3Str);
+                        break;
+                    }
+                    case "Quaternion":
+                    {
+                        var quaternionStr = FormatQuaternionComponents((Quaternion)obj);
+                        outputString = string.Join(VariableDelimiter, outputString, quaternionStr);
+                        break;
+                    }
+                    default:
+                        outputString = string.Join(VariableDelimiter, obj.ToString());
+                        break;
+                }
             }
 
-            RecorderUtils.HumrLog(outputString);
+            HumrLogger.Log(outputString);
         }
 
         private static string FormatVector3Components(Vector3 vector3)
@@ -129,16 +135,32 @@ namespace HUMR
             return trimmedQuaternion.Replace(" ", "");
         }
 
-        private static void RecordStart(RecordingType recType, string recName)
+        private static void RecordStart(RecordingType recordingType, string recName)
         {
-            RecorderUtils.HumrLog(string.Join(VariableDelimiter, RecorderUtils.RecordingStarted,
-                RecorderUtils.RecTypeToString(recType), recName));
+            HumrLogger.Log(string.Join(VariableDelimiter, HumrLogger.RecordingStarted,
+                RecordingTypeToString(recordingType), recName));
         }
 
-        private static void RecordStop(RecordingType recType, string recName)
+        private static void RecordStop(RecordingType recordingType, string recName)
         {
-            RecorderUtils.HumrLog(string.Join(VariableDelimiter, RecorderUtils.RecordingStopped,
-                RecorderUtils.RecTypeToString(recType), recName));
+            HumrLogger.Log(string.Join(VariableDelimiter, HumrLogger.RecordingStopped,
+                RecordingTypeToString(recordingType), recName));
+        }
+
+        private static string RecordingTypeToString(RecordingType recordingType)
+        {
+            switch (recordingType)
+            {
+                case RecordingType.Legacy:
+                    return "Legacy";
+                case RecordingType.BoneRotations:
+                    return "BoneRotations";
+                case RecordingType.Object:
+                    return "Object";
+                case RecordingType.Unknown:
+                default:
+                    return "Unknown";
+            }
         }
     }
 }

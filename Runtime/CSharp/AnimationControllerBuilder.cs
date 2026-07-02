@@ -30,7 +30,7 @@ namespace HUMR
         public void CleanControllerStates(bool clearAll)
         {
             if (_controller == null) return;
-
+            
             foreach (var layer in _controller.layers)
             {
                 var states = layer.stateMachine.states;

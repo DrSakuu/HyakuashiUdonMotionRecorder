@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace HUMR
 {
+    internal struct BoneSnapshot
+    {
+        public Transform Transform;
+        public Vector3 LocalPosition;
+        public Quaternion LocalRotation;
+    }
+
     internal class AvatarPoseSnapshot
     {
         private Vector3 _savedRootPosition;
@@ -16,12 +23,12 @@ namespace HUMR
             _savedRootPosition = rootTransform.position;
             _savedRootRotation = rootTransform.rotation;
             _avatarSnapshot.Clear();
-            
+
             for (var i = 0; i < HumanTrait.BoneName.Length; i++)
             {
                 var boneTransform = animator.GetBoneTransform((HumanBodyBones)i);
                 if (boneTransform == null) continue;
-            
+
                 _avatarSnapshot.Add(new BoneSnapshot
                 {
                     Transform = boneTransform,
@@ -35,7 +42,7 @@ namespace HUMR
         {
             rootTransform.position = _savedRootPosition;
             rootTransform.rotation = _savedRootRotation;
-            
+
             foreach (var snapshot in _avatarSnapshot)
             {
                 if (snapshot.Transform == null) continue;
