@@ -14,19 +14,7 @@ namespace HUMR
             _player = Networking.LocalPlayer;
             RecordingType = RecordingType.BoneRotations;
             TargetName = _player.displayName;
-        }
-
-        public override void StartRecording()
-        {
-            base.StartRecording();
-            RecordPlayerBones(_player);
-        }
-
-        protected override void OnRecordTick()
-        {
-            if (!Utilities.IsValid(_player)) return;
-
-            RecordPlayerBones(_player);
+            RecordingObjects = new object[1+(int)HumanBodyBones.LastBone];
         }
 
         public override void OnAvatarChanged(VRCPlayerApi player)
@@ -37,19 +25,15 @@ namespace HUMR
             if (recordOnStart) StartRecording();
         }
 
-        private void RecordPlayerBones(VRCPlayerApi player)
+        protected override void UpdateRecordingObjects()
         {
-            const int totalElements = 1 + (int)HumanBodyBones.LastBone;
-            var objectList = new object[totalElements];
-            var hipsPosition = player.GetBonePosition(HumanBodyBones.Hips);
-            objectList[0] = hipsPosition;
+            var hipsPosition = _player.GetBonePosition(HumanBodyBones.Hips);
+            RecordingObjects[0] = hipsPosition;
             for (var i = 0; i < (int)HumanBodyBones.LastBone; i++)
             {
-                var boneRotation = player.GetBoneRotation((HumanBodyBones)i);
-                objectList[i + 1] = boneRotation;
+                var boneRotation = _player.GetBoneRotation((HumanBodyBones)i);
+                RecordingObjects[i + 1] = boneRotation;
             }
-
-            RecordObjects(objectList);
         }
     }
 }

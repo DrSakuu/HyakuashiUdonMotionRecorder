@@ -29,13 +29,15 @@ namespace HUMR
         [SerializeField] [Tooltip("Frames per second for recording.")]
         protected float recordFramerate = 30;
 
+        protected RecordingType RecordingType = RecordingType.Object;
+        protected string TargetName = "Target";
+        protected object[] RecordingObjects;
+
         private bool _isRecording;
+        private float _recordTime;
         private float _nextRecordTime;
         private float _recordInterval;
-        protected RecordingType RecordingType = RecordingType.Object;
-
-        private float _recordTime;
-        protected string TargetName = "Target";
+        private int _takeNumber = -1;
 
         public virtual void Start()
         {
@@ -63,14 +65,15 @@ namespace HUMR
             _recordTime = 0f;
             _nextRecordTime = _recordTime;
             _recordInterval = 1f / recordFramerate;
-            RecordStart(RecordingType, TargetName);
+            _takeNumber++;
             _isRecording = true;
+            RecordObjects();
             UpdateUI();
         }
 
         public virtual void StopRecording()
         {
-            RecordStop(RecordingType, TargetName);
+            RecordObjects();
             _isRecording = false;
             UpdateUI();
         }
@@ -81,7 +84,12 @@ namespace HUMR
             if (stopRecordButton != null) stopRecordButton.gameObject.SetActive(_isRecording);
         }
 
-        protected virtual void OnRecordTick()
+        private void OnRecordTick()
+        {
+            RecordObjects();
+        }
+
+        protected virtual void UpdateRecordingObjects()
         {
         }
 
@@ -91,31 +99,33 @@ namespace HUMR
             else StartRecording();
         }
 
-        protected void RecordObjects(object[] objectList)
+        private void RecordObjects()
         {
             var timeStr = _recordTime.ToString(CultureInfo.InvariantCulture);
-            var outputString = string.Join(VariableDelimiter, TargetName, timeStr);
+            var typeStr = RecordingTypeToString(RecordingType);
+            var outputString = string.Join(VariableDelimiter, "RECORDING", TargetName, _takeNumber, typeStr, timeStr);
 
-            foreach (var obj in objectList)
+            UpdateRecordingObjects();
+            foreach (var recObj in RecordingObjects)
             {
-                if (obj == null) continue;
+                if (recObj == null) continue;
 
-                switch (obj.GetType().Name)
+                switch (recObj.GetType().Name)
                 {
                     case "Vector3":
                     {
-                        var vector3Str = FormatVector3Components((Vector3)obj);
+                        var vector3Str = FormatVector3Components((Vector3)recObj);
                         outputString = string.Join(VariableDelimiter, outputString, vector3Str);
                         break;
                     }
                     case "Quaternion":
                     {
-                        var quaternionStr = FormatQuaternionComponents((Quaternion)obj);
+                        var quaternionStr = FormatQuaternionComponents((Quaternion)recObj);
                         outputString = string.Join(VariableDelimiter, outputString, quaternionStr);
                         break;
                     }
                     default:
-                        outputString = string.Join(VariableDelimiter, obj.ToString());
+                        outputString = string.Join(VariableDelimiter, recObj.ToString());
                         break;
                 }
             }
@@ -133,18 +143,6 @@ namespace HUMR
         {
             var trimmedQuaternion = quaternion.ToString().Trim('(', ')');
             return trimmedQuaternion.Replace(" ", "");
-        }
-
-        private static void RecordStart(RecordingType recordingType, string recName)
-        {
-            HumrLogger.Log(string.Join(VariableDelimiter, HumrLogger.RecordingStarted,
-                RecordingTypeToString(recordingType), recName));
-        }
-
-        private static void RecordStop(RecordingType recordingType, string recName)
-        {
-            HumrLogger.Log(string.Join(VariableDelimiter, HumrLogger.RecordingStopped,
-                RecordingTypeToString(recordingType), recName));
         }
 
         private static string RecordingTypeToString(RecordingType recordingType)
