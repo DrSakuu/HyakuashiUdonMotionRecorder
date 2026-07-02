@@ -9,14 +9,14 @@ namespace HUMR
 {
     // Editor components prevent world build 
 #if UNITY_EDITOR
-    [CustomEditor(typeof(PlayerRecordingLoader))]
-    public class PlayerRecordingLoaderEditor : Editor
+    [CustomEditor(typeof(HumrRecordingLoader))]
+    public class HumrRecordingLoaderEditor : Editor
     {
         private bool _showAdvanced;
         
         public override void OnInspectorGUI()
         {
-            var recordLoader = (PlayerRecordingLoader)target;
+            var recordLoader = (HumrRecordingLoader)target;
             if (recordLoader == null) return;
         
             UpdateLogDirectory(recordLoader);
@@ -34,7 +34,7 @@ namespace HUMR
             DrawExportButton(recordLoader);
         }
         
-        private void UpdateLogDirectory(PlayerRecordingLoader recordLoader)
+        private void UpdateLogDirectory(HumrRecordingLoader recordLoader)
         {
             if (_showAdvanced) return;
             
@@ -45,7 +45,7 @@ namespace HUMR
             }
         }
         
-        private void DrawAdvancedPathSection(PlayerRecordingLoader recordLoader)
+        private void DrawAdvancedPathSection(HumrRecordingLoader recordLoader)
         {
             _showAdvanced = EditorGUILayout.Foldout(_showAdvanced, "Advanced: Custom Log Path");
             if (!_showAdvanced) return;
@@ -81,9 +81,9 @@ namespace HUMR
             }
         }
         
-        private static void InitializeLogs(PlayerRecordingLoader recordLoader)
+        private static void InitializeLogs(HumrRecordingLoader recordLoader)
         {
-            if (recordLoader.recordFileNames == null)
+            if (recordLoader.recordingFileNames == null)
             {
                 recordLoader.CollectLogFiles();
                 recordLoader.CollectRecordings();
@@ -95,7 +95,7 @@ namespace HUMR
             }
         }
         
-        private static void DrawLogFileDropdown(PlayerRecordingLoader recordLoader)
+        private static void DrawLogFileDropdown(HumrRecordingLoader recordLoader)
         {
             var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
             var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Recording Log File"));
@@ -106,13 +106,13 @@ namespace HUMR
                 recordLoader.CollectRecordings();
             }
         
-            if (recordLoader.recordFileNames != null && recordLoader.recordFileNames.Length > 0)
+            if (recordLoader.recordingFileNames != null && recordLoader.recordingFileNames.Length > 0)
             {
                 EditorGUI.BeginChangeCheck();
-                var selectedIndex = EditorGUI.Popup(popupRect, recordLoader.recordFileIndex, recordLoader.recordFileNames);
+                var selectedIndex = EditorGUI.Popup(popupRect, recordLoader.recordingFileIndex, recordLoader.recordingFileNames);
                 if (!EditorGUI.EndChangeCheck()) return;
                 
-                recordLoader.recordFileIndex = selectedIndex;
+                recordLoader.recordingFileIndex = selectedIndex;
                 recordLoader.CollectRecordings();
                 recordLoader.recordingIndex = 0;
             }
@@ -127,7 +127,7 @@ namespace HUMR
             }
         }
         
-        private static bool DrawRecordingTargetDropdown(PlayerRecordingLoader recordLoader)
+        private static bool DrawRecordingTargetDropdown(HumrRecordingLoader recordLoader)
         {
             var controlRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
             var popupRect = EditorGUI.PrefixLabel(controlRect, new GUIContent("Recording Target"));
@@ -140,7 +140,7 @@ namespace HUMR
             if (recordLoader.recordings != null && recordLoader.recordings.Count > 0)
             {
                 var recordListStr = recordLoader.recordings
-                    .Select(entry => $"{entry.type}: {entry.name}")
+                    .Select(entry => $"{entry.type}: {entry.target}")
                     .ToArray();
         
                 recordLoader.recordingIndex = Mathf.Clamp(recordLoader.recordingIndex, 0, recordListStr.Length - 1);
@@ -153,7 +153,7 @@ namespace HUMR
         
         }
         
-        private static void DrawExportButton(PlayerRecordingLoader recordLoader)
+        private static void DrawExportButton(HumrRecordingLoader recordLoader)
         {
             if (!GUILayout.Button("Load recording and export .fbx")) return;
             

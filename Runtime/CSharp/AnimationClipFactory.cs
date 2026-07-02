@@ -4,15 +4,15 @@ namespace HUMR
 {
     public static class AnimationClipFactory
     {
-        public static AnimationClip PopulateAnimationClip(MotionSegment segment, Animator animator)
+        public static AnimationClip PopulateAnimationClip(RecordingTake take, Animator animator)
         {
-            var frameCount = segment.Frames.Count;
+            var frameCount = take.Frames.Count;
             var totalCurves = 3 + HumanTrait.BoneName.Length * 4;
 
             var keyframes = InitializeKeyframeArrays(totalCurves, frameCount);
 
             for (var frameIdx = 0; frameIdx < frameCount; frameIdx++)
-                ProcessFrameKeyframes(segment.Frames[frameIdx], keyframes, frameIdx, animator);
+                ProcessFrameKeyframes(take.Frames[frameIdx], keyframes, frameIdx, animator);
 
             return CreateAndBindCurves(keyframes, animator);
         }
@@ -24,7 +24,7 @@ namespace HUMR
             return keyframes;
         }
 
-        private static void ProcessFrameKeyframes(MotionFrame frame, Keyframe[][] keyframes, int frameIdx, Animator animator)
+        private static void ProcessFrameKeyframes(RecordingFrame frame, Keyframe[][] keyframes, int frameIdx, Animator animator)
         {
             var localHipPos = ProcessHipPosition(frame.HipPosition, animator);
             keyframes[0][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.x);
@@ -44,7 +44,7 @@ namespace HUMR
             return armatureParent.InverseTransformPoint(rawHipPos);
         }
 
-        private static void ApplyWorldRotationsToAvatar(MotionFrame frame, Animator animator)
+        private static void ApplyWorldRotationsToAvatar(RecordingFrame frame, Animator animator)
         {
             for (var k = 0; k < HumanTrait.BoneName.Length; k++)
             {
@@ -57,7 +57,7 @@ namespace HUMR
             }
         }
 
-        private static void RecordLocalRotationsToKeyframes(Keyframe[][] keyframes, int frameIdx, MotionFrame frame, Animator animator)
+        private static void RecordLocalRotationsToKeyframes(Keyframe[][] keyframes, int frameIdx, RecordingFrame frame, Animator animator)
         {
             for (var k = 0; k < HumanTrait.BoneName.Length; k++)
             {

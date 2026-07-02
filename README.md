@@ -32,4 +32,4 @@ Duplicate `Humr Sample Scene.unity` from `Packages/Hyakuashi Udon Motion Recorde
 
 ## Changelog
 
-[CHANGELOG.md](CHANGELOG.md#200-beta1---unreleased)
+[CHANGELOG.md](CHANGELOG.md#200-alpha1---unreleased)

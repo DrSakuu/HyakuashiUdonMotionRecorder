@@ -98,7 +98,7 @@
 - `OutputLogLoader` を v1.1.1 に更新
 - 地域による小数点表記の違いに対応。
 
-## [2.0.0-alpha.1] - 2026-07-02
+## [2.0.0-alpha.1] - Unreleased
 
 A complete rewrite of the codebase so new features can be implemented more easily. Not compatible with previous versions.
 
