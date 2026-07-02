@@ -1,18 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace HUMR
 {
     [Serializable]
-    public class Recording
-    {
-        public string target;
-        public RecordingType type;
-    }
-
     public class RecordingTake
     {
         public RecordingTake()
@@ -20,11 +15,13 @@ namespace HUMR
             Frames = new List<RecordingFrame>();
         }
 
+        public string targetName;
         public List<RecordingFrame> Frames { get; set; }
     }
 
     public class RecordingFrame
     {
+        public FrameType FrameType;
         public float RecordTime { get; set; }
         public Vector3 HipPosition { get; set; }
         public List<Quaternion> BoneRotations { get; set; } = new List<Quaternion>();
@@ -32,7 +29,57 @@ namespace HUMR
 
     public static class LogDataParser
     {
-        public static string ExtractLegacyDisplayName(string line, string matchTarget)
+        public static List<string> LoadLogFileLines(string path)
+        {
+            var lines = new List<string>();
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var sr = new StreamReader(fs))
+            {
+                while (0 <= sr.Peek()) lines.Add(sr.ReadLine());
+            }
+
+            return lines;
+        }
+
+        public static string[] CollectTargetNames(RecordingFile recordingFile)
+        {
+            var foundTargets = new HashSet<string>();
+            foreach (var line in File.ReadLines(recordingFile.path))
+            {
+                string targetName;
+                switch (recordingFile.type)
+                {
+                    case LogType.Humr:
+                        targetName = ExtractTargetName(line, HumrRecordingLoader.LogMatchTarget);
+                        break;
+                    case LogType.Legacy:
+                        targetName = ExtractLegacyTargetName(line, HumrRecordingLoader.LegacyLogMatchTarget);
+                        break;
+                    case LogType.Corrupt:
+                    case LogType.NoData:
+                    default:
+                        continue;
+                }
+                if (targetName == null) continue;
+                foundTargets.Add(targetName);
+            }
+            return foundTargets.ToArray();
+        }
+
+        private static string ExtractTargetName(string line, string matchTarget)
+        {
+            var lineSplit = line.Split(new[] { matchTarget }, StringSplitOptions.None);
+            if (lineSplit.Length < 2) return null;
+
+            var recordingFrame = lineSplit[1];
+            var delimiterIndex = recordingFrame.IndexOf(HumrLogger.VariableDelimiter, StringComparison.Ordinal);
+            if (delimiterIndex == -1) return null;
+
+            var targetName = recordingFrame.Substring(0, delimiterIndex);
+            return targetName;
+        }
+
+        private static string ExtractLegacyTargetName(string line, string matchTarget)
         {
             var prefixIdx = line.IndexOf(matchTarget, StringComparison.Ordinal);
             if (prefixIdx == -1) return null;
@@ -52,59 +99,35 @@ namespace HUMR
             return -1;
         }
 
-        public static Recording ParseRecordingEntry(string content)
-        {
-            var parts = content.Split(';');
-            if (parts.Length < 3) return null;
-
-            var typeStr = parts[1];
-            if (!Enum.TryParse<RecordingType>(typeStr, true, out var type)) type = RecordingType.Unknown;
-
-            return new Recording { type = type, target = parts[2] };
-        }
-
-        public static List<string> LoadLogFileLines(string path)
-        {
-            var lines = new List<string>();
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var sr = new StreamReader(fs))
-            {
-                while (0 <= sr.Peek()) lines.Add(sr.ReadLine());
-            }
-
-            return lines;
-        }
-
-        public static List<RecordingTake> PartitionLogLinesIntoTakes(string[] lines, string targetDisplayName)
+        public static List<RecordingTake> PartitionLogLinesIntoTakes(string[] lines, string targetName)
         {
             var takes = new List<RecordingTake>();
             var currentTake = new RecordingTake();
-
+            currentTake.targetName = targetName;
+            var foundtakes = 0;
             var beforeTime = -1f;
-
+            
             foreach (var line in lines)
             {
-                if (!line.Contains(HumrRecordingLoader.LogMatchTarget)) continue;
+                var targetMatchStr = HumrRecordingLoader.LogMatchTarget + targetName + HumrLogger.VariableDelimiter;
+                if (!line.Contains(targetMatchStr)) continue;
 
-                var tagIndex = line.IndexOf(HumrRecordingLoader.LogMatchTarget, StringComparison.Ordinal);
-                var payload = line.Substring(tagIndex + HumrRecordingLoader.LogMatchTarget.Length);
-
-                var parts = payload.Split(';');
-                if (parts.Length < 4) continue;
-
-                var rowDisplayName = parts[0];
-                if (rowDisplayName != targetDisplayName) continue;
-
-                if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture,
+                var takeStr = line.Split(targetMatchStr)[1];
+                
+                var takeSplit = takeStr.Split(HumrLogger.VariableDelimiter);
+                if (takeSplit.Length < 4) continue;
+                
+                if (!float.TryParse(takeSplit[2], NumberStyles.Float, CultureInfo.InvariantCulture, 
                         out var currentTime)) continue;
-
-                if (currentTime < beforeTime && currentTake.Frames.Count > 0)
+    
+                if ((int.Parse(takeSplit[0]) > foundtakes || currentTime < beforeTime) && currentTake.Frames.Count > 0)
                 {
                     takes.Add(currentTake);
                     currentTake = new RecordingTake();
+                    foundtakes++;
                 }
-
-                var frame = ParseMotionFrame(parts);
+                
+                var frame = ParseMotionFrame(takeSplit);
                 if (frame == null) continue;
 
                 currentTake.Frames.Add(frame);
@@ -120,10 +143,10 @@ namespace HUMR
         {
             var frame = new RecordingFrame
             {
-                RecordTime = float.Parse(parts[1], CultureInfo.InvariantCulture)
+                RecordTime = float.Parse(parts[2], CultureInfo.InvariantCulture)
             };
 
-            var posValues = parts[2].Split(',');
+            var posValues = parts[3].Split(HumrLogger.ComponentDelimiter);
             if (posValues.Length == 3)
                 frame.HipPosition = new Vector3(
                     float.Parse(posValues[0], CultureInfo.InvariantCulture),
@@ -131,11 +154,11 @@ namespace HUMR
                     float.Parse(posValues[2], CultureInfo.InvariantCulture)
                 );
 
-            for (var i = 3; i < parts.Length; i++)
+            for (var i = 4; i < parts.Length; i++)
             {
                 if (string.IsNullOrWhiteSpace(parts[i])) continue;
 
-                var rotValues = parts[i].Split(',');
+                var rotValues = parts[i].Split(HumrLogger.ComponentDelimiter);
                 if (rotValues.Length != 4) continue;
                 var rotation = new Quaternion(
                     float.Parse(rotValues[0], CultureInfo.InvariantCulture),
@@ -182,7 +205,7 @@ namespace HUMR
             if (!dataSegment.StartsWith(targetName)) return false;
 
             var numericDataRaw = dataSegment.Substring(targetName.Length);
-            var tokens = numericDataRaw.Split(',');
+            var tokens = numericDataRaw.Split(HumrLogger.ComponentDelimiter);
             if (tokens.Length < 4) return false;
 
             try

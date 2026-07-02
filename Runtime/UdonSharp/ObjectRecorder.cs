@@ -5,7 +5,7 @@
         public override void Start()
         {
             base.Start();
-            RecordingType = RecordingType.Object;
+            FrameType = FrameType.Object;
             TargetName = gameObject.name;
             RecordingObjects = new object[3];
         }

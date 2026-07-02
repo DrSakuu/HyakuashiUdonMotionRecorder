@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: PlayerRecorder
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 85193df8d47d8a84693724dc334356c9, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 170c12be8153fe24e9c69db5b17452d3, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 9eb796a1efc67354a8646cce0902bf7b, type: 3}
@@ -319,19 +319,19 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: RecordingType
+      Data: FrameType
     - Name: $v
       Entry: 7
       Data: 21|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: RecordingType
+      Data: FrameType
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 22|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: HUMR.RecordingType, mukaderabbit.humr.Runtime
+      Data: HUMR.FrameType, mukaderabbit.humr.Runtime
     - Name: 
       Entry: 8
       Data: 

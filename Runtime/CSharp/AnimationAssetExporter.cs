@@ -10,9 +10,9 @@ namespace HUMR
 {
     internal static class AnimationAssetExporter
     {
-        public static void SaveGenericAnimationAsset(AnimationClip clip, string humrPath, string displayName, string baseName, int takeIndex, AnimationControllerBuilder controllerBuilder)
+        public static void SaveGenericAnimationAsset(AnimationClip clip, string humrPath, string targetName, string baseName, int takeIndex, AnimationControllerBuilder controllerBuilder)
         {
-            var animFolderPath = $"{humrPath}/GenericAnimations/{PathUtils.SanitizeFileName(displayName)}";
+            var animFolderPath = $"{humrPath}/GenericAnimations/{PathUtils.SanitizeFileName(targetName)}";
             PathUtils.CreateDirectoryIfNotExist(animFolderPath);
         
             var animAssetPath = $"{animFolderPath}/{baseName}_Take{takeIndex+1}.anim";
@@ -29,11 +29,11 @@ namespace HUMR
             AssetDatabase.Refresh();
         }
         
-        public static void ExportFBX(Animator animator, AnimatorController controller, string humrPath, string displayName, string fileName, GameObject targetObject)
+        public static void ExportFBX(Animator animator, AnimatorController controller, string humrPath, string targetName, string fileName, GameObject targetObject)
         {
             animator.runtimeAnimatorController = controller;
         
-            var exportFolderPath = $"{humrPath}/FBXs/{PathUtils.SanitizeFileName(displayName)}";
+            var exportFolderPath = $"{humrPath}/FBXs/{PathUtils.SanitizeFileName(targetName)}";
             PathUtils.CreateDirectoryIfNotExist(exportFolderPath);
         
             var finalPath = $"{exportFolderPath}/{fileName}";

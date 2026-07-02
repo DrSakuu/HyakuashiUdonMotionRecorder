@@ -1,4 +1,3 @@
-using HarmonyLib;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -12,7 +11,7 @@ namespace HUMR
         public override void Start()
         {
             _player = Networking.LocalPlayer;
-            RecordingType = RecordingType.BoneRotations;
+            FrameType = FrameType.BoneRotations;
             TargetName = _player.displayName;
             RecordingObjects = new object[1+(int)HumanBodyBones.LastBone];
         }

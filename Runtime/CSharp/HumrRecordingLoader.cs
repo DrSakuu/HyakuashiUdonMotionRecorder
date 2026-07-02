@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -14,17 +15,17 @@ namespace HUMR
     [RequireComponent(typeof(Animator))]
     public class HumrRecordingLoader : MonoBehaviour, RecordLogLoaderInterface
     {
-        public const string LogMatchTarget = "-  [HUMR] ";
+        public const string LogMatchTarget = "-  [HUMR] RECORDING;";
         public const string LegacyLogMatchTarget = "-  HUMR:";
         public const string HumrPath = "Assets/HUMR";
 
         public string logFileDirectory;
-        public string[] logFilePaths;
+
         public List<RecordingFile> recordingFiles = new List<RecordingFile>();
-        public string[] recordingFileNames;
-        public int recordingFileIndex;
-        public List<Recording> recordings = new List<Recording>();
-        public int recordingIndex;
+        public int fileIndex;
+        public RecordingFile currentFile;
+        public int targetIndex;
+        
         public bool exportGenericAnimation;
 
         private Animator _animator;
@@ -32,92 +33,45 @@ namespace HUMR
         public void CollectLogFiles()
         {
             if (!Directory.Exists(logFileDirectory)) return;
-        
-            logFilePaths = Directory.GetFiles(logFileDirectory, "*.txt");
+
+            var logFilePaths = Directory.GetFiles(logFileDirectory, "*.txt");
             recordingFiles = RecordingScanner.BuildRecordingFiles(logFilePaths);
-            recordingFileNames = RecordingScanner.BuildRecordingFileNames(recordingFiles);
         }
 
-        public void CollectRecordings()
+        public void CollectTargetNames()
         {
-            if (recordingFileIndex < 0 || recordingFileIndex >= recordingFiles.Count) return;
-        
-            var currentFile = recordingFiles[recordingFileIndex];
-            recordings.Clear();
-        
-            if (currentFile.type == RecordingType.Legacy)
+            currentFile.targetNames = LogDataParser.CollectTargetNames(currentFile);
+        }
+
+        public void CollectTakes()
+        {
+            var currentTargetName = currentFile.targetNames[targetIndex];
+            var logLines = LogDataParser.LoadLogFileLines(currentFile.path);
+
+            currentFile.recordingTakes = currentFile.type == LogType.Legacy
+                ? LogDataParser.ParseLegacyTakes(logLines, currentTargetName)
+                : LogDataParser.PartitionLogLinesIntoTakes(logLines.ToArray(), currentTargetName);
+            
+            if (currentFile.recordingTakes != null && currentFile.recordingTakes.Count != 0) return;
+            
+            HumrLogger.Warning($"Motion Data with [{currentTargetName}] does not exist in {currentFile.path}");
+        }
+
+    public void LoadRecordingAndExportAnim()
             {
-                CollectLegacyRecordings(currentFile);
-                return;
-            }
-            CollectStandardRecordings(currentFile);
-        }
-
-        private void CollectLegacyRecordings(RecordingFile currentFile)
-        {
-            foreach (var line in File.ReadLines(currentFile.path))
-            {
-                var displayName = LogDataParser.ExtractLegacyDisplayName(line, LegacyLogMatchTarget);
-                if (displayName == null) continue;
-        
-                recordings.Add(new Recording { type = RecordingType.Legacy, target = displayName });
-                break;
-            }
-        }
-
-        private void CollectStandardRecordings(RecordingFile currentFile)
-        {
-            var foundRecordings = new HashSet<string>();
-            var recordingStartLogMatch = $"{LogMatchTarget}{HumrLogger.RecordingStarted}";
-        
-            foreach (var line in File.ReadLines(currentFile.path))
-            {
-                if (!line.Contains(recordingStartLogMatch)) continue;
-        
-                var splitContent = line.Split(new[] { recordingStartLogMatch }, StringSplitOptions.None);
-                if (splitContent.Length < 2) continue;
-        
-                var content = splitContent[1];
-                if (!foundRecordings.Add(content)) continue;
-        
-                var recording = LogDataParser.ParseRecordingEntry(content);
-                if (recording == null) continue;
-        
-                recordings.Add(recording);
-            }
-        }
-
-        public void LoadRecordingAndExportAnim()
-        {
 #if !UNITY_EDITOR
             HumrLogger.Error("Exporting animations is only possible in editor.");
             return;
 #else
-            if (!ValidateIndices()) return;
-        
-            var currentFile = recordingFiles[recordingFileIndex];
-            
-            var currentDisplayName = recordings[recordingIndex].target;
+            var currentTargetName = currentFile.targetNames[targetIndex];
             if (!ValidateAnimator()) return;
-        
-            var logLines = LogDataParser.LoadLogFileLines(currentFile.path);
-        
-            var takes = currentFile.type == RecordingType.Legacy
-                ? LogDataParser.ParseLegacyTakes(logLines, currentDisplayName)
-                : LogDataParser.PartitionLogLinesIntoTakes(logLines.ToArray(), currentDisplayName);
-        
-            if (takes == null || takes.Count == 0)
-            {
-                Debug.LogWarning($"Motion Data with [{currentDisplayName}] does not exist in {currentFile.path}");
-                return;
-            }
-        
+            
             var poseSnapshot = new AvatarPoseSnapshot();
             poseSnapshot.Take(transform, _animator);
         
             try
             {
-                ExecuteExportPipeline(takes, currentFile.path, currentDisplayName);
+                ExecuteExportPipeline(currentFile.recordingTakes, currentFile.path, currentTargetName);
             }
             finally
             {
@@ -126,11 +80,9 @@ namespace HUMR
 #endif
         }
 
-#if UNITY_EDITOR
         private bool ValidateIndices()
         {
-            if (recordingFileIndex < 0 || recordingFileIndex >= recordingFiles.Count) return false;
-            return recordingIndex >= 0 && recordingIndex < recordings.Count;
+            return targetIndex >= 0 && targetIndex < currentFile.recordingTakes.Count;
         }
 
         private bool ValidateAnimator()
@@ -140,7 +92,8 @@ namespace HUMR
             return _animator != null;
         }
 
-        private void ExecuteExportPipeline(List<RecordingTake> takes, string filePath, string displayName)
+#if UNITY_EDITOR
+        private void ExecuteExportPipeline(List<RecordingTake> takes, string filePath, string targetName)
         {
             PathUtils.CreateDirectoryIfNotExist(HumrPath);
             
@@ -156,13 +109,13 @@ namespace HUMR
         
                 if (exportGenericAnimation)
                 {
-                    AnimationAssetExporter.SaveGenericAnimationAsset(takeClip, HumrPath, displayName, baseAnimName, i, controllerBuilder);
+                    AnimationAssetExporter.SaveGenericAnimationAsset(takeClip, HumrPath, targetName, baseAnimName, i, controllerBuilder);
                 }
                 
                 controllerBuilder.AddClipToController(takeClip);
             }
         
-            AnimationAssetExporter.ExportFBX(_animator, controllerBuilder.Controller, HumrPath, displayName, baseAnimName, gameObject);
+            AnimationAssetExporter.ExportFBX(_animator, controllerBuilder.Controller, HumrPath, targetName, baseAnimName, gameObject);
         }
 
 #endif
