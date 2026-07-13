@@ -32,37 +32,61 @@ namespace HUMR
         public static List<string> LoadLogFileLines(string path)
         {
             var lines = new List<string>();
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var sr = new StreamReader(fs))
+            using (var reader = OpenReadOnlyTextFile(path))
             {
-                while (0 <= sr.Peek()) lines.Add(sr.ReadLine());
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    lines.Add(line);
+                }
             }
 
             return lines;
         }
+        
+        public static StreamReader OpenReadOnlyTextFile(string filePath)
+        {
+            var fileStream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite);
+
+            return new StreamReader(fileStream);
+        }
 
         public static string[] CollectTargetNames(RecordingFile recordingFile)
         {
+            if (!File.Exists(recordingFile.path)) return null;
+            
             var foundTargets = new HashSet<string>();
-            foreach (var line in File.ReadLines(recordingFile.path))
+            using (var reader = OpenReadOnlyTextFile(recordingFile.path))
             {
-                string targetName;
-                switch (recordingFile.type)
+                string line;
+                while ((line = reader.ReadLine()) != null)
                 {
-                    case LogType.Humr:
-                        targetName = ExtractTargetName(line, HumrRecordingLoader.LogMatchTarget);
-                        break;
-                    case LogType.Legacy:
-                        targetName = ExtractLegacyTargetName(line, HumrRecordingLoader.LegacyLogMatchTarget);
-                        break;
-                    case LogType.Corrupt:
-                    case LogType.NoData:
-                    default:
-                        continue;
+                    {
+                        string targetName;
+                        switch (recordingFile.type)
+                        {
+                            case LogType.Humr:
+                                targetName = ExtractTargetName(line, HumrRecordingLoader.LogMatchTarget);
+                                break;
+                            case LogType.Legacy:
+                                targetName = ExtractLegacyTargetName(line, HumrRecordingLoader.LegacyLogMatchTarget);
+                                break;
+                            case LogType.Corrupt:
+                            case LogType.NoData:
+                            default:
+                                continue;
+                        }
+
+                        if (targetName == null) continue;
+                        foundTargets.Add(targetName);
+                    }
                 }
-                if (targetName == null) continue;
-                foundTargets.Add(targetName);
             }
+
             return foundTargets.ToArray();
         }
 

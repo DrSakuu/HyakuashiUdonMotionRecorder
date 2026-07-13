@@ -20,27 +20,85 @@ namespace HUMR
         public const string HumrPath = "Assets/HUMR";
 
         public string logFileDirectory;
-
         public List<RecordingFile> recordingFiles = new List<RecordingFile>();
+        public string[] recordingFileNames;
         public int fileIndex;
+
         public RecordingFile currentFile;
         public int targetIndex;
-        
         public bool exportGenericAnimation;
 
         private Animator _animator;
 
-        public void CollectLogFiles()
+        public void UpdateRecordingFiles()
         {
             if (!Directory.Exists(logFileDirectory)) return;
 
             var logFilePaths = Directory.GetFiles(logFileDirectory, "*.txt");
-            recordingFiles = RecordingScanner.BuildRecordingFiles(logFilePaths);
+            if (logFilePaths.Length == recordingFiles.Count) return;
+            
+            recordingFiles = CollectRecordingFiles(logFilePaths);
+            if (recordingFiles == null || recordingFiles.Count == 0)
+            {
+                recordingFileNames = new string[] { "No logs found" };
+                return;
+            }
+
+            recordingFileNames = recordingFiles.Select(file => file.fileName).ToArray();
+            SetCurrentRecordingFile();
+        }
+
+        private static List<RecordingFile> CollectRecordingFiles(string[] filePaths)
+        {
+            var discoveredFiles = new List<RecordingFile>();
+
+            foreach (var filePath in filePaths)
+            {
+                var fileType = RecordingScanner.DetermineRecordingType(filePath);
+                var writeTime = File.GetLastWriteTime(filePath);
+                var fileName = RecordingScanner.BuildRecordingFileName(filePath, fileType);
+                discoveredFiles.Add(new RecordingFile
+                {
+                    path = filePath, type = fileType , LastWriteTime = writeTime, fileName =  fileName
+                });
+            }
+
+            return discoveredFiles
+                .OrderByDescending(entry => entry.LastWriteTime)
+                .ToList();
+        }
+
+        public void SetCurrentRecordingFile()
+        {
+            if (recordingFiles == null || recordingFiles.Count == 0)
+            {
+                currentFile = null;
+                return;
+            }
+            
+            fileIndex = Mathf.Clamp(fileIndex, 0, recordingFiles.Count - 1);
+            currentFile = recordingFiles[fileIndex];
+            CollectTargetNames();
+            CollectTakes();
         }
 
         public void CollectTargetNames()
         {
-            currentFile.targetNames = LogDataParser.CollectTargetNames(currentFile);
+            switch (currentFile.type)
+            {
+                case LogType.Humr:
+                case LogType.Legacy:
+                    currentFile.targetNames = LogDataParser.CollectTargetNames(currentFile);
+                    break;
+                case LogType.Corrupt:
+                    currentFile.targetNames = new[] { "Humr data is corrupted" };
+                    break;
+                case LogType.NoData:
+                default:
+                    currentFile.targetNames = new[] { "No Humr data" };
+                    break;
+            }
+            targetIndex = Mathf.Clamp(targetIndex, 0, recordingFiles.Count - 1);
         }
 
         public void CollectTakes()
@@ -51,13 +109,16 @@ namespace HUMR
             currentFile.recordingTakes = currentFile.type == LogType.Legacy
                 ? LogDataParser.ParseLegacyTakes(logLines, currentTargetName)
                 : LogDataParser.PartitionLogLinesIntoTakes(logLines.ToArray(), currentTargetName);
-            
-            if (currentFile.recordingTakes != null && currentFile.recordingTakes.Count != 0) return;
-            
-            HumrLogger.Warning($"Motion Data with [{currentTargetName}] does not exist in {currentFile.path}");
+
+            if (currentFile.recordingTakes == null)
+            {
+                currentFile.foundTakesStr = "Found 0 takes.";
+                return;
+            }
+            currentFile.foundTakesStr = $"Found {currentFile.recordingTakes.Count} takes.";
         }
 
-    public void LoadRecordingAndExportAnim()
+        public void LoadRecordingAndExportAnim()
             {
 #if !UNITY_EDITOR
             HumrLogger.Error("Exporting animations is only possible in editor.");
@@ -93,6 +154,7 @@ namespace HUMR
         }
 
 #if UNITY_EDITOR
+
         private void ExecuteExportPipeline(List<RecordingTake> takes, string filePath, string targetName)
         {
             PathUtils.CreateDirectoryIfNotExist(HumrPath);
