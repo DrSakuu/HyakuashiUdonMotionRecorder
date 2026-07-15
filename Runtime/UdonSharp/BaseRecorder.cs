@@ -10,7 +10,9 @@ namespace HUMR
         Unknown,
         Legacy,
         BoneRotations,
-        Object
+        Object,
+        BoneRotationsWithIK,
+        HumanMuscles
     }
 
     public class BaseRecorder : UdonSharpBehaviour

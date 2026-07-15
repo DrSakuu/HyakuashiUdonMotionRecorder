@@ -10,7 +10,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 - Split up code into different methods
 
 > [!WARNING]
-> This is v2.0.0-alpha.1, subject to breaking changes.
+> This is v2.0.0-alpha.0, subject to breaking changes.
 
 ## Installation
 
@@ -19,10 +19,10 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 ### Requirements
 
-* Unity 2022.3.22f1
-* VRChat SDK - Worlds 3.10.3
-* FBX Exporter Version 4.2.1
-* VRChat 2026.2.2
+- Unity 2022.3.22f1
+- VRChat SDK - Worlds 3.10.3
+- FBX Exporter Version 4.2.1
+- VRChat 2026.2.2
 
 Download the `.unitypackage` from releases and import it into your VRChat World project.
 
@@ -32,4 +32,4 @@ Duplicate `Humr Sample Scene.unity` from `Packages/Hyakuashi Udon Motion Recorde
 
 ## Changelog
 
-[CHANGELOG.md](CHANGELOG.md#200-alpha1---unreleased)
+[CHANGELOG.md](CHANGELOG.md#200---unreleased)
