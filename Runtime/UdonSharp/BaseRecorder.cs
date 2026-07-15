@@ -99,7 +99,7 @@ namespace HUMR
 
         private void RecordObjects()
         {
-            var timeStr = _recordTime.ToString(CultureInfo.InvariantCulture);
+            var timeStr = _recordTime.ToString(HumrLogger.FloatFormat, CultureInfo.InvariantCulture);
             var typeStr = HumrLogger.RecordingTypeToString(FrameType);
             var outputString = string.Join(HumrLogger.VariableDelimiter, HumrLogger.RecordingTag, TargetName, _takeNumber, typeStr, timeStr);
 
