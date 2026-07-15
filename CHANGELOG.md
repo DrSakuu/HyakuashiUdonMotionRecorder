@@ -1,37 +1,32 @@
 # Changelog
 
-## [2.0.0-beta.0] - Unreleased
+## [2.0.0-beta.0] - 2026-07-16
 
-A complete rewrite of the codebase so new features can be implemented more easily. Not compatible with previous versions.
+A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format, can read pre-2.0.0 logs but not write them.
 
 > [!WARNING]
-> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing. 
+> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing.
 
 ### Added
 
-- Select player DisplayName from a dropdown
 - Button to explore log file path button in advanced foldout
 - Add recording button to `PlayerRecorder.prefab`
 - Load separate takes
-- GitHub action to build .unitypackage
-- A new `MotionFrame` structure to hold the recorded data
+- GitHub Action to build .unitypackage
 
 ### Changed
 
 - Complete rewrite of the codebase
-- Combine Recorder and OutputLogLoader `.unitypackage`s
-- List only log files with HUMR data
-- New OutputLog format: Semicolons to separate different types, start and end markers
+- Combine Recorder and OutputLogLoader `.unitypackage`s into `mukaderabbit.humr.unitypackage`
+- New OutputLog format: Semicolons to separate different parameters, more metadata
 
 ```txt
-[HUMR] Recording started;{RecordingType};{DisplayName}
-[HUMR] {DisplayName};{RecordTime};{HipsPosition};{HumanBoneRotations}
-[HUMR] Recording stopped;{RecordingType};{DisplayName}
+[HUMR] RECORDING;{TargetName};{TakeNumber};{FrameType};{RecordTime};{objects[]}
 ```
 
-- Remove hard-coded log parsing indexes
-- Remove duplicated code
 - Select newest log file automatically, sort in reverse order
+- Show which log files have HUMR data
+- Select player DisplayName from a dropdown
 
 ### Fixed
 
@@ -41,8 +36,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 ### Removed
 
-- `InteractRecorder.cs`
-- `Recorder.prefab`
+- Record all players
 
 ## [VCC_1.1.1] - 2026-06-09
 

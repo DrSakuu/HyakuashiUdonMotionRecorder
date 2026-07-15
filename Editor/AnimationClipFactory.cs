@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HUMR
+namespace Humr.Editor
 {
     public static class AnimationClipFactory
     {
@@ -24,7 +24,8 @@ namespace HUMR
             return keyframes;
         }
 
-        private static void ProcessFrameKeyframes(RecordingFrame frame, Keyframe[][] keyframes, int frameIdx, Animator animator)
+        private static void ProcessFrameKeyframes(
+            RecordingFrame frame, Keyframe[][] keyframes, int frameIdx, Animator animator)
         {
             var localHipPos = ProcessHipPosition(frame.HipPosition, animator);
             keyframes[0][frameIdx] = new Keyframe(frame.RecordTime, localHipPos.x);
@@ -57,7 +58,8 @@ namespace HUMR
             }
         }
 
-        private static void RecordLocalRotationsToKeyframes(Keyframe[][] keyframes, int frameIdx, RecordingFrame frame, Animator animator)
+        private static void RecordLocalRotationsToKeyframes(
+            Keyframe[][] keyframes, int frameIdx, RecordingFrame frame, Animator animator)
         {
             for (var k = 0; k < HumanTrait.BoneName.Length; k++)
             {
@@ -91,10 +93,14 @@ namespace HUMR
                 var bonePath = PathUtils.GetHierarchyPath(boneTransform);
                 var curveBaseIndex = m * 4 + 3;
 
-                clip.SetCurve(bonePath, typeof(Transform), "localRotation.x", new AnimationCurve(keyframes[curveBaseIndex]));
-                clip.SetCurve(bonePath, typeof(Transform), "localRotation.y", new AnimationCurve(keyframes[curveBaseIndex + 1]));
-                clip.SetCurve(bonePath, typeof(Transform), "localRotation.z", new AnimationCurve(keyframes[curveBaseIndex + 2]));
-                clip.SetCurve(bonePath, typeof(Transform), "localRotation.w", new AnimationCurve(keyframes[curveBaseIndex + 3]));
+                clip.SetCurve(bonePath, typeof(Transform), "localRotation.x",
+                    new AnimationCurve(keyframes[curveBaseIndex]));
+                clip.SetCurve(bonePath, typeof(Transform), "localRotation.y",
+                    new AnimationCurve(keyframes[curveBaseIndex + 1]));
+                clip.SetCurve(bonePath, typeof(Transform), "localRotation.z",
+                    new AnimationCurve(keyframes[curveBaseIndex + 2]));
+                clip.SetCurve(bonePath, typeof(Transform), "localRotation.w",
+                    new AnimationCurve(keyframes[curveBaseIndex + 3]));
             }
 
             clip.EnsureQuaternionContinuity();

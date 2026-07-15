@@ -1,9 +1,8 @@
-using System;
 using UnityEngine;
 
-namespace HUMR
+namespace Humr
 {
-    public class HumrLogger
+    public static class HumrLogger
     {
         private const string HumrTag = "[HUMR]";
         public const string RecordingTag = "RECORDING";
@@ -31,7 +30,7 @@ namespace HUMR
             Debug.LogAssertion($"{HumrTag} {message}");
         }
 
-        public static string FormatVector3Components(Vector3 vector3, string format=FloatFormat)
+        public static string FormatVector3Components(Vector3 vector3, string format = FloatFormat)
         {
             var vector3XStr = vector3.x.ToString(format);
             var vector3YStr = vector3.y.ToString(format);
@@ -39,13 +38,13 @@ namespace HUMR
             return string.Join(ComponentDelimiter, vector3XStr, vector3YStr, vector3ZStr);
         }
 
-        public static string FormatQuaternionComponents(Quaternion quaternion, string format=FloatFormat)
+        public static string FormatQuaternionComponents(Quaternion quaternion, string format = FloatFormat)
         {
             var quaternionXStr = quaternion.x.ToString(format);
             var quaternionYStr = quaternion.y.ToString(format);
             var quaternionZStr = quaternion.z.ToString(format);
             var quaternionWStr = quaternion.w.ToString(format);
-            return string.Join(ComponentDelimiter, quaternionXStr, quaternionYStr, quaternionZStr,  quaternionWStr);
+            return string.Join(ComponentDelimiter, quaternionXStr, quaternionYStr, quaternionZStr, quaternionWStr);
         }
 
         public static string RecordingTypeToString(FrameType frameType)
@@ -59,6 +58,8 @@ namespace HUMR
                 case FrameType.Object:
                     return "Object";
                 case FrameType.Unknown:
+                case FrameType.BoneRotationsWithIK:
+                case FrameType.HumanMuscles:
                 default:
                     return "Unknown";
             }

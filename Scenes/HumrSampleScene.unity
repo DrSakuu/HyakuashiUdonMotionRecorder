@@ -1952,52 +1952,49 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   logFileDirectory: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat
-  logFilePaths:
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-20_14-10-47.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-29_14-15-46.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-29_18-24-20.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-29_22-26-19.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_13-53-25.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_13-56-08.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_15-02-10.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_17-24-34.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_17-54-14.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_23-18-26.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-15-47.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-31-56.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-48-46.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-50-51.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-53-30.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_05-20-31.txt
-  recordFilePaths:
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_05-20-31.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-53-30.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-50-51.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-48-46.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-31-56.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-01_03-15-47.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_17-54-14.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_17-24-34.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_15-02-10.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-30_13-53-25.txt
-  - C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-06-29_14-15-46.txt
-  recordFileNames:
-  - 2026-07-01_05-20-31
-  - 2026-07-01_03-53-30
-  - 2026-07-01_03-50-51
-  - 2026-07-01_03-48-46
-  - 2026-07-01_03-31-56
-  - 2026-07-01_03-15-47
-  - 2026-06-30_17-54-14
-  - 2026-06-30_17-24-34
-  - 2026-06-30_15-02-10
-  - 2026-06-30_13-53-25
-  - 2026-06-29_14-15-46
-  recordFileIndex: 0
-  recordings:
-  - type: 1
-    name: DrSakuuCuddles
-  recordingIndex: 0
+  recordingFiles:
+  - path: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-13_22-29-15.txt
+    type: 3
+    fileName: 2026-07-13_22-29-15 (No Humr Data)
+    targetNames: []
+    recordingTakes: []
+  - path: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-13_18-29-23.txt
+    type: 3
+    fileName: 2026-07-13_18-29-23 (No Humr Data)
+    targetNames: []
+    recordingTakes: []
+  - path: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-13_17-11-17.txt
+    type: 3
+    fileName: 2026-07-13_17-11-17 (No Humr Data)
+    targetNames: []
+    recordingTakes: []
+  - path: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-13_12-36-32.txt
+    type: 3
+    fileName: 2026-07-13_12-36-32 (No Humr Data)
+    targetNames: []
+    recordingTakes: []
+  - path: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-13_00-33-51.txt
+    type: 3
+    fileName: 2026-07-13_00-33-51 (No Humr Data)
+    targetNames: []
+    recordingTakes: []
+  - path: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-12_17-13-54.txt
+    type: 3
+    fileName: 2026-07-12_17-13-54 (No Humr Data)
+    targetNames: []
+    recordingTakes: []
+  - path: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-12_10-14-54.txt
+    type: 3
+    fileName: 2026-07-12_10-14-54 (No Humr Data)
+    targetNames: []
+    recordingTakes: []
+  currentFile:
+    path: C:\Users\Sakuu-Holo\AppData\LocalLow\VRChat\VRChat\output_log_2026-07-13_22-29-15.txt
+    type: 3
+    fileName: 2026-07-13_22-29-15 (No Humr Data)
+    targetNames: []
+    recordingTakes: []
+  targetIndex: 0
   exportGenericAnimation: 0
 --- !u!1001 &1903263488
 PrefabInstance:

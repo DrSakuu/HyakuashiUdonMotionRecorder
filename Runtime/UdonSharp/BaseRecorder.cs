@@ -3,14 +3,16 @@ using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace HUMR
+namespace Humr
 {
     public enum FrameType
     {
         Unknown,
         Legacy,
         BoneRotations,
-        Object
+        Object,
+        BoneRotationsWithIK,
+        HumanMuscles
     }
 
     public class BaseRecorder : UdonSharpBehaviour
@@ -27,15 +29,15 @@ namespace HUMR
         [SerializeField] [Tooltip("Frames per second for recording.")]
         protected float recordFramerate = 30;
 
-        protected FrameType FrameType = FrameType.Object;
-        protected string TargetName = "Target";
-        protected object[] RecordingObjects;
-
         private bool _isRecording;
-        private float _recordTime;
         private float _nextRecordTime;
         private float _recordInterval;
+        private float _recordTime;
         private int _takeNumber = -1;
+
+        protected FrameType FrameType = FrameType.Object;
+        protected object[] RecordingObjects;
+        protected string TargetName = "Target";
 
         public virtual void Start()
         {
@@ -101,7 +103,8 @@ namespace HUMR
         {
             var timeStr = _recordTime.ToString(HumrLogger.FloatFormat, CultureInfo.InvariantCulture);
             var typeStr = HumrLogger.RecordingTypeToString(FrameType);
-            var outputString = string.Join(HumrLogger.VariableDelimiter, HumrLogger.RecordingTag, TargetName, _takeNumber, typeStr, timeStr);
+            var outputString = string.Join(HumrLogger.VariableDelimiter, HumrLogger.RecordingTag, TargetName,
+                _takeNumber, typeStr, timeStr);
 
             UpdateRecordingObjects();
             foreach (var recObj in RecordingObjects)

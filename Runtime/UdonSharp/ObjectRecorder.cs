@@ -1,4 +1,4 @@
-﻿namespace HUMR
+﻿namespace Humr
 {
     public class ObjectRecorder : BaseRecorder
     {
