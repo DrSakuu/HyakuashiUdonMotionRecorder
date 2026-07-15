@@ -1,7 +1,6 @@
 ﻿# TODO
 
 - [ ] English and Japanese localization
-- [ ] Combine `RecordingScanner.cs` and `LogDataParser.cs`
 
 ## BaseRecorder.cs
 
@@ -25,6 +24,7 @@
 ## HumrRecordingLoader.cs
 
 - [ ] Include displayname and take number in exported animations
+- [ ] Remove prefix from exported FBX name
 - [ ] Make target selector actually select only those takes
 - [ ] Detect Avatar height mismatch, scale from calibrated first frame
 - [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations

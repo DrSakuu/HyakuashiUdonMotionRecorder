@@ -1,10 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace HUMR
+namespace Humr.Editor
 {
     public static class PathUtils
     {

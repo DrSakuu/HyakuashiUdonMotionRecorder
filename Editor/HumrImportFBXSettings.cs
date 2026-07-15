@@ -1,25 +1,16 @@
-#if UNITY_EDITOR
 using UnityEditor;
 
-namespace HUMR
+namespace Humr.Editor
 {
     public class HumrImportFBXSettings : AssetPostprocessor
     {
-        private void OnPreprocessModel()
-        {
-            if (!assetPath.Contains("HUMR/FBXs")) return;
-            
-            var importer = (ModelImporter)assetImporter;
-            importer.animationType = ModelImporterAnimationType.Human;
-        }
-
         private void OnPreprocessAnimation()
         {
             if (!assetPath.Contains("HUMR/FBXs")) return;
-            
+
             var importer = (ModelImporter)assetImporter;
             importer.animationType = ModelImporterAnimationType.Human;
-            var importerClips = 
+            var importerClips =
                 importer.clipAnimations.Length == 0 ? importer.defaultClipAnimations : importer.clipAnimations;
             foreach (var clipAnimation in importerClips)
             {
@@ -35,6 +26,13 @@ namespace HUMR
 
             importer.clipAnimations = importerClips;
         }
+
+        private void OnPreprocessModel()
+        {
+            if (!assetPath.Contains("HUMR/FBXs")) return;
+
+            var importer = (ModelImporter)assetImporter;
+            importer.animationType = ModelImporterAnimationType.Human;
+        }
     }
 }
-#endif

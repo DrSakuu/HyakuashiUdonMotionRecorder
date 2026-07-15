@@ -1,7 +1,7 @@
 using UnityEngine;
 using VRC.SDKBase;
 
-namespace HUMR
+namespace Humr
 {
     public class PlayerRecorder : BaseRecorder
     {
@@ -13,7 +13,7 @@ namespace HUMR
             _player = Networking.LocalPlayer;
             FrameType = FrameType.BoneRotations;
             TargetName = _player.displayName;
-            RecordingObjects = new object[1+(int)HumanBodyBones.LastBone];
+            RecordingObjects = new object[1 + (int)HumanBodyBones.LastBone];
         }
 
         public override void OnAvatarChanged(VRCPlayerApi player)
