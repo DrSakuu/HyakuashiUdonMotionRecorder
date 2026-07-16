@@ -1,13 +1,27 @@
 {
   "name": "mukaderabbit.humr",
-  "version": "2.0.0-alpha.0",
   "displayName": "Hyakuashi Udon Motion Recorder",
-  "description": "Motion capture solution for VRChat with Udon.",
+  "version": "2.0.0-beta.0",
+  "description": "Motion capture solution for VRChat with Udon.",  
+  "author": {
+    "name": "mukaderabbit",
+    "url": "https://github.com/mukaderabbit/mukaderabbit-HyakuashiUdonMotionRecorder-HUMR-"
+  },
+  "legacyFolders": {
+    "Assets\\HUMR\\Prefabs": "a9daba3508e40b842b5213e24a43c417",
+    "Assets\\HUMR\\ReadMe": "d1bf393c3e46e554d963a2c0d6d4df74",
+    "Assets\\HUMR\\Scenes": "a6fa368aafb93394288d55085c8b1022",
+    "Assets\\HUMR\\Scripts": "78b965b503bad07419b69b59ca9b0330"
+  },
+  "legacyPackages": [
+    "humr.outputlogloader"
+  ],
   "unity": "2022.3",
   "dependencies": {
     "com.unity.formats.fbx": "4.2.1"
   },
   "vpmDependencies": {
     "com.vrchat.worlds": ">=3.8.1"
-  }
+  },
+  "license": "MIT"
 }

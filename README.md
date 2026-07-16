@@ -9,13 +9,10 @@ A complete rewrite of the codebase so new features can be implemented more easil
 - Select player DisplayName from a dropdown
 - Split up code into different methods
 
-> [!WARNING]
-> This is v2.0.0-alpha.0, subject to breaking changes.
-
 ## Installation
 
 > [!WARNING]
-> Remove `Packages/HUMR OutputLogLoader` and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing.
+> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing.
 
 ### Requirements
 
@@ -32,4 +29,4 @@ Duplicate `Humr Sample Scene.unity` from `Packages/Hyakuashi Udon Motion Recorde
 
 ## Changelog
 
-[CHANGELOG.md](CHANGELOG.md#200---unreleased)
+[CHANGELOG.md](CHANGELOG.md#200-beta0---2026-07-16)
