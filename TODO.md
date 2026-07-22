@@ -1,42 +1,44 @@
 ﻿# TODO
 
 - [ ] English and Japanese localization
+- [ ] Make compatible with both World and Avatar projects
 
 ## BaseRecorder.cs
 
+- [ ] Identify takes with start timestamp
 - [ ] Set TargetName default to hierarchy path
 - [ ] Option for world relative or start position relative recording
-- [ ] Add take number and framerate to start tags
-- [ ] Add take number, frame count and duration to end
+- [ ] Add take timestamp and framerate to start tags
+- [ ] Add take timestamp, frame count and duration to end
 - [ ] Analyze frametimes, did we drop frames?
 
 ## PlayerRecorder.cs
 
 - [ ] Restart take on avatar change or eye height change
-- [ ] T-pose on avatar change to calibrate hip height, save as first frame
+- [ ] T-pose on avatar change to calibrate hip height, save to start tags
 - [ ] Record hand and feet positions for IK
 - [ ] Record all players
 
 ## PlayerRecorder.prefab
 
+- [ ] Add recording origin marker
+- [ ] Add countdown
 - [ ] Add recording overlay with status and framerate
+- [ ] Advanced options to change framerate
+- [ ] Hold right stick up to show stop button
 
-## HumrRecordingLoader.cs
+## HumrRecordingLoaderEditor.cs
 
 - [ ] Include displayname and take number in exported animations
 - [ ] Remove prefix from exported FBX name
 - [ ] Make target selector actually select only those takes
-- [ ] Detect Avatar height mismatch, scale from calibrated first frame
+- [ ] Detect Avatar height mismatch, scale from calibrated start tags
 - [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations
 - [ ] Fix toes rotation
-
-## HumrRecordingLoaderEditor.cs
-
 - [ ] Update RecordingFiles if last write time is different
 - [ ] Export Mode (Humanoid/Generic) dropdown
 - [ ] List takes with durations and checkmarks to include them
 
 ## Samples
 
-- [ ] Add canvas with instructions
-- [ ] Make `Humr Sample Scene.unity` into a package sample
+- [ ] Update public world

@@ -1,8 +1,8 @@
 {
   "name": "mukaderabbit.humr",
   "displayName": "Hyakuashi Udon Motion Recorder",
-  "version": "2.0.0-beta.0",
-  "description": "Motion capture solution for VRChat with Udon.",  
+  "version": "2.0.0-beta.1",
+  "description": "HUMR is a motion capture tool that records player's movements into the VRChat log files and then reads them in a VRChat world project. This is version 2.0.0, which uses a new log format.",  
   "author": {
     "name": "mukaderabbit",
     "url": "https://github.com/mukaderabbit/mukaderabbit-HyakuashiUdonMotionRecorder-HUMR-"
@@ -23,5 +23,12 @@
   "vpmDependencies": {
     "com.vrchat.worlds": ">=3.8.1"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "samples": [
+    {
+      "displayName": "HUMR Sample World",
+      "description": "A scene with a HumrPlayerRecorder prefab and HumrRecordingLoader script. Requires the VRChat World SDK.",
+      "path": "Samples~/HumrSampleWorld"
+    }
+  ]
 }

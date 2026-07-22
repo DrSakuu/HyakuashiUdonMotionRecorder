@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.0-beta.1] - Unreleased
+
+### Added
+
+- HUMR Sample World
+
 ## [2.0.0-beta.0] - 2026-07-16
 
 A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format, can read pre-2.0.0 logs but not write them.

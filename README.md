@@ -7,7 +7,9 @@ A complete rewrite of the codebase so new features can be implemented more easil
 - Combine Recorder and OutputLogLoader `.unitypackage`s
 - New Recording log format: semicolons to separate different types
 - Select player DisplayName from a dropdown
-- Split up code into different methods
+- Add HUMR Sample World
+
+HUMR is a motion capture tool that records player's movements into the VRChat log files and then reads them in a VRChat world project. This is version 2.0.0, which uses a new log format.
 
 ## Installation
 
@@ -25,7 +27,19 @@ Download the `.unitypackage` from releases and import it into your VRChat World 
 
 ## Usage
 
-Duplicate `Humr Sample Scene.unity` from `Packages/Hyakuashi Udon Motion Recorder/Scenes/` into your `Assets`. Build & Test the world to do a recording, or use [the public world](https://vrchat.com/home/launch?worldId=wrld_5962f8a1-bc92-481e-b05a-7cb90eadce34). Use the `PlayerRecordingLoader` component in `Avatar_Utility Loader` to Load recording and export fbx.
+### Recording
+
+Either use [the public world](https://vrchat.com/home/launch?worldId=wrld_1fbb2fea-788e-43a8-a588-8ee7edf8e680) or import and build the HUMR Sample World from the Package Manager.
+
+Use the button on the mirror to start and stop recording. Multiple recordings will be split into takes in the same exported file.
+
+The bones of the avatar that you record and load your motion has to match exactly, so if you don't have access to the .fbx file of your current avatar, you can use the sample robot from the pedestal on the left, because that is included in the package. Unity can retarget the animation to another avatar when you import it. If you want to apply the animation to another model outside of Unity, you can use a tool like Rokoko plugin for Blender to retarget it.
+
+VRChat logs are deleted after 48 hours, so make sure to load the saved data or copy the log files elsewhere.
+
+### Loading
+
+Use the Avatar_Utility Recording Loader in the HUMR Sample World to load your animation, or attach the HumrRecordingLoader component to your custom avatar.
 
 ## Changelog
 
