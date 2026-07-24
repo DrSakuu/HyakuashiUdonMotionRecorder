@@ -1,3 +1,4 @@
+#if UDONSHARP
 using System;
 using System.Globalization;
 using UdonSharp;
@@ -6,16 +7,6 @@ using UnityEngine.UI;
 
 namespace Humr
 {
-    public enum FrameType
-    {
-        Unknown,
-        Legacy,
-        BoneRotations,
-        Object,
-        BoneRotationsWithIK,
-        HumanMuscles
-    }
-
     public class BaseRecorder : UdonSharpBehaviour
     {
         [SerializeField] [Tooltip("Start recording button, connect to StartRecording event.")]
@@ -136,3 +127,4 @@ namespace Humr
         }
     }
 }
+#endif

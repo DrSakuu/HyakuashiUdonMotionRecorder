@@ -1,4 +1,5 @@
-﻿namespace Humr
+﻿#if UDONSHARP
+namespace Humr
 {
     public class ObjectRecorder : BaseRecorder
     {
@@ -18,3 +19,4 @@
         }
     }
 }
+#endif

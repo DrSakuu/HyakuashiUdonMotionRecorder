@@ -21,7 +21,6 @@
     "com.unity.formats.fbx": "4.2.1"
   },
   "vpmDependencies": {
-    "com.vrchat.worlds": ">=3.8.1"
   },
   "license": "MIT",
   "samples": [

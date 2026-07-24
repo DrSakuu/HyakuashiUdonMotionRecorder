@@ -2,6 +2,17 @@ using UnityEngine;
 
 namespace Humr
 {
+    // TODO: Rename to RecordingType
+    public enum FrameType
+    {
+        Unknown,
+        Legacy,
+        BoneRotations,
+        Object,
+        BoneRotationsWithIK,
+        HumanMuscles
+    }
+    
     public static class HumrLogger
     {
         private const string HumrTag = "[HUMR]";

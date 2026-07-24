@@ -42,6 +42,7 @@ namespace Humr.Editor
             if (currentFile.type != LogType.Humr
                 && currentFile.type != LogType.Legacy) return;
 
+            // TODO: Warn about non-humanoid animator
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             GUILayout.Label(currentFile.foundTakesStr);
             exportGenericAnimation = GUILayout.Toggle(exportGenericAnimation, "Export Generic Animation");
@@ -219,6 +220,7 @@ namespace Humr.Editor
             _recordLoader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
             var exportPath = FbxAssetPath(HumrPath, targetName, baseAnimName);
             AnimationControllerBuilder.ExportFBX(exportPath, _recordLoader.gameObject);
+            // TODO: Make temporary animator controller work with humanoid avatar or remove it
         }
 
         private void ExportTake(

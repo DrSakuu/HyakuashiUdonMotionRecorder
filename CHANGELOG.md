@@ -2,13 +2,17 @@
 
 ## [2.0.0-beta.1] - Unreleased
 
-### Changed
-
-- Use unix timestamp as take number
-
 ### Added
 
 - HUMR Sample World
+
+### Changed
+
+- BaseRecorder: Use Unix timestamp as take number
+
+### Removed
+
+- BaseRecorder: Remove UdonSharp dependency
 
 ## [2.0.0-beta.0] - 2026-07-16
 

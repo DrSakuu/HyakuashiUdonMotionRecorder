@@ -1,3 +1,4 @@
+#if UDONSHARP
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -36,3 +37,4 @@ namespace Humr
         }
     }
 }
+#endif

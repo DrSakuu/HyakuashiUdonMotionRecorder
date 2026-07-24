@@ -1,7 +1,6 @@
 ﻿# TODO
 
 - [ ] English and Japanese localization
-- [ ] Make compatible with both World and Avatar projects
 
 ## BaseRecorder.cs
 
@@ -41,3 +40,4 @@
 ## Samples
 
 - [ ] Update public world
+- 
