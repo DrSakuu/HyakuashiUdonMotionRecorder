@@ -5,7 +5,6 @@
 
 ## BaseRecorder.cs
 
-- [ ] Identify takes with start timestamp
 - [ ] Set TargetName default to hierarchy path
 - [ ] Option for world relative or start position relative recording
 - [ ] Add take timestamp and framerate to start tags
@@ -31,7 +30,7 @@
 
 - [ ] Include displayname and take number in exported animations
 - [ ] Remove prefix from exported FBX name
-- [ ] Make target selector actually select only those takes
+- [ ] Make target selector actually select only takes belonging to target
 - [ ] Detect Avatar height mismatch, scale from calibrated start tags
 - [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations
 - [ ] Fix toes rotation

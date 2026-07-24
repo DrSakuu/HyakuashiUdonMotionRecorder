@@ -32,6 +32,7 @@ namespace Humr.Editor
     public class RecordingTake
     {
         public string targetName;
+        public long takeTimestamp;
 
         public RecordingTake()
         {
@@ -155,21 +156,25 @@ namespace Humr.Editor
             var takes = new List<RecordingTake>();
             var currentTake = new RecordingTake { targetName = targetName };
             var targetMatchStr = LogMatchTarget + targetName + HumrLogger.VariableDelimiter;
-            var foundTakes = 0;
             var beforeTime = -1f;
 
             foreach (var line in lines)
             {
                 if (!line.Contains(targetMatchStr)) continue;
 
-                if (!TryParseTakeLine(
-                        line, targetMatchStr, out var takeSplit, out var currentTime)) continue;
+                var takeStr = line.Split(targetMatchStr)[1];
+                if (!TryParseTakeLine(takeStr, out var takeSplit, out var currentTime)) continue;
 
-                if (ShouldStartNewTake(takeSplit, foundTakes, currentTime, beforeTime, currentTake))
+                var lineTimestamp = long.Parse(takeSplit[0]);
+                if (currentTake.takeTimestamp == 0 && currentTake.Frames.Count == 0)
+                {
+                    currentTake.takeTimestamp = lineTimestamp;
+                }
+                else if (ShouldStartNewTake(lineTimestamp, currentTime, beforeTime, currentTake))
                 {
                     takes.Add(currentTake);
-                    currentTake = new RecordingTake();
-                    foundTakes++;
+                    currentTake = new RecordingTake { targetName = targetName, takeTimestamp = lineTimestamp};
+                    beforeTime = -1;
                 }
 
                 var frame = ParseMotionFrame(takeSplit);
@@ -184,13 +189,12 @@ namespace Humr.Editor
             return takes;
         }
 
-        private static bool TryParseTakeLine(string line, string targetMatchStr, out string[] takeSplit,
+        private static bool TryParseTakeLine(string takeStr, out string[] takeSplit,
             out float currentTime)
         {
             takeSplit = null;
             currentTime = -1f;
 
-            var takeStr = line.Split(targetMatchStr)[1];
             var split = takeStr.Split(HumrLogger.VariableDelimiter);
             if (split.Length < MinimumComponentCount) return false;
 
@@ -202,14 +206,14 @@ namespace Humr.Editor
             return true;
         }
 
-        private static bool ShouldStartNewTake(string[] takeSplit, int foundTakes, float currentTime,
-            float beforeTime, RecordingTake currentTake)
+        // TODO: reduce number of parameters
+        private static bool ShouldStartNewTake(
+            long newTimestamp, float currentTime, float beforeTime, RecordingTake currentTake)
         {
-            var takeIndex = int.Parse(takeSplit[0]);
-            var isNewTakeIndex = takeIndex > foundTakes;
+            var isNewTimestamp = newTimestamp != currentTake.takeTimestamp;
             var isRewind = currentTime < beforeTime;
 
-            return (isNewTakeIndex || isRewind) && currentTake.Frames.Count > 0;
+            return (isNewTimestamp || isRewind) && currentTake.Frames.Count > 0;
         }
 
         private static RecordingFrame ParseMotionFrame(string[] parts)
@@ -282,6 +286,7 @@ namespace Humr.Editor
         {
             frame = null;
 
+            // TODO: do ExtractLegacyDataSegment before TryParseLegacyFrame
             var dataSegment = ExtractLegacyDataSegment(line, matchTarget, targetName);
             if (dataSegment == null) return false;
 
@@ -295,6 +300,7 @@ namespace Humr.Editor
             }
             catch (Exception ex)
             {
+                // TODO: change to HumrLogger
                 Debug.LogError($"Failed to interpret legacy sequential data array line: {ex.Message}");
                 return false;
             }

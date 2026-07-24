@@ -2,6 +2,10 @@
 
 ## [2.0.0-beta.1] - Unreleased
 
+### Changed
+
+- Use unix timestamp as take number
+
 ### Added
 
 - HUMR Sample World

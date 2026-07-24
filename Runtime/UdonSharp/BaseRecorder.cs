@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+using System;
+using System.Globalization;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,7 +34,7 @@ namespace Humr
         private float _nextRecordTime;
         private float _recordInterval;
         private float _recordTime;
-        private int _takeNumber = -1;
+        private long _takeTimestamp;
 
         protected FrameType FrameType = FrameType.Object;
         protected object[] RecordingObjects;
@@ -65,7 +66,7 @@ namespace Humr
             _recordTime = 0f;
             _nextRecordTime = _recordTime;
             _recordInterval = 1f / recordFramerate;
-            _takeNumber++;
+            _takeTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             _isRecording = true;
             RecordObjects();
             UpdateUI();
@@ -103,8 +104,8 @@ namespace Humr
         {
             var timeStr = _recordTime.ToString(HumrLogger.FloatFormat, CultureInfo.InvariantCulture);
             var typeStr = HumrLogger.RecordingTypeToString(FrameType);
-            var outputString = string.Join(HumrLogger.VariableDelimiter, HumrLogger.RecordingTag, TargetName,
-                _takeNumber, typeStr, timeStr);
+            var outputString = string.Join(
+                HumrLogger.VariableDelimiter, HumrLogger.RecordingTag, TargetName, _takeTimestamp, typeStr, timeStr);
 
             UpdateRecordingObjects();
             foreach (var recObj in RecordingObjects)
