@@ -9,6 +9,7 @@
 ### Changed
 
 - BaseRecorder: Use Unix timestamp as take number
+- BaseRecorder: Start/stop recording on pickup use
 
 ### Removed
 

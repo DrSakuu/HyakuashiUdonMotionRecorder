@@ -4,15 +4,16 @@ using System.Globalization;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
+using VRC.SDK3.Components;
 
 namespace Humr
 {
     public class BaseRecorder : UdonSharpBehaviour
     {
-        [SerializeField] [Tooltip("Start recording button, connect to StartRecording event.")]
+        [SerializeField] [Tooltip("Start recording button, connect onClick to StartRecording custom event.")]
         private Button startRecordButton;
 
-        [SerializeField] [Tooltip("Stop recording button, connect to StartRecording event.")]
+        [SerializeField] [Tooltip("Stop recording button, connect onClick to StartRecording custom event.")]
         private Button stopRecordButton;
 
         [SerializeField] [Tooltip("Start recording immediately on scene load.")]
@@ -26,6 +27,7 @@ namespace Humr
         private float _recordInterval;
         private float _recordTime;
         private long _takeTimestamp;
+        private VRCPickup _pickup;
 
         protected FrameType FrameType = FrameType.Object;
         protected object[] RecordingObjects;
@@ -34,6 +36,9 @@ namespace Humr
         public virtual void Start()
         {
             if (recordOnStart) StartRecording();
+            
+            _pickup = GetComponent<VRCPickup>();
+            if (_pickup != null) _pickup.UseText = "Record";
         }
 
         private void Update()
@@ -86,6 +91,18 @@ namespace Humr
         }
 
         public override void Interact()
+        {
+            if (_pickup != null) return;
+            
+            ToggleRecording();
+        }
+
+        public override void OnPickupUseDown()
+        {
+            ToggleRecording();
+        }
+
+        private void ToggleRecording()
         {
             if (_isRecording) StopRecording();
             else StartRecording();
