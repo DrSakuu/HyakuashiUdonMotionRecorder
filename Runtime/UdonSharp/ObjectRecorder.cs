@@ -1,14 +1,14 @@
-﻿#if UDONSHARP
+#if UDONSHARP
 namespace Humr
 {
     public class ObjectRecorder : BaseRecorder
     {
         public override void Start()
         {
-            base.Start();
             FrameType = FrameType.Object;
             TargetName = gameObject.name;
             RecordingObjects = new object[3];
+            base.Start();
         }
 
         protected override void UpdateRecordingObjects()

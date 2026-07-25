@@ -15,6 +15,8 @@ namespace Humr
             FrameType = FrameType.BoneRotations;
             TargetName = _player.displayName;
             RecordingObjects = new object[1 + (int)HumanBodyBones.LastBone];
+            
+            base.Start();
         }
 
         public override void OnAvatarChanged(VRCPlayerApi player)
