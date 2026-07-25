@@ -1,6 +1,7 @@
 ﻿# TODO
 
 - [ ] English and Japanese localization
+- [ ] Make VPM package site
 
 ## BaseRecorder.cs
 
@@ -27,6 +28,8 @@
 
 ## HumrRecordingLoaderEditor.cs
 
+- [ ] List takes with durations and checkmarks to include them
+- [ ] Test collect Legacy and Humr targets in same file
 - [ ] Include displayname and take number in exported animations
 - [ ] Remove prefix from exported FBX name
 - [ ] Make target selector actually select only takes belonging to target
@@ -35,9 +38,7 @@
 - [ ] Fix toes rotation
 - [ ] Update RecordingFiles if last write time is different
 - [ ] Export Mode (Humanoid/Generic) dropdown
-- [ ] List takes with durations and checkmarks to include them
 
 ## Samples
 
 - [ ] Update public world
-- 

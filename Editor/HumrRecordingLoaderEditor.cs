@@ -36,11 +36,11 @@ namespace Humr.Editor
             DrawAdvancedPathSection();
             UpdateRecordingFiles();
             if (!DrawLogFileDropdown()) return;
-
-            targetIndex = EditorGUILayout.Popup(
-                "Recording Target", targetIndex, currentFile.targetNames);
-            if (currentFile.type != LogType.Humr
-                && currentFile.type != LogType.Legacy) return;
+            var targetStrList = currentFile.Targets
+                .Select(t => $"{t.targetType}: {t.name}")
+                .ToArray();
+            targetIndex = EditorGUILayout.Popup("Recording Target", targetIndex, targetStrList);
+            if (currentFile.type != LogType.Humr) return;
 
             // TODO: Warn about non-humanoid animator
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
@@ -155,25 +155,26 @@ namespace Humr.Editor
             // TODO: is this needed?
             fileIndex = Mathf.Clamp(fileIndex, 0, recordingFiles.Count - 1);
             currentFile = recordingFiles[fileIndex];
-            CollectTargetNames();
+            CollectTargets();
             CollectTakes();
         }
 
-        public void CollectTargetNames()
+        public void CollectTargets()
         {
-            currentFile.targetNames = HumrLogParser.ResolveTargetNames(currentFile);
-            // TODO: is this needed?
-            targetIndex = Mathf.Clamp(targetIndex, 0, recordingFiles.Count - 1);
+            currentFile.Targets = HumrLogParser.ResolveTargets(currentFile);
+            targetIndex = 0;
         }
 
         public void CollectTakes()
         {
-            var currentTargetName = currentFile.targetNames[targetIndex];
+            if (currentFile.Targets.Length == 0) return;
+            
+            var (currentTargetType, currentTargetName) = currentFile.Targets[targetIndex];
             var logLines = HumrLogParser.LoadLogFileLines(currentFile.path);
 
-            currentFile.recordingTakes = currentFile.type == LogType.Legacy
+            currentFile.recordingTakes = currentTargetType == TargetType.Legacy
                 ? HumrLogParser.ParseLegacyTakes(logLines, currentTargetName)
-                : HumrLogParser.PartitionLogLinesIntoTakes(logLines.ToArray(), currentTargetName);
+                : HumrLogParser.PartitionLogLinesIntoTakes(logLines.ToArray(), (currentTargetType, currentTargetName));
 
             if (currentFile.recordingTakes == null)
             {
@@ -186,7 +187,7 @@ namespace Humr.Editor
 
         private void LoadRecordingAndExportAnim()
         {
-            var currentTargetName = currentFile.targetNames[targetIndex];
+            var (_, currentTargetName) = currentFile.Targets[targetIndex];
             if (_recordLoader.Animator == null) return;
 
             var poseSnapshot = new AvatarPoseSnapshot();

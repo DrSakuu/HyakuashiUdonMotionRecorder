@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0-beta.1] - Unreleased
+## [2.0.0-beta.1] - 2026-07-27
 
 ### Added
 
@@ -10,6 +10,7 @@
 
 - BaseRecorder: Use Unix timestamp as take number
 - BaseRecorder: Start/stop recording on pickup use
+- HumrRecordingLoader: Show target type in target dropdown
 
 ### Removed
 
@@ -36,7 +37,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 - New OutputLog format: Semicolons to separate different parameters, more metadata
 
 ```txt
-[HUMR] RECORDING;{TargetName};{TakeNumber};{FrameType};{RecordTime};{objects[]}
+[HUMR] RECORDING;{TargetType};{TargetName};{TakeTimestamp};{RecordTime};{objects[]}
 ```
 
 - Select newest log file automatically, sort in reverse order

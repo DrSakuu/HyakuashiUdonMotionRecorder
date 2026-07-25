@@ -2,8 +2,7 @@ using UnityEngine;
 
 namespace Humr
 {
-    // TODO: Rename to RecordingType
-    public enum FrameType
+    public enum TargetType
     {
         Unknown,
         Legacy,
@@ -58,21 +57,21 @@ namespace Humr
             return string.Join(ComponentDelimiter, quaternionXStr, quaternionYStr, quaternionZStr, quaternionWStr);
         }
 
-        public static string RecordingTypeToString(FrameType frameType)
+        public static string TargetTypeToString(TargetType targetType)
         {
-            switch (frameType)
+            switch (targetType)
             {
-                case FrameType.Legacy:
+                case TargetType.Legacy:
                     return "Legacy";
-                case FrameType.BoneRotations:
+                case TargetType.BoneRotations:
                     return "BoneRotations";
-                case FrameType.Object:
+                case TargetType.Object:
                     return "Object";
-                case FrameType.Unknown:
-                case FrameType.BoneRotationsWithIK:
-                case FrameType.HumanMuscles:
+                case TargetType.BoneRotationsWithIK:
+                case TargetType.HumanMuscles:
+                case TargetType.Unknown:
                 default:
-                    return "Unknown";
+                    return "Unsupported";
             }
         }
     }

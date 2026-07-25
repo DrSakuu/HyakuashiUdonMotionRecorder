@@ -5,8 +5,7 @@ namespace Humr
     {
         public override void Start()
         {
-            FrameType = FrameType.Object;
-            TargetName = gameObject.name;
+            TargetType = TargetType.Object;
             RecordingObjects = new object[3];
             base.Start();
         }

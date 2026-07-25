@@ -12,8 +12,9 @@ namespace Humr
         public override void Start()
         {
             _player = Networking.LocalPlayer;
-            FrameType = FrameType.BoneRotations;
-            TargetName = _player.displayName;
+            TargetType = TargetType.BoneRotations;
+            // TODO: Hide targetName in inspector
+            targetName = _player.displayName;
             RecordingObjects = new object[1 + (int)HumanBodyBones.LastBone];
             
             base.Start();

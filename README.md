@@ -19,7 +19,6 @@ HUMR is a motion capture tool that records player's movements into the VRChat lo
 ### Requirements
 
 - Unity 2022.3.22f1
-- VRChat SDK - Worlds 3.10.3
 - FBX Exporter Version 4.2.1
 - VRChat 2026.2.2
 
@@ -43,7 +42,7 @@ Use the Avatar_Utility Recording Loader in the HUMR Sample World to load your an
 
 ## Changelog
 
-[CHANGELOG.md](CHANGELOG.md#200-beta0---2026-07-16)
+[CHANGELOG.md](CHANGELOG.md#200-beta1---2026-07-27)
 
 ## License
 

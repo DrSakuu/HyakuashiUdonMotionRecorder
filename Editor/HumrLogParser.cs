@@ -11,7 +11,6 @@ namespace Humr.Editor
     public enum LogType
     {
         Humr,
-        Legacy,
         Corrupt,
         NoData
     }
@@ -22,7 +21,7 @@ namespace Humr.Editor
         public string path;
         public LogType type;
         public string fileName;
-        public string[] targetNames;
+        public (TargetType targetType, string name)[] Targets;
         public string foundTakesStr;
         public List<RecordingTake> recordingTakes = new List<RecordingTake>();
         public DateTime LastWriteTime;
@@ -31,6 +30,7 @@ namespace Humr.Editor
     [Serializable]
     public class RecordingTake
     {
+        public TargetType targetType;
         public string targetName;
         public long takeTimestamp;
 
@@ -44,7 +44,6 @@ namespace Humr.Editor
 
     public class RecordingFrame
     {
-        public FrameType FrameType;
         public float RecordTime { get; set; }
         public Vector3 HipPosition { get; set; }
         public List<Quaternion> BoneRotations { get; set; } = new List<Quaternion>();
@@ -54,8 +53,10 @@ namespace Humr.Editor
     {
         private const int MinimumComponentCount = 4;
 
-        private const string LogMatchTarget = "-  [HUMR] RECORDING;";
+        private const string LogMatchTarget = "-  [HUMR] RECORDING";
         private const string LegacyLogMatchTarget = "-  HUMR:";
+        private static readonly (TargetType, string) CorruptedTargetTuple = 
+            (TargetType.Unknown, "HUMR data is corrupted");
 
         public static List<string> LoadLogFileLines(string path)
         {
@@ -84,62 +85,68 @@ namespace Humr.Editor
             return new StreamReader(fileStream);
         }
 
-        private static string[] CollectTargetNames(RecordingFile recordingFile)
+        private static (TargetType, string)[] CollectTargetTypesAndNames(RecordingFile recordingFile)
         {
-            if (!File.Exists(recordingFile.path)) return null;
+            if (!File.Exists(recordingFile.path)) return new []{ CorruptedTargetTuple };
 
-            var foundTargets = new HashSet<string>();
+            var foundTargets = new HashSet<(TargetType, string)>();
 
             using (var reader = OpenReadOnlyTextFile(recordingFile.path))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    var targetName = ExtractTargetNameForType(line, recordingFile.type);
-                    if (targetName == null) continue;
-                    foundTargets.Add(targetName);
+                    var (targetType, targetName) = ExtractHumrOrLegacyTarget(line);
+                    if (targetType == TargetType.Unknown) continue;
+                    
+                    foundTargets.Add((targetType, targetName));
                 }
 
-                return foundTargets.ToArray();
+                if (foundTargets.Count > 0) return foundTargets.ToArray();
+                
+                recordingFile.type = LogType.Corrupt;
+                return new []{ CorruptedTargetTuple };
             }
         }
 
-        private static string ExtractTargetNameForType(string line, LogType type)
+        private static (TargetType, string) ExtractHumrOrLegacyTarget(string line)
         {
-            switch (type)
-            {
-                case LogType.Humr:
-                    return ExtractTargetName(line, LogMatchTarget);
-                case LogType.Legacy:
-                    return ExtractLegacyTargetName(line, LegacyLogMatchTarget);
-                case LogType.Corrupt:
-                case LogType.NoData:
-                default:
-                    return null;
-            }
+            if (line.Contains(LogMatchTarget)) return ExtractTarget(line);
+            return line.Contains(LegacyLogMatchTarget) ? ExtractLegacyTarget(line) : CorruptedTargetTuple;
         }
 
-        private static string ExtractTargetName(string line, string matchTarget)
+        private static (TargetType, string) ExtractTarget(string line)
         {
-            var lineSplit = line.Split(new[] { matchTarget }, StringSplitOptions.None);
-            if (lineSplit.Length < 2) return null;
+            if (!line.Contains(LogMatchTarget)) return CorruptedTargetTuple;
 
-            var recordingFrame = lineSplit[1];
-            var delimiterIndex = recordingFrame.IndexOf(HumrLogger.VariableDelimiter, StringComparison.Ordinal);
+            var recordingFrame = line.Substring(line.IndexOf(LogMatchTarget, StringComparison.Ordinal) + LogMatchTarget.Length + 1);
+            var typeVariableStr = SplitNextVariable(recordingFrame, out var remaining);
+            if (!Enum.TryParse<TargetType>(typeVariableStr, out var targetType)) return CorruptedTargetTuple;
+            
+            var targetName = SplitNextVariable(remaining, out _);
+            return (targetType, targetName);
+        }
+
+        private static string SplitNextVariable(string line, out string remaining)
+        {
+            remaining = line;
+            var delimiterIndex = line.IndexOf(HumrLogger.VariableDelimiter, StringComparison.Ordinal);
             if (delimiterIndex == -1) return null;
-
-            return recordingFrame.Substring(0, delimiterIndex);
+            
+            remaining = line.Substring(delimiterIndex + 1);
+            return line.Substring(0, delimiterIndex);
         }
 
-        private static string ExtractLegacyTargetName(string line, string matchTarget)
+        private static (TargetType, string) ExtractLegacyTarget(string line)
         {
-            var prefixIdx = line.IndexOf(matchTarget, StringComparison.Ordinal);
-            if (prefixIdx == -1) return null;
+            var prefixIdx = line.IndexOf(LegacyLogMatchTarget, StringComparison.Ordinal);
+            if (prefixIdx == -1) return CorruptedTargetTuple;
 
-            var dataSegment = line.Substring(prefixIdx + matchTarget.Length).Trim();
+            var dataSegment = line.Substring(prefixIdx + LegacyLogMatchTarget.Length).Trim();
 
             var digitIdx = FindFirstDigitIndex(dataSegment);
-            return digitIdx == -1 ? null : dataSegment.Substring(0, digitIdx);
+            return digitIdx == -1 ? CorruptedTargetTuple : 
+                (TargetType.Legacy, dataSegment.Substring(0, digitIdx));
         }
 
         private static int FindFirstDigitIndex(string text)
@@ -151,11 +158,13 @@ namespace Humr.Editor
             return -1;
         }
 
-        public static List<RecordingTake> PartitionLogLinesIntoTakes(string[] lines, string targetName)
+        public static List<RecordingTake> PartitionLogLinesIntoTakes(
+            string[] lines, (TargetType targetType, string targetName) target)
         {
             var takes = new List<RecordingTake>();
-            var currentTake = new RecordingTake { targetName = targetName };
-            var targetMatchStr = LogMatchTarget + targetName + HumrLogger.VariableDelimiter;
+            var currentTake = new RecordingTake { targetType = target.targetType, targetName = target.targetName };
+            var targetMatchStr = string.Join(
+                HumrLogger.VariableDelimiter, LogMatchTarget, target.targetType, target.targetName, "");
             var beforeTime = -1f;
 
             foreach (var line in lines)
@@ -173,7 +182,7 @@ namespace Humr.Editor
                 else if (ShouldStartNewTake(lineTimestamp, currentTime, beforeTime, currentTake))
                 {
                     takes.Add(currentTake);
-                    currentTake = new RecordingTake { targetName = targetName, takeTimestamp = lineTimestamp};
+                    currentTake = new RecordingTake { targetType = target.targetType, targetName = target.targetName, takeTimestamp = lineTimestamp};
                     beforeTime = -1;
                 }
 
@@ -189,8 +198,7 @@ namespace Humr.Editor
             return takes;
         }
 
-        private static bool TryParseTakeLine(string takeStr, out string[] takeSplit,
-            out float currentTime)
+        private static bool TryParseTakeLine(string takeStr, out string[] takeSplit, out float currentTime)
         {
             takeSplit = null;
             currentTime = -1f;
@@ -198,7 +206,7 @@ namespace Humr.Editor
             var split = takeStr.Split(HumrLogger.VariableDelimiter);
             if (split.Length < MinimumComponentCount) return false;
 
-            if (!float.TryParse(split[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var time))
+            if (!float.TryParse(split[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var time))
                 return false;
 
             takeSplit = split;
@@ -220,8 +228,8 @@ namespace Humr.Editor
         {
             var frame = new RecordingFrame
             {
-                RecordTime = float.Parse(parts[2], CultureInfo.InvariantCulture),
-                HipPosition = ParseHipPosition(parts[3])
+                RecordTime = float.Parse(parts[1], CultureInfo.InvariantCulture),
+                HipPosition = ParseHipPosition(parts[2])
             };
 
             AppendBoneRotations(parts, frame);
@@ -243,7 +251,7 @@ namespace Humr.Editor
 
         private static void AppendBoneRotations(string[] parts, RecordingFrame frame)
         {
-            for (var i = 4; i < parts.Length; i++)
+            for (var i = 3; i < parts.Length; i++)
             {
                 if (string.IsNullOrWhiteSpace(parts[i])) continue;
 
@@ -360,15 +368,7 @@ namespace Humr.Editor
             currentFrames.Clear();
         }
 
-        private static LogType DetermineRecordingType(string filePath)
-        {
-            var (isHumr, isLegacy) = DetectLogMarkers(filePath);
-
-            if (isHumr) return LogType.Humr;
-            return isLegacy ? LogType.Legacy : LogType.NoData;
-        }
-
-        private static (bool isHumr, bool isLegacy) DetectLogMarkers(string filePath)
+        private static bool DetectLogMarkers(string filePath)
         {
             using (var reader = OpenReadOnlyTextFile(filePath))
             {
@@ -380,10 +380,10 @@ namespace Humr.Editor
                 {
                     if (line.Contains(LogMatchTarget)) isHumr = true;
                     if (line.Contains(LegacyLogMatchTarget)) isLegacy = true;
-                    if (isHumr || isLegacy) break;
+                    if (isHumr || isLegacy) return true;
                 }
 
-                return (isHumr, isLegacy);
+                return false;
             }
         }
 
@@ -402,8 +402,6 @@ namespace Humr.Editor
             {
                 case LogType.Humr:
                     return "HUMR";
-                case LogType.Legacy:
-                    return "HUMR (Legacy)";
                 case LogType.Corrupt:
                     return "HUMR (Corrupted)";
                 case LogType.NoData:
@@ -419,7 +417,7 @@ namespace Humr.Editor
 
             foreach (var filePath in filePaths)
             {
-                var fileType = DetermineRecordingType(filePath);
+                var fileType = DetectLogMarkers(filePath) ? LogType.Humr : LogType.NoData;;
                 var writeTime = File.GetLastWriteTime(filePath);
                 var fileName = BuildRecordingFileName(filePath, fileType);
                 discoveredFiles.Add(new RecordingFile
@@ -433,18 +431,17 @@ namespace Humr.Editor
                 .ToList();
         }
 
-        public static string[] ResolveTargetNames(RecordingFile file)
+        public static (TargetType, string)[] ResolveTargets(RecordingFile file)
         {
             switch (file.type)
             {
                 case LogType.Humr:
-                case LogType.Legacy:
-                    return CollectTargetNames(file);
+                    return CollectTargetTypesAndNames(file);
                 case LogType.Corrupt:
-                    return new[] { "HUMR data is corrupted" };
+                    return new []{ CorruptedTargetTuple };
                 case LogType.NoData:
                 default:
-                    return new[] { "No HUMR data" };
+                    return new[] { (TargetType.Unknown, "No HUMR data") };
             }
         }
     }

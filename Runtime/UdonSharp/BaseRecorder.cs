@@ -22,6 +22,9 @@ namespace Humr
         [SerializeField] [Tooltip("Frames per second for recording.")]
         protected float recordFramerate = 30;
 
+        [SerializeField] [Tooltip("Target name for recording.")]
+        protected string targetName = "Target";
+
         private bool _isRecording;
         private float _nextRecordTime;
         private float _recordInterval;
@@ -29,9 +32,8 @@ namespace Humr
         private long _takeTimestamp;
         private VRCPickup _pickup;
 
-        protected FrameType FrameType = FrameType.Object;
+        protected TargetType TargetType = TargetType.Object;
         protected object[] RecordingObjects;
-        protected string TargetName = "Target";
 
         public virtual void Start()
         {
@@ -111,9 +113,9 @@ namespace Humr
         private void RecordObjects()
         {
             var timeStr = _recordTime.ToString(HumrLogger.FloatFormat, CultureInfo.InvariantCulture);
-            var typeStr = HumrLogger.RecordingTypeToString(FrameType);
+            var typeStr = HumrLogger.TargetTypeToString(TargetType);
             var outputString = string.Join(
-                HumrLogger.VariableDelimiter, HumrLogger.RecordingTag, TargetName, _takeTimestamp, typeStr, timeStr);
+                HumrLogger.VariableDelimiter, HumrLogger.RecordingTag, typeStr, targetName, _takeTimestamp, timeStr);
 
             UpdateRecordingObjects();
             foreach (var recObj in RecordingObjects)
