@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0-beta.2] - Unreleased
+
+A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format, can read pre-2.0.0 logs but not write them.
+
+> [!WARNING]
+> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing.
+
+### Changed
+
+- Keep original XZ position for .fbx import settings
+
 ## [2.0.0-beta.1] - 2026-07-27
 
 ### Added
@@ -11,17 +22,17 @@
 - BaseRecorder: Use Unix timestamp as take number
 - BaseRecorder: Start/stop recording on pickup use
 - HumrRecordingLoader: Show target type in target dropdown
+- New OutputLog format:
+
+```txt
+[HUMR] RECORDING;{TargetType};{TargetName};{TakeTimestamp};{RecordTime};{objects[]}
+```
 
 ### Removed
 
 - BaseRecorder: Remove UdonSharp dependency
 
 ## [2.0.0-beta.0] - 2026-07-16
-
-A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format, can read pre-2.0.0 logs but not write them.
-
-> [!WARNING]
-> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing.
 
 ### Added
 
@@ -37,7 +48,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 - New OutputLog format: Semicolons to separate different parameters, more metadata
 
 ```txt
-[HUMR] RECORDING;{TargetType};{TargetName};{TakeTimestamp};{RecordTime};{objects[]}
+[HUMR] RECORDING;{TargetName};{TakeNumber};{RecordingType};{RecordTime};{objects[]}
 ```
 
 - Select newest log file automatically, sort in reverse order

@@ -18,8 +18,8 @@ namespace Humr.Editor
                 clipAnimation.keepOriginalOrientation = true;
                 clipAnimation.lockRootHeightY = true;
                 clipAnimation.keepOriginalPositionY = true;
-                //clipAnimation.lockRootPositionXZ = true;
-                //clipAnimation.keepOriginalPositionXZ = true;
+                clipAnimation.lockRootPositionXZ = true;
+                clipAnimation.keepOriginalPositionXZ = true;
 
                 if (clipAnimation.name == "") clipAnimation.name = "HUMRAnimation";
             }

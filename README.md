@@ -2,14 +2,12 @@
 
 [日本語](README.jp.md)
 
-A complete rewrite of the codebase so new features can be implemented more easily.
+HUMR is a motion capture tool that records player's movements into the VRChat log files and then reads them in a VRChat world project. This is version 2.0.0, which is complete rewrite of the codebase so new features can be implemented more easily.
 
 - Combine Recorder and OutputLogLoader `.unitypackage`s
 - New Recording log format: semicolons to separate different types
 - Select player DisplayName from a dropdown
 - Add HUMR Sample World
-
-HUMR is a motion capture tool that records player's movements into the VRChat log files and then reads them in a VRChat world project. This is version 2.0.0, which uses a new log format.
 
 ## Installation
 
@@ -22,7 +20,7 @@ HUMR is a motion capture tool that records player's movements into the VRChat lo
 - FBX Exporter Version 4.2.1
 - VRChat 2026.2.2
 
-Download the `.unitypackage` from releases and import it into your VRChat World project.
+Download the `.unitypackage` from releases and import it into your VRChat World project for recording, or into your VRC avatar project for loading.
 
 ## Usage
 
@@ -38,11 +36,11 @@ VRChat logs are deleted after 48 hours, so make sure to load the saved data or c
 
 ### Loading
 
-Use the Avatar_Utility Recording Loader in the HUMR Sample World to load your animation, or attach the HumrRecordingLoader component to your custom avatar.
+Use the Avatar_Utility Recording Loader in the HUMR Sample World to load your animation, or attach the HumrRecordingLoader component to your custom avatar in your avatar project.
 
 ## Changelog
 
-[CHANGELOG.md](CHANGELOG.md#200-beta1---2026-07-27)
+[CHANGELOG.md](CHANGELOG.md#200-beta2---unreleased)
 
 ## License
 

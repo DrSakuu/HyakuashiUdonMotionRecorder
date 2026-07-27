@@ -1,7 +1,7 @@
 {
   "name": "mukaderabbit.humr",
   "displayName": "Hyakuashi Udon Motion Recorder",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "HUMR is a motion capture tool that records player's movements into the VRChat log files and then reads them in a VRChat world project. This is version 2.0.0, which uses a new log format.",  
   "author": {
     "name": "mukaderabbit",
