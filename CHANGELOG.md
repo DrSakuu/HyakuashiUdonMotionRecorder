@@ -7,6 +7,10 @@ A complete rewrite of the codebase so new features can be implemented more easil
 > [!WARNING]
 > Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing.
 
+### Added
+
+- Toggles to export .fbx or .anim or both
+
 ### Changed
 
 - Keep original XZ position for .fbx import settings

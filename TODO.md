@@ -28,6 +28,7 @@
 
 ## HumrRecordingLoaderEditor.cs
 
+- [ ] Select newest log file with HUMR data
 - [ ] List takes with durations and checkmarks to include them
 - [ ] Test collect Legacy and Humr targets in same file
 - [ ] Include displayname and take number in exported animations
@@ -37,7 +38,6 @@
 - [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations
 - [ ] Fix toes rotation
 - [ ] Update RecordingFiles if last write time is different
-- [ ] Export Mode (Humanoid/Generic) dropdown
 
 ## Samples
 

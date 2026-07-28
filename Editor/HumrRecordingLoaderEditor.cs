@@ -22,6 +22,7 @@ namespace Humr.Editor
 
         public RecordingFile currentFile;
         public int targetIndex;
+        public bool exportHumanoidFbx = true;
         public bool exportGenericAnimation;
         private HumrRecordingLoader _recordLoader;
         private bool _showAdvanced;
@@ -45,7 +46,8 @@ namespace Humr.Editor
             // TODO: Warn about non-humanoid animator
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             GUILayout.Label(currentFile.foundTakesStr);
-            exportGenericAnimation = GUILayout.Toggle(exportGenericAnimation, "Export Generic Animation");
+            exportHumanoidFbx = GUILayout.Toggle(exportHumanoidFbx, "Export Humanoid .fbx");
+            exportGenericAnimation = GUILayout.Toggle(exportGenericAnimation, "Export Generic .anim");
             DrawExportButton();
         }
 
@@ -114,9 +116,12 @@ namespace Humr.Editor
 
         private void DrawExportButton()
         {
-            if (!GUILayout.Button("Load recording and export .fbx")) return;
+            using (new EditorGUI.DisabledScope(!exportHumanoidFbx && !exportGenericAnimation))
+            {
+                if (!GUILayout.Button("Export recording")) return;
 
-            LoadRecordingAndExportAnim();
+                LoadRecordingAndExportAnim();
+            }
         }
 
         private static bool IsRectClick(Rect rect)
@@ -215,9 +220,11 @@ namespace Humr.Editor
             for (var i = 0; i < takes.Count; i++)
             {
                 var takeAnimStr = $"{baseAnimName}_Take{i + 1}";
-                ExportTake(takes[i], takeAnimStr, targetName, controllerBuilder);
+                AddTakeToControllerBuilder(takes[i], takeAnimStr, targetName, controllerBuilder);
             }
 
+            if (!exportHumanoidFbx) return;
+            
             var previousAnimControl = _recordLoader.Animator.runtimeAnimatorController;
             try
             {
@@ -231,8 +238,7 @@ namespace Humr.Editor
             }
         }
 
-        private void ExportTake(
-            RecordingTake take, string takeAnimStr, string targetName, AnimationControllerBuilder controllerBuilder)
+        private void AddTakeToControllerBuilder(RecordingTake take, string takeAnimStr, string targetName, AnimationControllerBuilder controllerBuilder)
         {
             var takeClip = AnimationClipFactory.PopulateAnimationClip(take, _recordLoader.Animator);
             takeClip.name = takeAnimStr;
