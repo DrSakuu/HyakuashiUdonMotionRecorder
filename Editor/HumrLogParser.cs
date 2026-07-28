@@ -55,8 +55,7 @@ namespace Humr.Editor
 
         private const string LogMatchTarget = "-  [HUMR] RECORDING";
         private const string LegacyLogMatchTarget = "-  HUMR:";
-        private static readonly (TargetType, string) CorruptedTargetTuple = 
-            (TargetType.Unknown, "HUMR data is corrupted");
+        private static readonly (TargetType, string) CorruptTargetTuple = (TargetType.Unknown, "HUMR data is corrupt");
 
         public static List<string> LoadLogFileLines(string path)
         {
@@ -87,7 +86,7 @@ namespace Humr.Editor
 
         private static (TargetType, string)[] CollectTargetTypesAndNames(RecordingFile recordingFile)
         {
-            if (!File.Exists(recordingFile.path)) return new []{ CorruptedTargetTuple };
+            if (!File.Exists(recordingFile.path)) return new []{ CorruptTargetTuple };
 
             var foundTargets = new HashSet<(TargetType, string)>();
 
@@ -105,23 +104,23 @@ namespace Humr.Editor
                 if (foundTargets.Count > 0) return foundTargets.ToArray();
                 
                 recordingFile.type = LogType.Corrupt;
-                return new []{ CorruptedTargetTuple };
+                return new []{ CorruptTargetTuple };
             }
         }
 
         private static (TargetType, string) ExtractHumrOrLegacyTarget(string line)
         {
             if (line.Contains(LogMatchTarget)) return ExtractTarget(line);
-            return line.Contains(LegacyLogMatchTarget) ? ExtractLegacyTarget(line) : CorruptedTargetTuple;
+            return line.Contains(LegacyLogMatchTarget) ? ExtractLegacyTarget(line) : CorruptTargetTuple;
         }
 
         private static (TargetType, string) ExtractTarget(string line)
         {
-            if (!line.Contains(LogMatchTarget)) return CorruptedTargetTuple;
+            if (!line.Contains(LogMatchTarget)) return CorruptTargetTuple;
 
             var recordingFrame = line.Substring(line.IndexOf(LogMatchTarget, StringComparison.Ordinal) + LogMatchTarget.Length + 1);
             var typeVariableStr = SplitNextVariable(recordingFrame, out var remaining);
-            if (!Enum.TryParse<TargetType>(typeVariableStr, out var targetType)) return CorruptedTargetTuple;
+            if (!Enum.TryParse<TargetType>(typeVariableStr, out var targetType)) return CorruptTargetTuple;
             
             var targetName = SplitNextVariable(remaining, out _);
             return (targetType, targetName);
@@ -140,12 +139,12 @@ namespace Humr.Editor
         private static (TargetType, string) ExtractLegacyTarget(string line)
         {
             var prefixIdx = line.IndexOf(LegacyLogMatchTarget, StringComparison.Ordinal);
-            if (prefixIdx == -1) return CorruptedTargetTuple;
+            if (prefixIdx == -1) return CorruptTargetTuple;
 
             var dataSegment = line.Substring(prefixIdx + LegacyLogMatchTarget.Length).Trim();
 
             var digitIdx = FindFirstDigitIndex(dataSegment);
-            return digitIdx == -1 ? CorruptedTargetTuple : 
+            return digitIdx == -1 ? CorruptTargetTuple : 
                 (TargetType.Legacy, dataSegment.Substring(0, digitIdx));
         }
 
@@ -308,8 +307,7 @@ namespace Humr.Editor
             }
             catch (Exception ex)
             {
-                // TODO: change to HumrLogger
-                Debug.LogError($"Failed to interpret legacy sequential data array line: {ex.Message}");
+                HumrLogger.Error($"Failed to interpret legacy sequential data array line: {ex.Message}");
                 return false;
             }
         }
@@ -438,7 +436,7 @@ namespace Humr.Editor
                 case LogType.Humr:
                     return CollectTargetTypesAndNames(file);
                 case LogType.Corrupt:
-                    return new []{ CorruptedTargetTuple };
+                    return new []{ CorruptTargetTuple };
                 case LogType.NoData:
                 default:
                     return new[] { (TargetType.Unknown, "No HUMR data") };

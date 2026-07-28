@@ -10,6 +10,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 ### Added
 
 - Toggles to export .fbx or .anim or both
+- Show help box on error
 
 ### Changed
 

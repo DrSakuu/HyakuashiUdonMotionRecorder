@@ -34,22 +34,38 @@ namespace Humr.Editor
             _recordLoader = (HumrRecordingLoader)target;
             if (_recordLoader == null) return;
 
+            var errorMessage = "";
             UpdateLogDirectory();
             DrawAdvancedPathSection();
             UpdateRecordingFiles();
-            if (!DrawLogFileDropdown()) return;
+            if (!DrawLogFileDropdown()) SetError("No log files found.");
+
             var targetStrList = currentFile.Targets
                 .Select(t => $"{t.targetType}: {t.name}")
                 .ToArray();
             targetIndex = EditorGUILayout.Popup("Recording Target", targetIndex, targetStrList);
-            if (currentFile.type != LogType.Humr) return;
+            if (currentFile.type == LogType.NoData) SetError("No HUMR data found.");
+            if (currentFile.type == LogType.Corrupt) SetError("HUMR data is corrupt.");
 
-            // TODO: Warn about non-humanoid animator
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             GUILayout.Label(currentFile.foundTakesStr);
+            
+            var isHumanoidBoneTarget = currentFile.Targets[targetIndex].targetType == TargetType.BoneRotations;
+            var isHumanoidAvatar = _recordLoader.Animator.avatar != null && _recordLoader.Animator.avatar.isHuman;
+            if (isHumanoidBoneTarget && !isHumanoidAvatar) SetError("The Avatar needs to be Humanoid.");
+            
             exportHumanoidFbx = GUILayout.Toggle(exportHumanoidFbx, "Export Humanoid .fbx");
             exportGenericAnimation = GUILayout.Toggle(exportGenericAnimation, "Export Generic .anim");
-            DrawExportButton();
+            if (!exportHumanoidFbx && !exportGenericAnimation) SetError("Select either .fbx or .anim export.");
+            
+            if (!string.IsNullOrEmpty(errorMessage)) EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
+            DrawExportButton(string.IsNullOrEmpty(errorMessage));
+            return;
+
+            void SetError(string msg)
+            {
+                if (string.IsNullOrEmpty(errorMessage)) errorMessage = msg;
+            }
         }
 
         private void UpdateLogDirectory()
@@ -115,9 +131,9 @@ namespace Humr.Editor
             return true;
         }
 
-        private void DrawExportButton()
+        private void DrawExportButton(bool enabled = true)
         {
-            using (new EditorGUI.DisabledScope(!exportHumanoidFbx && !exportGenericAnimation))
+            using (new EditorGUI.DisabledScope(!enabled))
             {
                 if (!GUILayout.Button("Export recording")) return;
 
