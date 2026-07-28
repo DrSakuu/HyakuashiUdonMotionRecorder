@@ -13,26 +13,19 @@ namespace Humr.Editor
     public class HumrRecordingLoaderEditor : UnityEditor.Editor
     {
         private const string VrcLogPathSuffix = @"\AppData\LocalLow\VRChat\VRChat";
-
         private const string HumrPath = @"Assets\HUMR";
 
-        public string logFileDirectory;
-        public List<RecordingFile> recordingFiles = new List<RecordingFile>();
-        public string[] recordingFileNames;
-        public int fileIndex;
-
-        public RecordingFile currentFile;
-        public int targetIndex;
-        public bool exportHumanoidFbx = true;
-        public bool exportGenericAnimation;
-        private HumrRecordingLoader _recordLoader;
-        private bool _showAdvanced;
+        private HumrRecordingLoader _loader;
         private string _userProfile;
+        private string _logPath;
+        private List<RecordingFile> _recordingFiles = new List<RecordingFile>();
+        private string[] _recordingFileNames;
+        private RecordingFile _currentFile;
 
         public override void OnInspectorGUI()
         {
-            _recordLoader = (HumrRecordingLoader)target;
-            if (_recordLoader == null) return;
+            _loader = (HumrRecordingLoader)target;
+            if (_loader == null) return;
 
             var errorMessage = "";
             UpdateLogDirectory();
@@ -40,23 +33,25 @@ namespace Humr.Editor
             UpdateRecordingFiles();
             if (!DrawLogFileDropdown()) SetError("No log files found.");
 
-            var targetStrList = currentFile.Targets
+            var targetStrList = _currentFile.Targets
                 .Select(t => $"{t.targetType}: {t.name}")
                 .ToArray();
-            targetIndex = EditorGUILayout.Popup("Recording Target", targetIndex, targetStrList);
-            if (currentFile.type == LogType.NoData) SetError("No HUMR data found.");
-            if (currentFile.type == LogType.Corrupt) SetError("HUMR data is corrupt.");
+            _loader.targetIndex = EditorGUILayout.Popup(
+                "Recording Target", _loader.targetIndex, targetStrList);
+            if (_currentFile.type == LogType.NoData) SetError("No HUMR data found.");
+            if (_currentFile.type == LogType.Corrupt) SetError("HUMR data is corrupt.");
 
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
-            GUILayout.Label(currentFile.foundTakesStr);
+            GUILayout.Label(_currentFile.foundTakesStr);
             
-            var isHumanoidBoneTarget = currentFile.Targets[targetIndex].targetType == TargetType.BoneRotations;
-            var isHumanoidAvatar = _recordLoader.Animator.avatar != null && _recordLoader.Animator.avatar.isHuman;
+            var isHumanoidBoneTarget = _currentFile.Targets[_loader.targetIndex].targetType == TargetType.BoneRotations;
+            var isHumanoidAvatar = _loader.Animator.avatar != null && _loader.Animator.avatar.isHuman;
             if (isHumanoidBoneTarget && !isHumanoidAvatar) SetError("The Avatar needs to be Humanoid.");
             
-            exportHumanoidFbx = GUILayout.Toggle(exportHumanoidFbx, "Export Humanoid .fbx");
-            exportGenericAnimation = GUILayout.Toggle(exportGenericAnimation, "Export Generic .anim");
-            if (!exportHumanoidFbx && !exportGenericAnimation) SetError("Select either .fbx or .anim export.");
+            _loader.exportHumanFbx = GUILayout.Toggle(_loader.exportHumanFbx, "Export Humanoid .fbx");
+            _loader.exportGenericAnim = GUILayout.Toggle(_loader.exportGenericAnim, "Export Generic .anim");
+            if (!_loader.exportHumanFbx && !_loader.exportGenericAnim) 
+                SetError("Select either .fbx or .anim export.");
             
             if (!string.IsNullOrEmpty(errorMessage)) EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
@@ -70,24 +65,24 @@ namespace Humr.Editor
 
         private void UpdateLogDirectory()
         {
-            if (_showAdvanced) return;
+            if (_loader.showAdvanced) return;
 
             _userProfile ??= Environment.GetEnvironmentVariable("USERPROFILE");
-            logFileDirectory = $"{_userProfile}{VrcLogPathSuffix}";
+            _logPath = $"{_userProfile}{VrcLogPathSuffix}";
         }
 
         private void DrawAdvancedPathSection()
         {
-            _showAdvanced = EditorGUILayout.Foldout(_showAdvanced, "Advanced: Custom Log Path");
-            if (!_showAdvanced) return;
+            _loader.showAdvanced = EditorGUILayout.Foldout(
+                _loader.showAdvanced, "Advanced: Custom Log Path");
+            if (!_loader.showAdvanced) return;
 
             EditorGUI.indentLevel++;
             EditorGUILayout.BeginHorizontal();
 
-            logFileDirectory = EditorGUILayout.TextField(
-                "Output Log Path (resets when closed)", logFileDirectory);
+            _logPath = EditorGUILayout.TextField("Output Log Path (resets when closed)", _logPath);
 
-            if (GUILayout.Button("Explore", GUILayout.Width(100))) OpenLogFolder(logFileDirectory);
+            if (GUILayout.Button("Explore", GUILayout.Width(100))) OpenLogFolder(_logPath);
 
             EditorGUILayout.EndHorizontal();
             EditorGUI.indentLevel--;
@@ -122,10 +117,10 @@ namespace Humr.Editor
             DrawClickableDropdown(
                 "Recording Log File",
                 UpdateRecordingFiles,
-                () => fileIndex,
-                value => fileIndex = value,
-                recordingFileNames);
-            if (recordingFiles == null || recordingFiles.Count == 0) return false;
+                () => _loader.fileIndex,
+                value => _loader.fileIndex = value,
+                _recordingFileNames);
+            if (_recordingFiles == null || _recordingFiles.Count == 0) return false;
 
             if (EditorGUI.EndChangeCheck()) SetCurrentRecordingFile();
             return true;
@@ -150,78 +145,83 @@ namespace Humr.Editor
 
         public void UpdateRecordingFiles()
         {
-            if (!Directory.Exists(logFileDirectory)) return;
+            if (!Directory.Exists(_logPath)) return;
 
-            var logFilePaths = Directory.GetFiles(logFileDirectory, "*.txt");
-            if (logFilePaths.Length == recordingFiles.Count) return;
+            var logFilePaths = Directory.GetFiles(_logPath, "*.txt");
+            if (logFilePaths.Length == _recordingFiles.Count) return;
 
-            recordingFiles = HumrLogParser.CollectRecordingFiles(logFilePaths);
-            if (recordingFiles == null || recordingFiles.Count == 0)
+            _recordingFiles = HumrLogParser.CollectRecordingFiles(logFilePaths);
+            if (_recordingFiles == null || _recordingFiles.Count == 0)
             {
-                recordingFileNames = new[] { "No logs found" };
+                _recordingFileNames = new[] { "No logs found" };
                 return;
             }
 
-            recordingFileNames = recordingFiles.Select(file => file.fileName).ToArray();
+            _recordingFileNames = _recordingFiles.Select(file => file.fileName).ToArray();
             SetCurrentRecordingFile();
         }
 
         public void SetCurrentRecordingFile()
         {
-            if (recordingFiles == null || recordingFiles.Count == 0)
+            if (_recordingFiles == null || _recordingFiles.Count == 0)
             {
-                currentFile = null;
+                _currentFile = null;
                 return;
             }
 
             // TODO: is this needed?
-            fileIndex = Mathf.Clamp(fileIndex, 0, recordingFiles.Count - 1);
-            currentFile = recordingFiles[fileIndex];
+            _loader.fileIndex = Mathf.Clamp(_loader.fileIndex, 0, _recordingFiles.Count - 1);
+            _currentFile = _recordingFiles[_loader.fileIndex];
             CollectTargets();
             CollectTakes();
         }
 
         public void CollectTargets()
         {
-            currentFile.Targets = HumrLogParser.ResolveTargets(currentFile);
-            targetIndex = 0;
+            _currentFile.Targets = HumrLogParser.ResolveTargets(_currentFile);
+            _loader.targetIndex = 0;
         }
 
         public void CollectTakes()
         {
-            if (currentFile.Targets.Length == 0) return;
+            if (_currentFile.Targets.Length == 0) return;
             
-            var (currentTargetType, currentTargetName) = currentFile.Targets[targetIndex];
-            var logLines = HumrLogParser.LoadLogFileLines(currentFile.path);
+            var (currentTargetType, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
+            var logLines = HumrLogParser.LoadLogFileLines(_currentFile.path);
 
-            currentFile.recordingTakes = currentTargetType == TargetType.Legacy
+            _currentFile.takes = currentTargetType == TargetType.Legacy
                 ? HumrLogParser.ParseLegacyTakes(logLines, currentTargetName)
                 : HumrLogParser.PartitionLogLinesIntoTakes(logLines.ToArray(), (currentTargetType, currentTargetName));
 
-            if (currentFile.recordingTakes == null)
+            if (_currentFile.takes == null)
             {
-                currentFile.foundTakesStr = "Found 0 takes.";
-                return;
+                _currentFile.foundTakesStr = "Found 0 takes.";
             }
-
-            currentFile.foundTakesStr = $"Found {currentFile.recordingTakes.Count} takes.";
+            else if (_currentFile.takes.Count == 1)
+            {
+                _currentFile.foundTakesStr = "Found 1 take.";
+            }
+            else
+            {
+                _currentFile.foundTakesStr = $"Found {_currentFile.takes.Count} takes.";
+            }
         }
 
         private void LoadRecordingAndExportAnim()
         {
-            var (_, currentTargetName) = currentFile.Targets[targetIndex];
-            if (_recordLoader.Animator == null) return;
+            var (_, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
+            if (_loader.Animator == null) return;
 
             var poseSnapshot = new AvatarPoseSnapshot();
-            poseSnapshot.Take(_recordLoader.transform, _recordLoader.Animator);
+            poseSnapshot.Take(_loader.transform, _loader.Animator);
 
             try
             {
-                ExecuteExportPipeline(currentFile.recordingTakes, currentFile.path, currentTargetName);
+                ExecuteExportPipeline(_currentFile.takes, _currentFile.path, currentTargetName);
             }
             finally
             {
-                poseSnapshot.Restore(_recordLoader.transform);
+                poseSnapshot.Restore(_loader.transform);
             }
         }
 
@@ -240,30 +240,32 @@ namespace Humr.Editor
                 AddTakeToControllerBuilder(takes[i], takeAnimStr, targetName, controllerBuilder);
             }
 
-            if (!exportHumanoidFbx) return;
+            if (!_loader.exportHumanFbx) return;
             
-            var previousAnimControl = _recordLoader.Animator.runtimeAnimatorController;
+            var previousAnimControl = _loader.Animator.runtimeAnimatorController;
             try
             {
-                _recordLoader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
+                _loader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
                 var exportPath = GetAssetPath("FBXs", targetName, baseAnimName, "fbx"); 
-                ModelExporter.ExportObject(exportPath, _recordLoader.gameObject);
+                ModelExporter.ExportObject(exportPath, _loader.gameObject);
             }
             finally
             {
-                _recordLoader.Animator.runtimeAnimatorController = previousAnimControl;
+                _loader.Animator.runtimeAnimatorController = previousAnimControl;
             }
         }
 
-        private void AddTakeToControllerBuilder(RecordingTake take, string takeAnimStr, string targetName, AnimationControllerBuilder controllerBuilder)
+        private void AddTakeToControllerBuilder(
+            RecordingTake take, string takeAnimStr, string targetName, AnimationControllerBuilder controllerBuilder)
         {
-            var takeClip = AnimationClipFactory.PopulateAnimationClip(take, _recordLoader.Animator);
+            var takeClip = AnimationClipFactory.PopulateAnimationClip(take, _loader.Animator);
             takeClip.name = takeAnimStr;
 
-            if (exportGenericAnimation)
+            if (_loader.exportGenericAnim)
             {
                 controllerBuilder.CleanControllerStates(false);
-                var animAssetPath = GetAssetPath("GenericAnimations", targetName, takeAnimStr, "anim");
+                var animAssetPath = GetAssetPath(
+                    "GenericAnimations", targetName, takeAnimStr, "anim");
                 AnimationControllerBuilder.SaveGenericAnimationAsset(takeClip, animAssetPath);
             }
 

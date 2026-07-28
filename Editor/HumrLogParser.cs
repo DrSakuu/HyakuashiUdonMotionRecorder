@@ -23,7 +23,7 @@ namespace Humr.Editor
         public string fileName;
         public (TargetType targetType, string name)[] Targets;
         public string foundTakesStr;
-        public List<RecordingTake> recordingTakes = new List<RecordingTake>();
+        public List<RecordingTake> takes = new List<RecordingTake>();
         public DateTime LastWriteTime;
     }
 
@@ -118,7 +118,8 @@ namespace Humr.Editor
         {
             if (!line.Contains(LogMatchTarget)) return CorruptTargetTuple;
 
-            var recordingFrame = line.Substring(line.IndexOf(LogMatchTarget, StringComparison.Ordinal) + LogMatchTarget.Length + 1);
+            var recordingFrame = line.Substring(
+                line.IndexOf(LogMatchTarget, StringComparison.Ordinal) + LogMatchTarget.Length + 1);
             var typeVariableStr = SplitNextVariable(recordingFrame, out var remaining);
             if (!Enum.TryParse<TargetType>(typeVariableStr, out var targetType)) return CorruptTargetTuple;
             
@@ -181,11 +182,14 @@ namespace Humr.Editor
                 else if (ShouldStartNewTake(lineTimestamp, currentTime, beforeTime, currentTake))
                 {
                     takes.Add(currentTake);
-                    currentTake = new RecordingTake { targetType = target.targetType, targetName = target.targetName, takeTimestamp = lineTimestamp};
+                    currentTake = new RecordingTake
+                    {
+                        targetType = target.targetType, targetName = target.targetName, takeTimestamp = lineTimestamp
+                    };
                     beforeTime = -1;
                 }
 
-                var frame = ParseMotionFrame(takeSplit);
+                var frame = ParseRecordingFrame(takeSplit);
                 if (frame == null) continue;
 
                 currentTake.Frames.Add(frame);
@@ -223,7 +227,7 @@ namespace Humr.Editor
             return (isNewTimestamp || isRewind) && currentTake.Frames.Count > 0;
         }
 
-        private static RecordingFrame ParseMotionFrame(string[] parts)
+        private static RecordingFrame ParseRecordingFrame(string[] parts)
         {
             var frame = new RecordingFrame
             {
@@ -401,7 +405,7 @@ namespace Humr.Editor
                 case LogType.Humr:
                     return "HUMR";
                 case LogType.Corrupt:
-                    return "HUMR (Corrupted)";
+                    return "HUMR (Corrupted)"; // TODO: Never displayed
                 case LogType.NoData:
                     return "----";
                 default:
