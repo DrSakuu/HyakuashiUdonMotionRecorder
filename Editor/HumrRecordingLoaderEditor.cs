@@ -45,12 +45,16 @@ namespace Humr.Editor
             GUILayout.Label(_currentFile.foundTakesStr);
             
             var isHumanoidBoneTarget = _currentFile.Targets[_loader.targetIndex].targetType == TargetType.BoneRotations;
-            var isHumanoidAvatar = _loader.Animator.avatar != null && _loader.Animator.avatar.isHuman;
-            if (isHumanoidBoneTarget && !isHumanoidAvatar) SetError("The Avatar needs to be Humanoid.");
-            
-            _loader.exportHumanFbx = GUILayout.Toggle(_loader.exportHumanFbx, "Export Humanoid .fbx");
-            _loader.exportGenericAnim = GUILayout.Toggle(_loader.exportGenericAnim, "Export Generic .anim");
-            if (!_loader.exportHumanFbx && !_loader.exportGenericAnim) 
+            if (isHumanoidBoneTarget)
+            {
+                var isHumanoidAvatar = _loader.Animator.avatar != null && _loader.Animator.avatar.isHuman;
+                if (!isHumanoidAvatar) SetError("The Avatar needs to be Humanoid.");
+
+            }
+
+            _loader.exportFbx = GUILayout.Toggle(_loader.exportFbx, "Export .fbx");
+            _loader.exportAnim = GUILayout.Toggle(_loader.exportAnim, "Export .anim");
+            if (!_loader.exportFbx && !_loader.exportAnim) 
                 SetError("Select either .fbx or .anim export.");
             
             if (!string.IsNullOrEmpty(errorMessage)) EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
@@ -192,7 +196,7 @@ namespace Humr.Editor
             var logLines = HumrLogParser.LoadLogFileLines(_currentFile.path);
 
             _currentFile.takes = currentTargetType == TargetType.Legacy
-                ? HumrLogParser.ParseLegacyTakes(logLines, currentTargetName)
+                ? HumrLogParser.ParseLegacyTakes(logLines.ToArray(), currentTargetName)
                 : HumrLogParser.PartitionLogLinesIntoTakes(logLines.ToArray(), (currentTargetType, currentTargetName));
 
             if (_currentFile.takes == null)
@@ -211,23 +215,25 @@ namespace Humr.Editor
 
         private void LoadRecordingAndExportAnim()
         {
-            var (_, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
+            var (currentTargetType, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
             if (_loader.Animator == null) return;
 
             var poseSnapshot = new AvatarPoseSnapshot();
-            poseSnapshot.Take(_loader.transform, _loader.Animator);
+            if (currentTargetType == TargetType.BoneRotations) poseSnapshot.Take(_loader.transform, _loader.Animator);
 
             try
             {
-                ExecuteExportPipeline(_currentFile.takes, _currentFile.path, currentTargetName);
+                ExecuteExportPipeline(_currentFile.takes, _currentFile.path, currentTargetType, currentTargetName);
             }
             finally
             {
-                poseSnapshot.Restore(_loader.transform);
+                if (currentTargetType == TargetType.BoneRotations) poseSnapshot.Restore(_loader.transform);
+
             }
         }
 
-        private void ExecuteExportPipeline(List<RecordingTake> takes, string filePath, string targetName)
+        private void ExecuteExportPipeline(
+            List<RecordingTake> takes, string filePath, TargetType targetType, string targetName)
         {
             PathUtils.CreateDirectoryIfNotExist(HumrPath);
 
@@ -239,10 +245,10 @@ namespace Humr.Editor
             for (var i = 0; i < takes.Count; i++)
             {
                 var takeAnimStr = $"{baseAnimName}_Take{i + 1}";
-                AddTakeToControllerBuilder(takes[i], takeAnimStr, targetName, controllerBuilder);
+                AddTakeToControllerBuilder(takes[i], takeAnimStr, controllerBuilder);
             }
 
-            if (!_loader.exportHumanFbx) return;
+            if (!_loader.exportFbx) return;
             
             var previousAnimControl = _loader.Animator.runtimeAnimatorController;
             try
@@ -250,24 +256,70 @@ namespace Humr.Editor
                 _loader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
                 var exportPath = GetAssetPath("FBXs", targetName, baseAnimName, "fbx"); 
                 ModelExporter.ExportObject(exportPath, _loader.gameObject);
+                
+                var importer = AssetImporter.GetAtPath(exportPath) as ModelImporter;
+                if (importer == null) return;
+
+                if (targetType == TargetType.BoneRotations)
+                {
+                    SetHumanImportSettings(importer);
+                    importer.SaveAndReimport();
+                }
             }
             finally
             {
                 _loader.Animator.runtimeAnimatorController = previousAnimControl;
             }
         }
+        
+        private static void SetHumanImportSettings(ModelImporter importer)
+        {
+            importer.animationType = ModelImporterAnimationType.Human;
+            var importerClips =
+                importer.clipAnimations.Length == 0 ? importer.defaultClipAnimations : importer.clipAnimations;
+            foreach (var clipAnimation in importerClips)
+            {
+                clipAnimation.lockRootRotation = true;
+                clipAnimation.keepOriginalOrientation = true;
+                clipAnimation.lockRootHeightY = true;
+                clipAnimation.keepOriginalPositionY = true;
+                clipAnimation.lockRootPositionXZ = true;
+                clipAnimation.keepOriginalPositionXZ = true;
+
+                if (clipAnimation.name == "") clipAnimation.name = "HUMRAnimation";
+            }
+
+            importer.clipAnimations = importerClips;
+        }
 
         private void AddTakeToControllerBuilder(
-            RecordingTake take, string takeAnimStr, string targetName, AnimationControllerBuilder controllerBuilder)
+            RecordingTake take, string takeAnimStr, AnimationControllerBuilder controllerBuilder)
         {
-            var takeClip = AnimationClipFactory.PopulateAnimationClip(take, _loader.Animator);
-            takeClip.name = takeAnimStr;
+            AnimationClip takeClip = null;
+            switch (take.targetType)
+            {
+                case TargetType.BoneRotations:
+                    takeClip = AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator);
+                    break;
+                case TargetType.Object:
+                    takeClip = AnimationClipFactory.PopulateObjectClip(take, _loader.gameObject.transform);
+                    break;
+                case TargetType.Unknown:
+                case TargetType.Legacy:
+                case TargetType.BoneRotationsWithIK:
+                case TargetType.HumanMuscles:
+                default:
+                    throw new NotImplementedException();
+            }
+            
+            if (takeClip == null) return;
 
-            if (_loader.exportGenericAnim)
+            takeClip.name = takeAnimStr;
+            if (_loader.exportAnim)
             {
                 controllerBuilder.CleanControllerStates(false);
                 var animAssetPath = GetAssetPath(
-                    "GenericAnimations", targetName, takeAnimStr, "anim");
+                    "GenericAnimations", take.targetName, takeAnimStr, "anim");
                 AnimationControllerBuilder.SaveGenericAnimationAsset(takeClip, animAssetPath);
             }
 

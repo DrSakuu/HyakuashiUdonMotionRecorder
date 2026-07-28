@@ -8,8 +8,8 @@ namespace Humr
         public Animator Animator => GetComponent<Animator>();
         public int fileIndex;
         public int targetIndex;
-        public bool exportHumanFbx = true;
-        public bool exportGenericAnim; 
+        public bool exportFbx = true;
+        public bool exportAnim; 
         public bool showAdvanced;
     }
 }

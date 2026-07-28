@@ -9,6 +9,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 ### Added
 
+- Load Object recordings
 - Toggles to export .fbx or .anim or both
 - Show help box on error
 
@@ -21,6 +22,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 - Restore original Animation Controller after export
 - Explicit include .fbx extension to delete temp file
+- Only change .fbx animationType on export
 
 ## [2.0.0-beta.1] - 2026-07-27
 

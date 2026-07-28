@@ -6,11 +6,11 @@
 
 ## BaseRecorder.cs
 
-- [ ] Set TargetName default to hierarchy path
 - [ ] Option for world relative or start position relative recording
 - [ ] Add take timestamp and framerate to start tags
 - [ ] Add take timestamp, frame count and duration to end
 - [ ] Analyze frametimes, did we drop frames?
+- [ ] Set TargetName default to hierarchy path
 
 ## PlayerRecorder.cs
 

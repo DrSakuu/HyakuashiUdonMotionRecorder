@@ -6,7 +6,8 @@ HUMR is a motion capture tool that records player's movements into the VRChat lo
 
 - Combine Recorder and OutputLogLoader `.unitypackage`s
 - New Recording log format: semicolons to separate different types
-- Select player DisplayName from a dropdown
+- Record single objects like a camera
+- New inspector with target name dropdown and error handling
 - Add HUMR Sample World
 
 ## Installation

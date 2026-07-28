@@ -34,19 +34,28 @@ namespace Humr.Editor
         public string targetName;
         public long takeTimestamp;
 
-        public RecordingTake()
-        {
-            Frames = new List<RecordingFrame>();
-        }
-
-        public List<RecordingFrame> Frames { get; set; }
+        public List<Frame> Frames { get; set; } = new List<Frame>();
     }
 
-    public class RecordingFrame
+    [Serializable]
+    public abstract class Frame
     {
         public float RecordTime { get; set; }
+    }
+
+    [Serializable]
+    public class BoneRotationsFrame : Frame
+    {
         public Vector3 HipPosition { get; set; }
         public List<Quaternion> BoneRotations { get; set; } = new List<Quaternion>();
+    }
+
+    [Serializable]
+    public class ObjectFrame : Frame
+    {
+        public Vector3 Position { get; set; }
+        public Quaternion Rotation { get; set; }
+        public Vector3 LocalScale { get; set; }
     }
 
     public static class HumrLogParser
@@ -189,7 +198,7 @@ namespace Humr.Editor
                     beforeTime = -1;
                 }
 
-                var frame = ParseRecordingFrame(takeSplit);
+                var frame = ParseFrame(target.targetType, takeSplit);
                 if (frame == null) continue;
 
                 currentTake.Frames.Add(frame);
@@ -227,12 +236,29 @@ namespace Humr.Editor
             return (isNewTimestamp || isRewind) && currentTake.Frames.Count > 0;
         }
 
-        private static RecordingFrame ParseRecordingFrame(string[] parts)
+        private static Frame ParseFrame(TargetType targetType, string[] takeSplit)
         {
-            var frame = new RecordingFrame
+            switch (targetType)
+            {
+                case TargetType.BoneRotations:
+                    return ParseBoneRotationsFrame(takeSplit);
+                case TargetType.Object:
+                    return ParseObjectFrame(takeSplit);
+                case TargetType.Unknown:
+                case TargetType.Legacy:
+                case TargetType.BoneRotationsWithIK:
+                case TargetType.HumanMuscles:
+                default:
+                    return null;
+            }
+        }
+
+        private static BoneRotationsFrame ParseBoneRotationsFrame(string[] parts)
+        {
+            var frame = new BoneRotationsFrame
             {
                 RecordTime = float.Parse(parts[1], CultureInfo.InvariantCulture),
-                HipPosition = ParseHipPosition(parts[2])
+                HipPosition = ParseVector3(parts[2])
             };
 
             AppendBoneRotations(parts, frame);
@@ -240,9 +266,9 @@ namespace Humr.Editor
             return frame;
         }
 
-        private static Vector3 ParseHipPosition(string rawPosition)
+        private static Vector3 ParseVector3(string vector3String)
         {
-            var posValues = rawPosition.Split(HumrLogger.ComponentDelimiter);
+            var posValues = vector3String.Split(HumrLogger.ComponentDelimiter);
             if (posValues.Length != 3) return default;
 
             return new Vector3(
@@ -252,7 +278,20 @@ namespace Humr.Editor
             );
         }
 
-        private static void AppendBoneRotations(string[] parts, RecordingFrame frame)
+        private static Quaternion ParseQuaternion(string quaternionString)
+        {
+            var quaternionValues = quaternionString.Split(HumrLogger.ComponentDelimiter);
+            if (quaternionValues.Length != 4) return default;
+
+            return new Quaternion(
+                float.Parse(quaternionValues[0], CultureInfo.InvariantCulture),
+                float.Parse(quaternionValues[1], CultureInfo.InvariantCulture),
+                float.Parse(quaternionValues[2], CultureInfo.InvariantCulture), 
+                float.Parse(quaternionValues[3], CultureInfo.InvariantCulture)
+            );
+        }
+
+        private static void AppendBoneRotations(string[] parts, BoneRotationsFrame frame)
         {
             for (var i = 3; i < parts.Length; i++)
             {
@@ -270,30 +309,43 @@ namespace Humr.Editor
             }
         }
 
-        public static List<RecordingTake> ParseLegacyTakes(List<string> logLines, string targetName)
+        private static ObjectFrame ParseObjectFrame(string[] parts)
+        {
+            var frame = new ObjectFrame
+            {
+                RecordTime = float.Parse(parts[1], CultureInfo.InvariantCulture),
+                Position = ParseVector3(parts[2]),
+                Rotation = ParseQuaternion(parts[3]),
+                LocalScale = ParseVector3(parts[4])
+            };
+            return frame;
+        }
+
+        public static List<RecordingTake> ParseLegacyTakes(string[] logLines, string targetName)
         {
             var take = new List<RecordingTake>();
-            var currentFrames = new List<RecordingFrame>();
+            var currentFrames = new List<Frame>();
             var lastTime = -1f;
 
             foreach (var line in logLines)
             {
-                if (!TryParseLegacyFrame(line, LegacyLogMatchTarget, targetName,
-                        out var frame)) continue;
+                if (!TryParseLegacyFrame(line, LegacyLogMatchTarget, targetName, out var frame)) continue;
 
                 HandleTakeBreak(frame, currentFrames, take, ref lastTime);
-
                 currentFrames.Add(frame);
                 lastTime = frame.RecordTime;
             }
 
-            if (currentFrames.Count > 0) take.Add(new RecordingTake { Frames = currentFrames });
+            if (currentFrames.Count > 0)
+            {
+                take.Add(new RecordingTake { Frames = new List<Frame>() } );
+            }
 
             return take;
         }
 
         private static bool TryParseLegacyFrame(string line, string matchTarget, string targetName,
-            out RecordingFrame frame)
+            out BoneRotationsFrame frame)
         {
             frame = null;
 
@@ -327,9 +379,9 @@ namespace Humr.Editor
             return dataSegment.Substring(targetName.Length);
         }
 
-        private static RecordingFrame BuildLegacyFrame(string[] tokens)
+        private static BoneRotationsFrame BuildLegacyFrame(string[] tokens)
         {
-            var frame = new RecordingFrame
+            var frame = new BoneRotationsFrame
             {
                 RecordTime = float.Parse(tokens[0], CultureInfo.InvariantCulture),
                 HipPosition = new Vector3(
@@ -344,7 +396,7 @@ namespace Humr.Editor
             return frame;
         }
 
-        private static void ParseBoneRotations(string[] tokens, RecordingFrame frame)
+        private static void ParseBoneRotations(string[] tokens, BoneRotationsFrame frame)
         {
             for (var i = 4; i + 3 < tokens.Length; i += 4)
                 frame.BoneRotations.Add(new Quaternion(
@@ -355,7 +407,7 @@ namespace Humr.Editor
                 ));
         }
 
-        private static void HandleTakeBreak(RecordingFrame frame, List<RecordingFrame> currentFrames,
+        private static void HandleTakeBreak(Frame frame, List<Frame> currentFrames,
             List<RecordingTake> takes, ref float lastTime)
         {
             if (lastTime < 0) return;
@@ -366,7 +418,7 @@ namespace Humr.Editor
             if (!isRewind && !isGap) return;
             if (currentFrames.Count <= 0) return;
 
-            takes.Add(new RecordingTake { Frames = new List<RecordingFrame>(currentFrames) });
+            takes.Add(new RecordingTake { Frames = new List<Frame>(currentFrames) });
             currentFrames.Clear();
         }
 
