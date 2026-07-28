@@ -15,6 +15,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 ### Changed
 
 - Keep original XZ position for .fbx import settings
+- Select newest HUMR file automatically
 
 ### Fixed
 

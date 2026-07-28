@@ -158,6 +158,8 @@ namespace Humr.Editor
             }
 
             _recordingFileNames = _recordingFiles.Select(file => file.fileName).ToArray();
+            var humrIndex = _recordingFiles.FindIndex(file => file.type == LogType.Humr);
+            if (humrIndex != -1) _loader.fileIndex = humrIndex;
             SetCurrentRecordingFile();
         }
 
