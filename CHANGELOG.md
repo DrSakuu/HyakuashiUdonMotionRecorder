@@ -11,6 +11,10 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 - Keep original XZ position for .fbx import settings
 
+### Fixed
+
+- Restore original Animation Controller after export
+
 ## [2.0.0-beta.1] - 2026-07-27
 
 ### Added

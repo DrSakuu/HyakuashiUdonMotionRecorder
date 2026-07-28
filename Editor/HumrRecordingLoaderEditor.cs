@@ -218,10 +218,17 @@ namespace Humr.Editor
                 ExportTake(takes[i], takeAnimStr, targetName, controllerBuilder);
             }
 
-            _recordLoader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
-            var exportPath = FbxAssetPath(HumrPath, targetName, baseAnimName);
-            AnimationControllerBuilder.ExportFBX(exportPath, _recordLoader.gameObject);
-            // TODO: Make temporary animator controller work with humanoid avatar or remove it
+            var previousAnimControl = _recordLoader.Animator.runtimeAnimatorController;
+            try
+            {
+                _recordLoader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
+                var exportPath = FbxAssetPath(HumrPath, targetName, baseAnimName);
+                AnimationControllerBuilder.ExportFBX(exportPath, _recordLoader.gameObject);
+            }
+            finally
+            {
+                _recordLoader.Animator.runtimeAnimatorController = previousAnimControl;
+            }
         }
 
         private void ExportTake(
