@@ -18,6 +18,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 ### Fixed
 
 - Restore original Animation Controller after export
+- Explicit include .fbx extension to delete temp file
 
 ## [2.0.0-beta.1] - 2026-07-27
 

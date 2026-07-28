@@ -2,7 +2,6 @@
 using System.IO;
 using UnityEditor;
 using UnityEditor.Animations;
-using UnityEditor.Formats.Fbx.Exporter;
 using UnityEngine;
 
 namespace Humr.Editor
@@ -108,11 +107,6 @@ namespace Humr.Editor
             AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(animAssetPath));
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-        }
-
-        public static void ExportFBX(string filePath, Object singleObject)
-        {
-            ModelExporter.ExportObject(filePath, singleObject);
         }
     }
 }

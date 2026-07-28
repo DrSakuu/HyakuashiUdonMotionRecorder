@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Formats.Fbx.Exporter;
 using UnityEngine;
 
 namespace Humr.Editor
@@ -13,7 +14,7 @@ namespace Humr.Editor
     {
         private const string VrcLogPathSuffix = @"\AppData\LocalLow\VRChat\VRChat";
 
-        private const string HumrPath = "Assets/HUMR";
+        private const string HumrPath = @"Assets\HUMR";
 
         public string logFileDirectory;
         public List<RecordingFile> recordingFiles = new List<RecordingFile>();
@@ -229,8 +230,8 @@ namespace Humr.Editor
             try
             {
                 _recordLoader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
-                var exportPath = FbxAssetPath(HumrPath, targetName, baseAnimName);
-                AnimationControllerBuilder.ExportFBX(exportPath, _recordLoader.gameObject);
+                var exportPath = GetAssetPath("FBXs", targetName, baseAnimName, "fbx"); 
+                ModelExporter.ExportObject(exportPath, _recordLoader.gameObject);
             }
             finally
             {
@@ -246,26 +247,27 @@ namespace Humr.Editor
             if (exportGenericAnimation)
             {
                 controllerBuilder.CleanControllerStates(false);
-                var animAssetPath = AnimAssetPath(HumrPath, targetName, takeAnimStr);
+                var animAssetPath = GetAssetPath("GenericAnimations", targetName, takeAnimStr, "anim");
                 AnimationControllerBuilder.SaveGenericAnimationAsset(takeClip, animAssetPath);
             }
 
             controllerBuilder.AddClipToController(takeClip);
         }
-
-        private static string AnimAssetPath(string humrPath, string targetName, string takeAnimStr)
+        
+        private static string GetAssetPath(string subFolder, string targetName, string fileName, string extension)
         {
-            var animFolderPath = $"{humrPath}/GenericAnimations/{PathUtils.SanitizeFileName(targetName)}";
-            PathUtils.CreateDirectoryIfNotExist(animFolderPath);
-            return $"{animFolderPath}/{takeAnimStr}.anim";
+            var folderPath = Path.Join(HumrPath, subFolder, PathUtils.SanitizeFileName(targetName));
+            PathUtils.CreateDirectoryIfNotExist(folderPath);
+
+            return Path.Join(folderPath, $"{fileName}.{extension}");
         }
 
-        private static string FbxAssetPath(string humrPath, string targetName, string fileName)
+        private static string FbxAssetPath(string targetName, string fileName)
         {
-            var exportFolderPath = $"{humrPath}/FBXs/{PathUtils.SanitizeFileName(targetName)}";
+            var exportFolderPath = Path.Join(HumrPath, "FBXs", PathUtils.SanitizeFileName(targetName));
             PathUtils.CreateDirectoryIfNotExist(exportFolderPath);
 
-            return $"{exportFolderPath}/{fileName}";
+            return Path.Join(exportFolderPath, $"{fileName}.fbx");
         }
     }
 }

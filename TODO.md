@@ -2,6 +2,7 @@
 
 - [ ] English and Japanese localization
 - [ ] Make VPM package site
+- [ ] Clean up Editor/Runtime classes
 
 ## BaseRecorder.cs
 
@@ -32,7 +33,6 @@
 - [ ] List takes with durations and checkmarks to include them
 - [ ] Test collect Legacy and Humr targets in same file
 - [ ] Include displayname and take number in exported animations
-- [ ] Remove prefix from exported FBX name
 - [ ] Make target selector actually select only takes belonging to target
 - [ ] Detect Avatar height mismatch, scale from calibrated start tags
 - [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations
