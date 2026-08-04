@@ -1,5 +1,6 @@
 #if UDONSHARP
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using UdonSharp;
 using UnityEngine;
@@ -10,20 +11,26 @@ namespace Humr
 {
     public class BaseRecorder : UdonSharpBehaviour
     {
+        [SerializeField] [Tooltip("Target name for recording.")]
+        protected string targetName = "Target";
+
+        [SerializeField] [Tooltip("Frames per second for recording.")]
+        protected float recordFramerate = 30;
+
+        [SerializeField] [Tooltip("Start recording immediately on scene load.")]
+        protected bool recordOnStart = true;
+
         [SerializeField] [Tooltip("Start recording button, connect onClick to StartRecording custom event.")]
         private Button startRecordButton;
 
         [SerializeField] [Tooltip("Stop recording button, connect onClick to StartRecording custom event.")]
         private Button stopRecordButton;
-
-        [SerializeField] [Tooltip("Start recording immediately on scene load.")]
-        protected bool recordOnStart = true;
-
-        [SerializeField] [Tooltip("Frames per second for recording.")]
-        protected float recordFramerate = 30;
-
-        [SerializeField] [Tooltip("Target name for recording.")]
-        protected string targetName = "Target";
+        
+        [SerializeField] [Tooltip("Target mesh to that changes material to indicate recording state.")]
+        private Renderer indicatorRenderer;
+        
+        [SerializeField] [Tooltip("The material to set the indicator when HUMR is recording.")]
+        private Material recordingMaterial;
 
         private bool _isRecording;
         private float _nextRecordTime;
@@ -31,6 +38,7 @@ namespace Humr
         private float _recordTime;
         private long _takeTimestamp;
         private VRCPickup _pickup;
+        private Material _indicatorDefaultMaterial;
 
         protected TargetType TargetType = TargetType.Object;
         protected object[] RecordingObjects;
@@ -41,6 +49,11 @@ namespace Humr
             
             _pickup = GetComponent<VRCPickup>();
             if (_pickup != null) _pickup.UseText = "Record";
+            
+            if (indicatorRenderer != null && recordingMaterial != null)
+            {
+                _indicatorDefaultMaterial = indicatorRenderer.material;
+            }
         }
 
         private void Update()
@@ -81,6 +94,10 @@ namespace Humr
         {
             if (startRecordButton != null) startRecordButton.gameObject.SetActive(!_isRecording);
             if (stopRecordButton != null) stopRecordButton.gameObject.SetActive(_isRecording);
+            if (indicatorRenderer != null && recordingMaterial != null)
+            {
+                indicatorRenderer.material = _isRecording ? recordingMaterial : _indicatorDefaultMaterial;
+            }
         }
 
         private void OnRecordTick()
