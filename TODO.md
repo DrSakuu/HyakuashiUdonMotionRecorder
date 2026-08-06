@@ -1,4 +1,4 @@
-﻿# TODO
+# TODO
 
 - [ ] English and Japanese localization
 - [ ] Make VPM package site
