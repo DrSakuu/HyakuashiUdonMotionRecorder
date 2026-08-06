@@ -51,13 +51,14 @@ namespace Humr.Editor
 
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             GUILayout.Label(_currentFile.foundTakesStr);
-            
+
             var isHumanoidBoneTarget = _currentFile.Targets[_loader.targetIndex].targetType == TargetType.BoneRotations;
             if (isHumanoidBoneTarget)
             {
                 var isHumanoidAvatar = _loader.Animator.avatar != null && _loader.Animator.avatar.isHuman;
                 if (!isHumanoidAvatar) SetError("The Avatar needs to be Humanoid.");
-
+                _loader.blenderHipFix = GUILayout.Toggle(_loader.blenderHipFix, new GUIContent("Blender hip fix",
+                    "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure."));
             }
 
             _loader.exportFbx = GUILayout.Toggle(_loader.exportFbx, "Export .fbx");
@@ -257,29 +258,51 @@ namespace Humr.Editor
             }
 
             if (!_loader.exportFbx) return;
-            
+
+            var originalRootBones = ApplyBlenderHipFix();
             var previousAnimControl = _loader.Animator.runtimeAnimatorController;
             try
             {
                 _loader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
-                var exportPath = GetAssetPath("FBXs", targetName, baseAnimName, "fbx"); 
+
+                var exportPath = GetAssetPath("FBXs", targetName, baseAnimName, "fbx");
                 ModelExporter.ExportObject(exportPath, _loader.gameObject);
-                
+
                 var importer = AssetImporter.GetAtPath(exportPath) as ModelImporter;
                 if (importer == null) return;
 
-                if (targetType == TargetType.BoneRotations)
-                {
-                    SetHumanImportSettings(importer);
-                    importer.SaveAndReimport();
-                }
+                if (targetType != TargetType.BoneRotations) return;
+
+                SetHumanImportSettings(importer);
+                importer.SaveAndReimport();
             }
             finally
             {
                 _loader.Animator.runtimeAnimatorController = previousAnimControl;
+                if (originalRootBones.Count > 0)
+                    foreach (var (renderer, rootBone) in originalRootBones)
+                        renderer.rootBone = rootBone;
             }
         }
-        
+
+        private List<(SkinnedMeshRenderer renderer, Transform rootBone)> ApplyBlenderHipFix()
+        {
+            var originalRootBones = new List<(SkinnedMeshRenderer renderer, Transform rootBone)>();
+            if (!_loader.Animator.isHuman || !_loader.blenderHipFix) return originalRootBones;
+
+            var hipsTransform = _loader.Animator.GetBoneTransform(HumanBodyBones.Hips);
+            var skinnedRenderers = _loader.Animator.transform.GetComponentsInChildren<SkinnedMeshRenderer>();
+            foreach (var renderer in skinnedRenderers)
+            {
+                if (renderer.rootBone == hipsTransform.parent) continue;
+
+                originalRootBones.Add((renderer, renderer.rootBone));
+                renderer.rootBone = hipsTransform.parent;
+            }
+
+            return originalRootBones;
+        }
+
         private static void SetHumanImportSettings(ModelImporter importer)
         {
             importer.animationType = ModelImporterAnimationType.Human;
