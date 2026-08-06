@@ -20,6 +20,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 
 ### Fixed
 
+- Export animations relative to Animator transform
 - Restore original Animation Controller after export
 - Explicit include .fbx extension to delete temp file
 - Only change .fbx animationType on export

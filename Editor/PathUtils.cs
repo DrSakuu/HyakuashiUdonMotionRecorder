@@ -26,18 +26,5 @@ namespace Humr.Editor
 
             return match.Success ? match.Value : fileName;
         }
-
-        public static string GetHierarchyPath(Transform self)
-        {
-            var path = self.gameObject.name;
-            var parent = self.parent;
-            while (parent.parent != null)
-            {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
-            }
-
-            return path;
-        }
     }
 }

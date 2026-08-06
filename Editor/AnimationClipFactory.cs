@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace Humr.Editor
@@ -103,7 +104,8 @@ namespace Humr.Editor
         private static AnimationClip CreateAndBindBoneRotationCurves(Keyframe[][] keyframes, Animator animator)
         {
             var clip = new AnimationClip();
-            var hipPath = PathUtils.GetHierarchyPath(animator.GetBoneTransform(0));
+            var hipTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
+            var hipPath = AnimationUtility.CalculateTransformPath(hipTransform, animator.transform);
 
             clip.SetCurve(hipPath, typeof(Transform), "localPosition.x", new AnimationCurve(keyframes[0]));
             clip.SetCurve(hipPath, typeof(Transform), "localPosition.y", new AnimationCurve(keyframes[1]));
@@ -114,7 +116,7 @@ namespace Humr.Editor
                 var boneTransform = animator.GetBoneTransform((HumanBodyBones)m);
                 if (boneTransform == null) continue;
 
-                var bonePath = PathUtils.GetHierarchyPath(boneTransform);
+                var bonePath = AnimationUtility.CalculateTransformPath(boneTransform, animator.transform);
                 var curveBaseIndex = m * 4 + 3;
 
                 clip.SetCurve(bonePath, typeof(Transform), "localRotation.x",
