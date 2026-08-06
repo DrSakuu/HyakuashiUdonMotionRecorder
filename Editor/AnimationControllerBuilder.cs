@@ -107,6 +107,11 @@ namespace Humr.Editor
             AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(animAssetPath));
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            
+            EditorUtility.FocusProjectWindow();
+            var createdAsset = AssetDatabase.LoadAssetAtPath<AnimationClip>(AssetDatabase.GetAssetPath(clip));
+            Selection.activeObject = createdAsset;
+            EditorGUIUtility.PingObject(createdAsset);
         }
     }
 }

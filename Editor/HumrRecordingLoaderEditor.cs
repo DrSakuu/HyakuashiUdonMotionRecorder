@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Formats.Fbx.Exporter;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Humr.Editor
 {
@@ -270,6 +271,11 @@ namespace Humr.Editor
 
                 var importer = AssetImporter.GetAtPath(exportPath) as ModelImporter;
                 if (importer == null) return;
+                
+                EditorUtility.FocusProjectWindow();
+                var createdAsset = AssetDatabase.LoadAssetAtPath<Object>(exportPath);
+                Selection.activeObject = createdAsset;
+                EditorGUIUtility.PingObject(createdAsset);
 
                 if (targetType != TargetType.BoneRotations) return;
 
@@ -363,14 +369,6 @@ namespace Humr.Editor
             PathUtils.CreateDirectoryIfNotExist(folderPath);
 
             return Path.Join(folderPath, $"{fileName}.{extension}");
-        }
-
-        private static string FbxAssetPath(string targetName, string fileName)
-        {
-            var exportFolderPath = Path.Join(HumrPath, "FBXs", PathUtils.SanitizeFileName(targetName));
-            PathUtils.CreateDirectoryIfNotExist(exportFolderPath);
-
-            return Path.Join(exportFolderPath, $"{fileName}.fbx");
         }
     }
 }
