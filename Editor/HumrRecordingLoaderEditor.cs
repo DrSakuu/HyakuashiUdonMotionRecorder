@@ -33,7 +33,15 @@ namespace Humr.Editor
             UpdateRecordingFiles();
             if (!DrawLogFileDropdown()) SetError("No log files found.");
 
-            var targetStrList = _currentFile.Targets
+            var currentTargets = _currentFile.Targets;
+            if (currentTargets == null)
+            {
+                EditorGUILayout.HelpBox("Please select the log file again.", MessageType.Error);
+                CollectTargets();
+                return;
+            }
+
+            var targetStrList = currentTargets
                 .Select(t => $"{t.targetType}: {t.name}")
                 .ToArray();
             _loader.targetIndex = EditorGUILayout.Popup(
