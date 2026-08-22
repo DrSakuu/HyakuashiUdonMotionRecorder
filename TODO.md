@@ -3,6 +3,8 @@
 - [ ] English and Japanese localization
 - [ ] Make VPM package site
 - [ ] Clean up Editor/Runtime classes
+- [ ] Test with Unity 2019-6000
+- [ ] Test with World SDK 3.9.0
 
 ## BaseRecorder.cs
 
@@ -18,6 +20,7 @@
 - [ ] T-pose on avatar change to calibrate hip height, save to start tags
 - [ ] Record hand and feet positions for IK
 - [ ] Record all players
+- [ ] Hide `Target Name` in inspector
 
 ## PlayerRecorder.prefab
 
@@ -29,16 +32,12 @@
 
 ## HumrRecordingLoaderEditor.cs
 
-- [ ] Select newest log file with HUMR data
+- [ ] Test target selector actually select only takes belonging to target
+- [ ] Test collecting Legacy and Humr targets in same file
 - [ ] List takes with durations and checkmarks to include them
-- [ ] Test collect Legacy and Humr targets in same file
-- [ ] Include displayname and take number in exported animations
-- [ ] Make target selector actually select only takes belonging to target
-- [ ] Detect Avatar height mismatch, scale from calibrated start tags
 - [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations
+- [ ] Include displayname and take number in exported animations
+- [ ] Detect Avatar height mismatch, scale from calibrated start tags
 - [ ] Fix toes rotation
 - [ ] Update RecordingFiles if last write time is different
-
-## Samples
-
-- [ ] Update public world
+- [ ] Keyframe reduction for .anim files with `AnimationUtility.ReduceKeyframes`

@@ -123,6 +123,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &14032958
+GameObject:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 14032960}
+  - component: {fileID: 14032959}
+  m_Layer: 0
+  m_Name: nadena.dev.ndmf__Activator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &14032959
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 14032958}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c432a5ed00a04259997c23712bcf2186, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &14032960
+Transform:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 14032958}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &75362606
 GameObject:
   m_ObjectHideFlags: 0
@@ -180,7 +224,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Download:'
+  m_text: Download
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -917,17 +961,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2156042555352384062, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 2198187421064365204, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
       propertyPath: serializedProgramAsset
       value: 
       objectReference: {fileID: 11400000, guid: 2fb6b72e7a28ada479fe26a4257ed87b, type: 2}
     - target: {fileID: 2198187421064365205, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.25
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2198187421064365205, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -935,7 +975,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2198187421064365205, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2198187421064365205, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -969,65 +1009,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: HumrPlayerRecorder
       objectReference: {fileID: 0}
-    - target: {fileID: 3404536332706373457, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_Navigation.m_Mode
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3414541347730952932, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_fontColor.b
-      value: 0.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 3414541347730952932, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_fontColor.g
-      value: 0.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 3414541347730952932, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_fontColor.r
-      value: 0.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 3414541347730952932, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4293322470
-      objectReference: {fileID: 0}
-    - target: {fileID: 3599971380136833842, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_Material
-      value: 
-      objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}
-    - target: {fileID: 4156275033612179845, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_Navigation.m_Mode
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 5886427879181469803, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 5886427879181469803, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-    - target: {fileID: 5999656809371462438, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9214050525099494496, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_Color.b
-      value: 0.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 9214050525099494496, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_Color.g
-      value: 0.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 9214050525099494496, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_Color.r
-      value: 0.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 9214050525099494496, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      propertyPath: m_Material
-      value: 
-      objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5360131877152886301, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1893318242}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
 --- !u!1 &1074288853 stripped
 GameObject:
@@ -2269,8 +2258,8 @@ MonoBehaviour:
 
     HUMR
     is a motion capture tool that records player''s movements into the VRChat log
-    files and then reads them in a VRChat world project. This is version 2.0.0, which
-    uses a new log format.
+    files and then reads them in a Unity project. This is version 2, which uses a
+    new log format.
 
 
 '
@@ -2362,7 +2351,7 @@ GameObject:
   - component: {fileID: 1728851614}
   - component: {fileID: 1728851613}
   m_Layer: 0
-  m_Name: Usage
+  m_Name: Recording
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2416,24 +2405,15 @@ MonoBehaviour:
 
 
     The bones of the avatar that you record and load your
-    motion has to match exactly, so if you don''t have access to the .fbx file of
+    motion have to match exactly, so if you don''t have access to the .fbx file of
     your current avatar, you can use the sample robot from the pedestal on the left,
-    because that is included in the package. Unity can retarget the animation to
-    another avatar when you import it. If you want to apply the animation to another
-    model outside of Unity, you can use a tool like Rokoko plugin for Blender to
-    retarget it.
+    because that is included in the VRChat SDK. Unity can retarget the animation
+    to another avatar after you import it, or you can use a tool like Rokoko plugin
+    for Blender for manual retargeting.
 
 
-    VRChat logs are deleted after 48 hours, so make sure to load the saved data or copy the log files elsewhere.
-
-
-    <b><size=40>Loading</size></b>
-
-
-    Import the mukaderabbit.humr
-    Unitypackage into a VRChat world project, and import the HUMR Sample Scene from
-    the Package Manager. Use the Avatar_Utility Recording Loader to load your animation,
-    or attach the HumrRecordingLoader component to your custom avatar.
+    VRChat logs are deleted after 48 hours,
+    so make sure to load the saved data or copy the log files elsewhere.
 
 
 '
@@ -3446,32 +3426,155 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f9df6fa54e171f41bdc968c43763f02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &1893318236 stripped
+  fileIndex: 0
+  targetIndex: 0
+  exportFbx: 1
+  exportAnim: 0
+  showAdvanced: 0
+  blenderHipFix: 1
+--- !u!1 &1895435918
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 5360131877152886301, guid: fde5e7532b82927428632c04b3d713d9, type: 3}
-  m_PrefabInstance: {fileID: 1074288852}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &1893318242
-BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1893318236}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1895435919}
+  - component: {fileID: 1895435921}
+  - component: {fileID: 1895435920}
+  m_Layer: 0
+  m_Name: Loading
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1895435919
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1895435918}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2076183773}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1895435920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1895435918}
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: '<b><size=40>Loading</size></b>
+
+
+    Import the mukaderabbit.humr Unitypackage
+    into any Unity project and attach the HumrRecordingLoader component to an animator
+    with a human avatar. Select the VRChat log file with your recording takes from
+    the list and export it as either .fbx or .anim.
+
+
+'
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4293322470
+  m_fontColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 20
+  m_fontSizeBase: 20
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1895435921
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1895435918}
+  m_CullTransparentMesh: 1
 --- !u!1001 &1903263488
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3611,6 +3714,7 @@ RectTransform:
   m_Children:
   - {fileID: 1699391790}
   - {fileID: 1728851612}
+  - {fileID: 1895435919}
   - {fileID: 75362607}
   - {fileID: 1077168894}
   m_Father: {fileID: 432132860}
@@ -3694,3 +3798,4 @@ SceneRoots:
   - {fileID: 1074288852}
   - {fileID: 1765599547}
   - {fileID: 1234793110}
+  - {fileID: 14032960}
