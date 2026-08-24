@@ -7,7 +7,7 @@ HUMR is a motion capture tool that records player's movements into the VRChat lo
 ## Installation
 
 > [!WARNING]
-> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing.
+> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing. This is done automatically if installed from VPM.
 
 ### Requirements
 
@@ -15,7 +15,13 @@ HUMR is a motion capture tool that records player's movements into the VRChat lo
 - FBX Exporter =>4.2.1 (Installed automatically on import)
 - VRChat World SDK =>3.10.0 (For recording)
 
-Download the `.unitypackage` from releases and import it into your VRChat World project for recording, or into your VRC avatar project for loading.
+### VPM
+
+Install from Sakuu's VPM Listing: <https://drsakuu.github.io/vpm-listing/> (Using [ALCOM](https://vrc-get.anatawa12.com/alcom/)).
+
+### Other
+
+For loading animations, the VRChat SDK is not needed. If you don't use VPM, download the `.unitypackage` from [releases](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases) and import it into any Unity project.
 
 ## Usage
 

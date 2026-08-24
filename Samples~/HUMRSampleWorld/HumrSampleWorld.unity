@@ -3493,7 +3493,7 @@ MonoBehaviour:
 
 
     Import the drsakuu.humr Unitypackage
-    into any Unity project and attach the HumrRecordingLoader component to an animator
+    into a Unity 2022.3.22f1 project and attach the HumrRecordingLoader component to an animator
     with a human avatar. Select the VRChat log file with your recording takes from
     the list and export it as either .fbx or .anim.
 
