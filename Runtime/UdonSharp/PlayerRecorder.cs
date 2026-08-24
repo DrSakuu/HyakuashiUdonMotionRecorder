@@ -2,7 +2,7 @@
 using UnityEngine;
 using VRC.SDKBase;
 
-namespace Humr
+namespace DrSakuu.Humr
 {
     public class PlayerRecorder : BaseRecorder
     {

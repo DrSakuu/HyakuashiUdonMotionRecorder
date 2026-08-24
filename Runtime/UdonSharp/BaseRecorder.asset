@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: BaseRecorder
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 163ed427bf45f3b468c4a2acc3ed528a, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 5c1a42b42b8d4e944a2e24057465fad5, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 6313f376ed2493742bcbc8d3e8901000, type: 3}
@@ -20,7 +20,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 0
   hasInteractEvent: 1
-  scriptID: 2568266952017283310
+  scriptID: 8477627364340153502
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -886,7 +886,7 @@ MonoBehaviour:
       Data: 53|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: Humr.TargetType, Humr
+      Data: DrSakuu.Humr.TargetType, DrSakuu.Humr
     - Name: 
       Entry: 8
       Data: 

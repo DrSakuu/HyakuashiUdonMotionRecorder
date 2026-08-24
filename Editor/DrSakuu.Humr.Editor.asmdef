@@ -1,11 +1,13 @@
 {
-    "name": "Humr",
-    "rootNamespace": "Humr",
+    "name": "DrSakuu.Humr.Editor",
+    "rootNamespace": "DrSakuu.Humr.Editor",
     "references": [
-        "GUID:99835874ee819da44948776e0df4ff1d",
-        "GUID:3c1bc1267eab5884ebe7f232c09ee0d9"
+        "GUID:4156b7325025f45479ad99b85e7efd7c",
+        "GUID:0f9e8f73c69964f1e8176f9a0b86f9b2"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Humr
+namespace DrSakuu.Humr
 {
     [RequireComponent(typeof(Animator))]
     public class HumrRecordingLoader : MonoBehaviour

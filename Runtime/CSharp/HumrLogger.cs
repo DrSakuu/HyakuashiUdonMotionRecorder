@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Humr
+namespace DrSakuu.Humr
 {
     public enum TargetType
     {

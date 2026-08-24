@@ -31,7 +31,7 @@ VRChat logs are deleted after 48 hours, so make sure to load the saved data or c
 
 ### Loading
 
-Import the mukaderabbit.humr Unitypackage into any Unity project and attach the HumrRecordingLoader component to an animator with a human avatar. Select the VRChat log file with your recording takes from the list and export it as either .fbx or .anim.
+Import the drsakuu.humr Unitypackage into any Unity project and attach the HumrRecordingLoader component to an animator with a human avatar. Select the VRChat log file with your recording takes from the list and export it as either .fbx or .anim.
 
 ## Changelog
 

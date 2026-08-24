@@ -1,11 +1,11 @@
 {
-  "name": "mukaderabbit.humr",
+  "name": "drsakuu.humr",
   "displayName": "Hyakuashi Udon Motion Recorder",
-  "version": "2.0.0-beta.2",
-  "description": "HUMR is a motion capture tool that records player's movements into the VRChat log files and then reads them in a VRChat world project. This is version 2.0.0, which uses a new log format.",  
+  "version": "2.0.0-beta.3",
+  "description": "HUMR is a motion capture tool that records player's movements into the VRChat log files and then reads them in a Unity project. This is version 2, which uses a new log format.",  
   "author": {
-    "name": "mukaderabbit",
-    "url": "https://github.com/mukaderabbit/mukaderabbit-HyakuashiUdonMotionRecorder-HUMR-"
+    "name": "drsakuu",
+    "url": "https://drsakuu.carrd.co"
   },
   "legacyFolders": {
     "Assets\\HUMR\\Prefabs": "a9daba3508e40b842b5213e24a43c417",

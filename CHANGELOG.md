@@ -1,11 +1,17 @@
 # Changelog
 
-## [2.0.0-beta.2] - 2026-08-24
+## [2.0.0-beta.3] - Unreleased
 
 A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format, can read pre-2.0.0 logs but not write them.
 
 > [!WARNING]
-> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing.
+> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing. This is done automatically if installed from VPM.
+
+### Changed
+
+- Move to DrSakuu namespace
+
+## [2.0.0-beta.2] - 2026-08-24
 
 ### Added
 

@@ -8,7 +8,7 @@ using UnityEditor.Formats.Fbx.Exporter;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Humr.Editor
+namespace DrSakuu.Humr.Editor
 {
     [CustomEditor(typeof(HumrRecordingLoader))]
     public class HumrRecordingLoaderEditor : UnityEditor.Editor

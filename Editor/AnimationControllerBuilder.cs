@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
-namespace Humr.Editor
+namespace DrSakuu.Humr.Editor
 {
     internal struct BoneSnapshot
     {

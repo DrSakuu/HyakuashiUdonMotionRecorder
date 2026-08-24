@@ -1,8 +1,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
-using UnityEngine;
 
-namespace Humr.Editor
+namespace DrSakuu.Humr.Editor
 {
     public static class PathUtils
     {

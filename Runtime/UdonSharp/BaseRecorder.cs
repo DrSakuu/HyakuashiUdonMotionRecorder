@@ -1,13 +1,12 @@
 #if UDONSHARP
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
 using VRC.SDK3.Components;
 
-namespace Humr
+namespace DrSakuu.Humr
 {
     public class BaseRecorder : UdonSharpBehaviour
     {

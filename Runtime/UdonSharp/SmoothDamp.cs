@@ -2,7 +2,7 @@
 using UdonSharp;
 using UnityEngine;
 
-namespace Humr
+namespace DrSakuu.Humr
 {
     public class SmoothDamp : UdonSharpBehaviour
     {

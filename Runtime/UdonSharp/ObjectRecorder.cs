@@ -1,5 +1,5 @@
 #if UDONSHARP
-namespace Humr
+namespace DrSakuu.Humr
 {
     public class ObjectRecorder : BaseRecorder
     {
