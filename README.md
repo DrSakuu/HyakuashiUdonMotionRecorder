@@ -1,6 +1,6 @@
 # Hyakuashi Udon Motion Recorder
 
-[日本語](README.jp.md)
+[日本語](Documentation/README.jp.md)
 
 HUMR is a motion capture tool that records player's movements into the VRChat log files and then reads them in a Unity project. This is version 2, which uses a new log format.
 
@@ -15,7 +15,7 @@ HUMR is a motion capture tool that records player's movements into the VRChat lo
 - FBX Exporter =>4.2.1 (Installed automatically on import)
 - VRChat World SDK =>3.10.0 (For recording)
 
-### VPM
+### VRChat Package Manager
 
 Install from Sakuu's VPM Listing: <https://drsakuu.github.io/vpm-listing/> (with [ALCOM](https://vrc-get.anatawa12.com/alcom/)).
 
@@ -27,6 +27,9 @@ For loading animations, the VRChat SDK is not needed. If you don't use VPM, down
 
 ### Recording
 
+> [!INFO]
+> You need to set Logging to Full in the VRChat Debug settings for HUMR to work.
+
 Either use [the public world](https://vrchat.com/home/launch?worldId=wrld_1fbb2fea-788e-43a8-a588-8ee7edf8e680) or add the HumrPlayerRecorder prefab to your VRChat World project. The public world is included as HUMR Sample World in the Samples tab of the Package Manager.
 
 Use the button on the mirror to start and stop recording. Multiple recordings will be split into takes in the same exported file.
@@ -37,12 +40,16 @@ VRChat logs are deleted after 48 hours, so make sure to load the saved data or c
 
 ### Loading
 
-Import the drsakuu.humr Unitypackage into any Unity project and attach the HumrRecordingLoader component to an animator with a human avatar. Select the VRChat log file with your recording takes from the list and export it as either .fbx or .anim.
+Import the drsakuu.humr Unitypackage into a Unity 2022.3.22f1 project and attach the HumrRecordingLoader component to an animator with a human avatar. Select the VRChat log file with your recording takes from the list and export it as either .fbx or .anim.
 
 ## Changelog
 
 [CHANGELOG.md](CHANGELOG.md)
 
+## Contributing
+
+[Issues](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues) and [Pull requests](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/pulls) are welcome! Check [TODO.md](TODO.md) for inspiration what to do next.
+
 ## License
 
-[LICENSE.md](LICENSE.md)
+[MIT License](LICENSE.md)

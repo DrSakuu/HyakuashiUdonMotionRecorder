@@ -1,7 +1,6 @@
 # TODO
 
-- [ ] English and Japanese localization
-- [ ] Make VPM package site
+- [ ] English and Japanese Editor localization
 - [ ] Clean up Editor/Runtime classes
 - [ ] Test with Unity 2019-6000
 - [ ] Test with World SDK 3.9.0
@@ -33,11 +32,10 @@
 ## HumrRecordingLoaderEditor.cs
 
 - [ ] Test target selector actually select only takes belonging to target
-- [ ] Test collecting Legacy and Humr targets in same file
 - [ ] List takes with durations and checkmarks to include them
 - [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations
-- [ ] Include displayname and take number in exported animations
+- [ ] Keyframe reduction for .anim files with `AnimationUtility.ReduceKeyframes`
+- [ ] Fix loading Legacy recordings
 - [ ] Detect Avatar height mismatch, scale from calibrated start tags
 - [ ] Fix toes rotation
 - [ ] Update RecordingFiles if last write time is different
-- [ ] Keyframe reduction for .anim files with `AnimationUtility.ReduceKeyframes`

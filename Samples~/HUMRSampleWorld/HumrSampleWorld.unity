@@ -2399,6 +2399,9 @@ MonoBehaviour:
   m_text: '<b><size=40>Recording</size></b>
 
 
+    You need to set Logging to Full in the VRChat Debug settings for HUMR to work.
+
+
     Use the button on the mirror to
     start and stop recording. Multiple recordings will be split into takes in the
     same exported file.
