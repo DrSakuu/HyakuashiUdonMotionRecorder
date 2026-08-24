@@ -1,4 +1,4 @@
-name: Build .unitypackage
+name: Build release artifacts
 
 on: 
   workflow_dispatch:

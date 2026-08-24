@@ -17,7 +17,7 @@ HUMR is a motion capture tool that records player's movements into the VRChat lo
 
 ### VPM
 
-Install from Sakuu's VPM Listing: <https://drsakuu.github.io/vpm-listing/> (Using [ALCOM](https://vrc-get.anatawa12.com/alcom/)).
+Install from Sakuu's VPM Listing: <https://drsakuu.github.io/vpm-listing/> (with [ALCOM](https://vrc-get.anatawa12.com/alcom/)).
 
 ### Other
 
