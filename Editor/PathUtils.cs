@@ -18,7 +18,7 @@ namespace DrSakuu.Humr.Editor
             return sanitized;
         }
 
-        public static string GetBaseAnimationName(string filePath)
+        public static string GetDateTimeFromFileName(string filePath)
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);
             var match = Regex.Match(fileName, @"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}");

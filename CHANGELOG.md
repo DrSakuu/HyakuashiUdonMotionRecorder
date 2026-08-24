@@ -10,6 +10,7 @@ A complete rewrite of the codebase so new features can be implemented more easil
 ### Changed
 
 - Move to DrSakuu namespace
+- Add TargetName to animation name
 
 ## [2.0.0-beta.2] - 2026-08-24
 

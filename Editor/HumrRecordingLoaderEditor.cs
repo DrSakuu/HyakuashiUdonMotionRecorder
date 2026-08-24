@@ -250,11 +250,11 @@ namespace DrSakuu.Humr.Editor
             var controllerBuilder = new AnimationControllerBuilder();
             controllerBuilder.Setup(HumrPath);
 
-            var baseAnimName = PathUtils.GetBaseAnimationName(filePath);
+            var animTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
 
             for (var i = 0; i < takes.Count; i++)
             {
-                var takeAnimStr = $"{baseAnimName}_Take{i + 1}";
+                var takeAnimStr = $"{targetName}_{animTimestamp}_Take{i + 1}";
                 AddTakeToControllerBuilder(takes[i], takeAnimStr, controllerBuilder);
             }
 
@@ -266,7 +266,7 @@ namespace DrSakuu.Humr.Editor
             {
                 _loader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
 
-                var exportPath = GetAssetPath("FBXs", targetName, baseAnimName, "fbx");
+                var exportPath = GetAssetPath("FBXs", targetName, animTimestamp, "fbx");
                 ModelExporter.ExportObject(exportPath, _loader.gameObject);
 
                 var importer = AssetImporter.GetAtPath(exportPath) as ModelImporter;
@@ -356,7 +356,7 @@ namespace DrSakuu.Humr.Editor
             {
                 controllerBuilder.CleanControllerStates(false);
                 var animAssetPath = GetAssetPath(
-                    "GenericAnimations", take.targetName, takeAnimStr, "anim");
+                    "Animations", take.targetName, takeAnimStr, "anim");
                 AnimationControllerBuilder.SaveGenericAnimationAsset(takeClip, animAssetPath);
             }
 
