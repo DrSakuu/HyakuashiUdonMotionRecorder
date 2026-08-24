@@ -27,7 +27,7 @@ For loading animations, the VRChat SDK is not needed. If you don't use VPM, down
 
 ### Recording
 
-> [!INFO]
+> [!IMPORTANT]
 > You need to set Logging to Full in the VRChat Debug settings for HUMR to work.
 
 Either use [the public world](https://vrchat.com/home/launch?worldId=wrld_1fbb2fea-788e-43a8-a588-8ee7edf8e680) or add the HumrPlayerRecorder prefab to your VRChat World project. The public world is included as HUMR Sample World in the Samples tab of the Package Manager.
@@ -36,7 +36,7 @@ Use the button on the mirror to start and stop recording. Multiple recordings wi
 
 The bones of the avatar that you record and load your motion have to match exactly, so if you don't have access to the .fbx file of your VRChat avatar, you can use the sample robot from the pedestal on the left, because that is included in the VRChat SDK. Unity can retarget the animation to another avatar after you import it, or you can use a tool like Rokoko plugin for Blender for manual retargeting.
 
-VRChat logs are deleted after 48 hours, so make sure to load the saved data or copy the log files elsewhere.
+VRChat logs are deleted after about a week, so make sure to load the saved data or copy the log files elsewhere.
 
 ### Loading
 
