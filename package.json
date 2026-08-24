@@ -7,6 +7,8 @@
     "name": "drsakuu",
     "url": "https://drsakuu.carrd.co"
   },
+  "documentationUrl": "https://github.com/DrSakuu/HyakuashiUdonMotionRecorder#hyakuashi-udon-motion-recorder",
+  "changelogUrl": "https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/blob/main/Documentation/CHANGELOG.md",
   "legacyFolders": {
     "Assets\\HUMR\\Prefabs": "a9daba3508e40b842b5213e24a43c417",
     "Assets\\HUMR\\ReadMe": "d1bf393c3e46e554d963a2c0d6d4df74",

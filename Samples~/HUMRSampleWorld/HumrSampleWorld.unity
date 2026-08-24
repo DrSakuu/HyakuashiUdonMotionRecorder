@@ -224,7 +224,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Download
+  m_text: Full guide and releases
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -766,7 +766,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases/latest\u200B"
+  m_text: "https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1604,7 +1604,7 @@ MonoBehaviour:
   m_CaretColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_CustomCaretColor: 0
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
-  m_Text: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases/latest
+  m_Text: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 1
   m_ReadOnly: 1
@@ -2399,7 +2399,9 @@ MonoBehaviour:
   m_text: '<b><size=40>Recording</size></b>
 
 
-    You need to set Logging to Full in the VRChat Debug settings for HUMR to work.
+    <color=#eae915><b>IMPORTANT</b></color>: You need to set <color=#2aaac1>Logging
+    </color>to <color=#2aaac1>Full</color> in the VRChat <color=#2aaac1>Debug
+    </color>settings for HUMR recording to work.
 
 
     Use the button on the mirror to

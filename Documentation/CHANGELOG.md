@@ -1,11 +1,56 @@
 # Changelog
 
-## [2.0.0-beta.3] - 2026-08-24
+## [2.0.0] - Unreleased
 
-A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format, can read pre-2.0.0 logs but not write them.
+A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format:
+
+```txt
+[HUMR] RECORDING;{TargetType};{TargetName};{TakeTimestamp};{RecordTime};{objects[]}
+```
+
+Can read pre-2.0.0 logs, but not write them.
 
 > [!WARNING]
-> Remove the old `HUMR OutputLogLoader` package and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` before importing. This is done automatically if installed from VPM.
+> Remove the pre-2.0.0 `HUMR OutputLogLoader` from `Packages` and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` from `Assets/HUMR` before importing. This is done automatically if installed using VPM.
+
+### Added
+
+- VRChat Package Manager support
+- Button to explore log file path button in advanced foldout
+- Add recording button to `PlayerRecorder.prefab`
+- Load separate takes
+- GitHub Action to build .unitypackage
+- Load Object recordings
+- Camera recorder
+- Toggles to export .fbx or .anim or both
+- Show help box on error
+- Ping created assets
+
+### Changed
+
+- Move everything into `drsakuu.humr` namespace and Package
+- Recordings can be loaded without VRChat SDK
+- Keep original XZ position for .fbx import settings
+- Add TargetName to animation name
+- Select newest HUMR log file automatically, sort in reverse order
+- Show which log files have HUMR data
+- Select player DisplayName from a dropdown
+
+### Fixed
+
+- Export animations relative to Animator transform
+- Restore original Animation Controller after export
+- Explicit include .fbx extension to delete temp file
+- Only change .fbx animationType on export
+- Do not start recording until avatar loads
+- Open log file as read-only
+- Restore avatar pose after export
+
+### Removed
+
+- Record all players
+
+## [2.0.0-beta.3] - 2026-08-24
 
 ### Changed
 
