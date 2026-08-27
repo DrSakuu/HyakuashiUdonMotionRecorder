@@ -18,13 +18,13 @@ Can read pre-2.0.0 logs, but not write them.
 - VRChat Package Manager support
 - Button to explore log file path button in advanced foldout
 - Add recording button to `PlayerRecorder.prefab`
-- Load separate takes
 - GitHub Action to build .unitypackage
 - Load Object recordings
 - Camera recorder
 - Toggles to export .fbx or .anim or both
 - Show help box on error
 - Ping created assets
+- HUMR-Chan sample avatar
 
 ### Changed
 
@@ -49,6 +49,13 @@ Can read pre-2.0.0 logs, but not write them.
 ### Removed
 
 - Record all players
+
+## [2.0.0-beta.4] - Unreleased
+
+### Added
+
+- HUMR-Chan sample avatar
+- Guides in documentation
 
 ## [2.0.0-beta.3] - 2026-08-24
 
