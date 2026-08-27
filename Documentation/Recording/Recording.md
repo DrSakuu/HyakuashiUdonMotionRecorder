@@ -16,3 +16,5 @@ The lengths and rotations of the bones of the avatar that you record and load yo
 You can use the Avatar_Utility sample robot from the pedestal in the public world, because that is included in the VRChat SDK. It also has good proportions for recording humanoid animations. Unity can retarget the animation to another avatar after you import it, or you can use a tool like [Rokoko plugin for Blender](https://github.com/Rokoko/rokoko-studio-live-blender/) for manual retargeting.
 
 VRChat logs are deleted after about a week, so make sure to load the saved data before that, or back up the log files.
+
+![Recording an animation with HUMR in VRChat](HumrRecordingStart.gif)
