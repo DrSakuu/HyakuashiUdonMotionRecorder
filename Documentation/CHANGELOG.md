@@ -51,7 +51,7 @@ Can read pre-2.0.0 logs, but not write them.
 
 - Record all players
 
-## [2.0.0-beta.4] - Unreleased
+## [2.0.0-beta.4] - 2026-08-28
 
 ### Added
 

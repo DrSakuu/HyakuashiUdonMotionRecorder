@@ -43,9 +43,7 @@ Either use [the public world](https://vrchat.com/home/launch?worldId=wrld_1fbb2f
 
 Add the HumrRecordingLoader Component to an animator with a human avatar. Select the VRChat log file you recorded earlier and export the takes as either .fbx or .anim.
 
-![Loading an animation in Unity](Documentation/Loading/HUMRLoadingExport.gif)
-
-![Previewing the animation](Documentation/Loading/HUMRLoadingPreview.gif)
+![Loading an animation in Unity](Documentation/Loading/HUMRLoading.gif)
 
 ### Advanced guides
 

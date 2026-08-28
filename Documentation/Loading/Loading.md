@@ -4,6 +4,4 @@ For loading recordings, the VRChat SDK is not needed. If you want to do it witho
 
 Add the HumrRecordingLoader Component to an animator with a human avatar. Select the VRChat log file you recorded earlier and export the takes as either .fbx or .anim.
 
-![Loading an animation in Unity](HUMRLoadingExport.gif)
-
-![Previewing the animation](HUMRLoadingPreview.gif)
+![Loading an animation in Unity](HUMRLoading.gif)
