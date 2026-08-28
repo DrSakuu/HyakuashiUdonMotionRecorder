@@ -25,6 +25,7 @@ Can read pre-2.0.0 logs, but not write them.
 - Show help box on error
 - Ping created assets
 - HUMR-Chan sample avatar
+- Guides in documentation
 
 ### Changed
 
