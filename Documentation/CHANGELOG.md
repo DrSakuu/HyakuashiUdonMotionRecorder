@@ -51,6 +51,12 @@ Can read pre-2.0.0 logs, but not write them.
 
 - Record all players
 
+## [2.0.0-beta.5] - Unreleased
+
+### Fixed
+
+- Loader: Collect takes when target index changes
+
 ## [2.0.0-beta.4] - 2026-08-28
 
 ### Added

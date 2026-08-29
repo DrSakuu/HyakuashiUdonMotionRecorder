@@ -45,8 +45,11 @@ namespace DrSakuu.Humr.Editor
             var targetStrList = currentTargets
                 .Select(t => $"{t.targetType}: {t.name}")
                 .ToArray();
+            EditorGUI.BeginChangeCheck();
             _loader.targetIndex = EditorGUILayout.Popup(
                 "Recording Target", _loader.targetIndex, targetStrList);
+            if (EditorGUI.EndChangeCheck()) CollectTakes();
+            
             if (_currentFile.type == LogType.NoData) SetError("No HUMR data found.");
             if (_currentFile.type == LogType.Corrupt) SetError("HUMR data is corrupt.");
 

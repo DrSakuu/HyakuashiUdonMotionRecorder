@@ -31,11 +31,10 @@
 
 ## HumrRecordingLoaderEditor.cs
 
-- [ ] Test target selector actually select only takes belonging to target
+- [ ] Fix loading Legacy recordings
 - [ ] List takes with durations and checkmarks to include them
 - [ ] Use `HumanPoseHandler` to write muscle values and hand and feet IK instead of raw rotations
 - [ ] Keyframe reduction for .anim files with `AnimationUtility.ReduceKeyframes`
-- [ ] Fix loading Legacy recordings
 - [ ] Detect Avatar height mismatch, scale from calibrated start tags
 - [ ] Fix toes rotation
 - [ ] Update RecordingFiles if last write time is different
