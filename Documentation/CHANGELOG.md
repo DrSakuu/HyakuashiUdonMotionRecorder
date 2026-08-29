@@ -53,9 +53,14 @@ Can read pre-2.0.0 logs, but not write them.
 
 ## [2.0.0-beta.5] - Unreleased
 
+### Added
+
+- PlayerRecorder: Origin marker, avatar scale warning
+
 ### Fixed
 
 - Loader: Collect takes when target index changes
+- Loader: Load Legacy recordings
 
 ## [2.0.0-beta.4] - 2026-08-28
 

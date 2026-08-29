@@ -19,7 +19,7 @@ namespace DrSakuu.Humr.Editor
         private HumrRecordingLoader _loader;
         private string _userProfile;
         private string _logPath;
-        private List<RecordingFile> _recordingFiles = new List<RecordingFile>();
+        private List<RecordingFile> _recordingFiles = new();
         private string[] _recordingFileNames;
         private RecordingFile _currentFile;
 
