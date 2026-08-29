@@ -329,7 +329,8 @@ namespace DrSakuu.Humr.Editor
 
             foreach (var line in logLines)
             {
-                if (!TryParseLegacyFrame(line, LegacyLogMatchTarget, targetName, out var frame)) continue;
+                var dataSegment = ExtractLegacyDataSegment(line, LegacyLogMatchTarget, targetName);
+                if (!TryParseLegacyFrame(dataSegment, out var frame)) continue;
 
                 HandleTakeBreak(frame, currentFrames, take, ref lastTime);
                 currentFrames.Add(frame);
@@ -338,19 +339,18 @@ namespace DrSakuu.Humr.Editor
 
             if (currentFrames.Count > 0)
             {
-                take.Add(new RecordingTake { Frames = new List<Frame>() } );
+                take.Add(new RecordingTake
+                {
+                    targetType = TargetType.Legacy, targetName = targetName, Frames = currentFrames
+                } );
             }
 
             return take;
         }
 
-        private static bool TryParseLegacyFrame(string line, string matchTarget, string targetName,
-            out BoneRotationsFrame frame)
+        private static bool TryParseLegacyFrame(string dataSegment, out BoneRotationsFrame frame)
         {
             frame = null;
-
-            // TODO: do ExtractLegacyDataSegment before TryParseLegacyFrame
-            var dataSegment = ExtractLegacyDataSegment(line, matchTarget, targetName);
             if (dataSegment == null) return false;
 
             var tokens = dataSegment.Split(HumrLogger.ComponentDelimiter);

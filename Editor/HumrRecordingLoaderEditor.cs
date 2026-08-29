@@ -232,7 +232,8 @@ namespace DrSakuu.Humr.Editor
             if (_loader.Animator == null) return;
 
             var poseSnapshot = new AvatarPoseSnapshot();
-            if (currentTargetType == TargetType.BoneRotations) poseSnapshot.Take(_loader.transform, _loader.Animator);
+            if (currentTargetType == TargetType.BoneRotations || currentTargetType == TargetType.Legacy) 
+                poseSnapshot.Take(_loader.transform, _loader.Animator);
 
             try
             {
@@ -240,7 +241,8 @@ namespace DrSakuu.Humr.Editor
             }
             finally
             {
-                if (currentTargetType == TargetType.BoneRotations) poseSnapshot.Restore(_loader.transform);
+                if (currentTargetType == TargetType.BoneRotations || currentTargetType == TargetType.Legacy) 
+                    poseSnapshot.Restore(_loader.transform);
 
             }
         }
@@ -280,7 +282,7 @@ namespace DrSakuu.Humr.Editor
                 Selection.activeObject = createdAsset;
                 EditorGUIUtility.PingObject(createdAsset);
 
-                if (targetType != TargetType.BoneRotations) return;
+                if (targetType != TargetType.BoneRotations && targetType != TargetType.Legacy) return;
 
                 SetHumanImportSettings(importer);
                 importer.SaveAndReimport();
@@ -339,13 +341,13 @@ namespace DrSakuu.Humr.Editor
             switch (take.targetType)
             {
                 case TargetType.BoneRotations:
+                case TargetType.Legacy:
                     takeClip = AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator);
                     break;
                 case TargetType.Object:
                     takeClip = AnimationClipFactory.PopulateObjectClip(take, _loader.gameObject.transform);
                     break;
                 case TargetType.Unknown:
-                case TargetType.Legacy:
                 case TargetType.BoneRotationsWithIK:
                 case TargetType.HumanMuscles:
                 default:
