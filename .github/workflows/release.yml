@@ -1,0 +1,71 @@
+name: Build Release
+
+on: 
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Read package metadata
+        id: package
+        shell: bash
+        run: |
+          PACKAGE_NAME="$(jq -r '.name' package.json)"
+          PACKAGE_VERSION="$(jq -r '.version' package.json)"
+          ZIP_FILE="${PACKAGE_NAME}-${PACKAGE_VERSION}.zip"
+          UNITY_PACKAGE="${PACKAGE_NAME}-${PACKAGE_VERSION}.unitypackage"
+
+          echo "name=${PACKAGE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${PACKAGE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "zip_file=${ZIP_FILE}" >> "$GITHUB_OUTPUT"
+          echo "unity_package=${UNITY_PACKAGE}" >> "$GITHUB_OUTPUT"
+
+      - name: Require tag to equal package.json version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          PACKAGE_VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          EXPECTED="v${PACKAGE_VERSION}"
+          if [ "${TAG}" != "${EXPECTED}" ]; then
+            echo "::error::Tag (${TAG}) does not equal expected tag (${EXPECTED})"
+            exit 1
+          fi
+
+      - name: Prepare Package Folder
+        env:
+          PACKAGE_NAME: ${{ steps.package.outputs.name }}
+        run: |
+          mkdir -p "Packages/${PACKAGE_NAME}"
+          find . -maxdepth 1 ! -name '.git' ! -name 'Packages' -exec mv -t "Packages/${PACKAGE_NAME}" {} +
+
+      - name: Create Package Zip
+        working-directory: "Packages/${{ steps.package.outputs.name }}"
+        run: zip -r "${{ github.workspace }}/${{ steps.package.outputs.zip_file }}" .
+      
+      - name: Create UnityPackage
+        uses: foxscore/make-unitypackage@e16d36990b1acf2219e43f809a2b803f01b7422f
+        with:
+          path: ${{ steps.package.outputs.name }}
+          saveTo: ${{ steps.package.outputs.unity_package }}
+      
+      - name: Make Release
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        with:
+          draft: true
+          prerelease: ${{ contains(steps.package.outputs.version, 'beta') }}
+          files: |
+            ${{ steps.package.outputs.zip_file }}
+            ${{ steps.package.outputs.unity_package }}
+          name: "${{ steps.package.outputs.name }} ${{ steps.package.outputs.version }}"
+          tag_name: "v${{ steps.package.outputs.version }}"
