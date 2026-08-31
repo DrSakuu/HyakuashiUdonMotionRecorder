@@ -50,19 +50,23 @@ jobs:
           find . -maxdepth 1 \
             ! -name '.' \
             ! -name '.git' \
+            ! -name '.github' \
             ! -name 'Packages' \
             -exec mv -t "Packages/${PACKAGE_NAME}" {} +
 
       - name: Create Package Zip
         working-directory: "Packages/${{ steps.package.outputs.name }}"
         run: zip -r "${{ github.workspace }}/${{ steps.package.outputs.zip_file }}" .
-      
+                    
+      - name: Track Package Meta Files
+        run: find "Packages/${{ steps.package.outputs.name }}/" -name \*.meta >> metaList
+
       - name: Create UnityPackage
-        uses: foxscore/make-unitypackage@e16d36990b1acf2219e43f809a2b803f01b7422f
+        uses: pCYSl5EDgo/create-unitypackage@b5c57408698b1fab8b3a84d4b67f767b8b7c0be9
         with:
-          path: ${{ steps.package.outputs.name }}
-          saveTo: ${{ steps.package.outputs.unity_package }}
-      
+          package-path: ${{ steps.package.outputs.unity_package }}
+          include-files: metaList
+          
       - name: Make Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
         with:
@@ -71,5 +75,5 @@ jobs:
           files: |
             ${{ steps.package.outputs.zip_file }}
             ${{ steps.package.outputs.unity_package }}
-          name: "${{ steps.package.outputs.name }} ${{ steps.package.outputs.version }}"
+          name: "HUMR ${{ steps.package.outputs.version }}"
           tag_name: "v${{ steps.package.outputs.version }}"
