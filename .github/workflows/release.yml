@@ -47,7 +47,11 @@ jobs:
           PACKAGE_NAME: ${{ steps.package.outputs.name }}
         run: |
           mkdir -p "Packages/${PACKAGE_NAME}"
-          find . -maxdepth 1 ! -name '.git' ! -name 'Packages' -exec mv -t "Packages/${PACKAGE_NAME}" {} +
+          find . -maxdepth 1 \
+            ! -name '.' \
+            ! -name '.git' \
+            ! -name 'Packages' \
+            -exec mv -t "Packages/${PACKAGE_NAME}" {} +
 
       - name: Create Package Zip
         working-directory: "Packages/${{ steps.package.outputs.name }}"
