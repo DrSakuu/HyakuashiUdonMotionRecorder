@@ -21,16 +21,17 @@ Can read pre-2.0.0 logs, but not write them.
 - GitHub Action to build .unitypackage
 - Load Object recordings
 - Camera recorder
-- Toggles to export .fbx or .anim or both
 - Show help box on error
 - Ping created assets
 - HUMR-Chan sample avatar
 - Guides in documentation
+- Recording origin marker, avatar scale warning
 
 ### Changed
 
 - Move everything into `drsakuu.humr` namespace and Package
 - Recordings can be loaded without VRChat SDK
+- Toggles to export .fbx or .anim or both
 - Keep original XZ position for .fbx import settings
 - Add TargetName to animation name
 - Select newest HUMR log file automatically, sort in reverse order
@@ -59,7 +60,7 @@ Can read pre-2.0.0 logs, but not write them.
 
 ### Fixed
 
-- Loader: Collect takes when target index changes
+- Loader: Recollect takes when target index changes
 - Loader: Load Legacy recordings
 
 ## [2.0.0-beta.4] - 2026-08-28

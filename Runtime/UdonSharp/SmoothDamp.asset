@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: SmoothDamp
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: c6bf18e517ca59e4bbd8baaeea43f384, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: d1a6efe834c9f6f40a38740c0fd0ad7a, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 6183a8dcf61a13e4ebfa14e7040597b6, type: 3}
