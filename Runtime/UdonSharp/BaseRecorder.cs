@@ -74,7 +74,7 @@ namespace DrSakuu.Humr
         {
             _recordTime = 0f;
             _nextRecordTime = _recordTime;
-            _recordInterval = 1f / recordFramerate;
+            _recordInterval = recordFramerate <= 0 ? Mathf.Infinity : 1f / recordFramerate;
             _takeTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             _isRecording = true;
             RecordObjects();
