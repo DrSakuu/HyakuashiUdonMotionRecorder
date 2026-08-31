@@ -11,7 +11,7 @@ namespace DrSakuu.Humr
         BoneRotationsWithIK,
         HumanMuscles
     }
-    
+
     public static class HumrLogger
     {
         private const string HumrTag = "[HUMR]";

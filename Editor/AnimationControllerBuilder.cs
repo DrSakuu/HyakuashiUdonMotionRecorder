@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace DrSakuu.Humr.Editor
 {
-
     internal class AnimationControllerBuilder
     {
         public AnimatorController Controller { get; private set; }
@@ -58,7 +57,7 @@ namespace DrSakuu.Humr.Editor
             AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(animAssetPath));
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            
+
             EditorUtility.FocusProjectWindow();
             var createdAsset = AssetDatabase.LoadAssetAtPath<AnimationClip>(AssetDatabase.GetAssetPath(clip));
             Selection.activeObject = createdAsset;

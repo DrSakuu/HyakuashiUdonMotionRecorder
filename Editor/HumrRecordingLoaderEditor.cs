@@ -15,13 +15,13 @@ namespace DrSakuu.Humr.Editor
     {
         private const string VrcLogPathSuffix = @"\AppData\LocalLow\VRChat\VRChat";
         private const string HumrPath = @"Assets\HUMR";
+        private RecordingFile _currentFile;
 
         private HumrRecordingLoader _loader;
-        private string _userProfile;
         private string _logPath;
-        private List<RecordingFile> _recordingFiles = new();
         private string[] _recordingFileNames;
-        private RecordingFile _currentFile;
+        private List<RecordingFile> _recordingFiles = new();
+        private string _userProfile;
 
         public override void OnInspectorGUI()
         {
@@ -49,7 +49,7 @@ namespace DrSakuu.Humr.Editor
             _loader.targetIndex = EditorGUILayout.Popup(
                 "Recording Target", _loader.targetIndex, targetStrList);
             if (EditorGUI.EndChangeCheck()) CollectTakes();
-            
+
             if (_currentFile.type == LogType.NoData) SetError("No HUMR data found.");
             if (_currentFile.type == LogType.Corrupt) SetError("HUMR data is corrupt.");
 
@@ -67,9 +67,9 @@ namespace DrSakuu.Humr.Editor
 
             _loader.exportFbx = GUILayout.Toggle(_loader.exportFbx, "Export .fbx");
             _loader.exportAnim = GUILayout.Toggle(_loader.exportAnim, "Export .anim");
-            if (!_loader.exportFbx && !_loader.exportAnim) 
+            if (!_loader.exportFbx && !_loader.exportAnim)
                 SetError("Select either .fbx or .anim export.");
-            
+
             if (!string.IsNullOrEmpty(errorMessage)) EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
             return;
@@ -204,7 +204,7 @@ namespace DrSakuu.Humr.Editor
         public void CollectTakes()
         {
             if (_currentFile.Targets.Length == 0) return;
-            
+
             var (currentTargetType, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
             var logLines = HumrLogParser.LoadLogFileLines(_currentFile.path);
 
@@ -213,23 +213,17 @@ namespace DrSakuu.Humr.Editor
                 : HumrLogParser.PartitionLogLinesIntoTakes(logLines.ToArray(), (currentTargetType, currentTargetName));
 
             if (_currentFile.takes == null)
-            {
                 _currentFile.foundTakesStr = "Found 0 takes.";
-            }
             else if (_currentFile.takes.Count == 1)
-            {
                 _currentFile.foundTakesStr = "Found 1 take.";
-            }
             else
-            {
                 _currentFile.foundTakesStr = $"Found {_currentFile.takes.Count} takes.";
-            }
         }
 
         private void LoadRecordingAndExportAnim()
         {
             if (_loader.Animator == null) return;
-            
+
             var (currentTargetType, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
             var originalLoader = _loader;
             var tempLoaderObject = Instantiate(_loader.gameObject);
@@ -277,7 +271,7 @@ namespace DrSakuu.Humr.Editor
 
                 var importer = AssetImporter.GetAtPath(exportPath) as ModelImporter;
                 if (importer == null) return;
-                
+
                 EditorUtility.FocusProjectWindow();
                 var createdAsset = AssetDatabase.LoadAssetAtPath<Object>(exportPath);
                 Selection.activeObject = createdAsset;
@@ -338,7 +332,7 @@ namespace DrSakuu.Humr.Editor
         private void AddTakeToControllerBuilder(
             RecordingTake take, string takeAnimStr, AnimationControllerBuilder controllerBuilder)
         {
-            AnimationClip takeClip = null;
+            AnimationClip takeClip;
             switch (take.targetType)
             {
                 case TargetType.BoneRotations:
@@ -354,7 +348,7 @@ namespace DrSakuu.Humr.Editor
                 default:
                     throw new NotImplementedException();
             }
-            
+
             if (takeClip == null) return;
 
             takeClip.name = takeAnimStr;
@@ -368,7 +362,7 @@ namespace DrSakuu.Humr.Editor
 
             controllerBuilder.AddClipToController(takeClip);
         }
-        
+
         private static string GetAssetPath(string subFolder, string targetName, string fileName, string extension)
         {
             var folderPath = Path.Join(HumrPath, subFolder, PathUtils.SanitizeFileName(targetName));

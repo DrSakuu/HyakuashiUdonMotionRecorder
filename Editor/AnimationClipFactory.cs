@@ -11,7 +11,7 @@ namespace DrSakuu.Humr.Editor
             var totalCurves = 3 + HumanTrait.BoneName.Length * 4;
 
             var keyframes = InitializeKeyframeArrays(totalCurves, frameCount);
-            for (var frameIdx = 0; frameIdx < frameCount; frameIdx++) 
+            for (var frameIdx = 0; frameIdx < frameCount; frameIdx++)
                 ProcessBoneRotationsKeyframes((BoneRotationsFrame)take.Frames[frameIdx], keyframes, frameIdx, animator);
 
             return CreateAndBindBoneRotationCurves(keyframes, animator);
@@ -21,10 +21,10 @@ namespace DrSakuu.Humr.Editor
         {
             var frameCount = take.Frames.Count;
             var keyframes = InitializeKeyframeArrays(10, frameCount);
-            for (var frameIdx = 0; frameIdx < frameCount; frameIdx++) 
+            for (var frameIdx = 0; frameIdx < frameCount; frameIdx++)
                 ProcessObjectKeyframes((ObjectFrame)take.Frames[frameIdx], keyframes, frameIdx);
-            
-            return CreateAndBindObjectCurves(keyframes, transform);
+
+            return CreateAndBindObjectCurves(keyframes);
         }
 
         private static Keyframe[][] InitializeKeyframeArrays(int totalCurves, int frameCount)
@@ -132,33 +132,32 @@ namespace DrSakuu.Humr.Editor
             return clip;
         }
 
-        private static AnimationClip CreateAndBindObjectCurves(Keyframe[][] keyframes, Transform transform)
+        private static AnimationClip CreateAndBindObjectCurves(Keyframe[][] keyframes)
         {
             var clip = new AnimationClip();
-            // var transformPath = PathUtils.GetHierarchyPath(transform);
-            var transformPath = "";
+            const string transformPath = "";
 
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localPosition.x", new AnimationCurve(keyframes[0]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localPosition.y", new AnimationCurve(keyframes[1]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localPosition.z", new AnimationCurve(keyframes[2]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localRotation.x", new AnimationCurve(keyframes[3]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localRotation.y", new AnimationCurve(keyframes[4]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localRotation.z", new AnimationCurve(keyframes[5]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localRotation.w", new AnimationCurve(keyframes[6]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localScale.x", new AnimationCurve(keyframes[7]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localScale.y", new AnimationCurve(keyframes[8]));
-            clip.SetCurve(transformPath, typeof(Transform), 
+            clip.SetCurve(transformPath, typeof(Transform),
                 "localScale.z", new AnimationCurve(keyframes[9]));
-            
+
             clip.EnsureQuaternionContinuity();
             return clip;
         }

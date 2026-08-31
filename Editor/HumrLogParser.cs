@@ -21,10 +21,10 @@ namespace DrSakuu.Humr.Editor
         public string path;
         public LogType type;
         public string fileName;
-        public (TargetType targetType, string name)[] Targets;
         public string foundTakesStr;
         public List<RecordingTake> takes = new List<RecordingTake>();
         public DateTime LastWriteTime;
+        public (TargetType targetType, string name)[] Targets;
     }
 
     [Serializable]
@@ -95,7 +95,7 @@ namespace DrSakuu.Humr.Editor
 
         private static (TargetType, string)[] CollectTargetTypesAndNames(RecordingFile recordingFile)
         {
-            if (!File.Exists(recordingFile.path)) return new []{ CorruptTargetTuple };
+            if (!File.Exists(recordingFile.path)) return new[] { CorruptTargetTuple };
 
             var foundTargets = new HashSet<(TargetType, string)>();
 
@@ -106,14 +106,14 @@ namespace DrSakuu.Humr.Editor
                 {
                     var (targetType, targetName) = ExtractHumrOrLegacyTarget(line);
                     if (targetType == TargetType.Unknown) continue;
-                    
+
                     foundTargets.Add((targetType, targetName));
                 }
 
                 if (foundTargets.Count > 0) return foundTargets.ToArray();
-                
+
                 recordingFile.type = LogType.Corrupt;
-                return new []{ CorruptTargetTuple };
+                return new[] { CorruptTargetTuple };
             }
         }
 
@@ -131,7 +131,7 @@ namespace DrSakuu.Humr.Editor
                 line.IndexOf(LogMatchTarget, StringComparison.Ordinal) + LogMatchTarget.Length + 1);
             var typeVariableStr = SplitNextVariable(recordingFrame, out var remaining);
             if (!Enum.TryParse<TargetType>(typeVariableStr, out var targetType)) return CorruptTargetTuple;
-            
+
             var targetName = SplitNextVariable(remaining, out _);
             return (targetType, targetName);
         }
@@ -141,7 +141,7 @@ namespace DrSakuu.Humr.Editor
             remaining = line;
             var delimiterIndex = line.IndexOf(HumrLogger.VariableDelimiter, StringComparison.Ordinal);
             if (delimiterIndex == -1) return null;
-            
+
             remaining = line.Substring(delimiterIndex + 1);
             return line.Substring(0, delimiterIndex);
         }
@@ -154,8 +154,7 @@ namespace DrSakuu.Humr.Editor
             var dataSegment = line.Substring(prefixIdx + LegacyLogMatchTarget.Length).Trim();
 
             var digitIdx = FindFirstDigitIndex(dataSegment);
-            return digitIdx == -1 ? CorruptTargetTuple : 
-                (TargetType.Legacy, dataSegment.Substring(0, digitIdx));
+            return digitIdx == -1 ? CorruptTargetTuple : (TargetType.Legacy, dataSegment.Substring(0, digitIdx));
         }
 
         private static int FindFirstDigitIndex(string text)
@@ -286,7 +285,7 @@ namespace DrSakuu.Humr.Editor
             return new Quaternion(
                 float.Parse(quaternionValues[0], CultureInfo.InvariantCulture),
                 float.Parse(quaternionValues[1], CultureInfo.InvariantCulture),
-                float.Parse(quaternionValues[2], CultureInfo.InvariantCulture), 
+                float.Parse(quaternionValues[2], CultureInfo.InvariantCulture),
                 float.Parse(quaternionValues[3], CultureInfo.InvariantCulture)
             );
         }
@@ -338,12 +337,10 @@ namespace DrSakuu.Humr.Editor
             }
 
             if (currentFrames.Count > 0)
-            {
                 take.Add(new RecordingTake
                 {
                     targetType = TargetType.Legacy, targetName = targetName, Frames = currentFrames
-                } );
-            }
+                });
 
             return take;
         }
@@ -471,7 +468,7 @@ namespace DrSakuu.Humr.Editor
 
             foreach (var filePath in filePaths)
             {
-                var fileType = DetectLogMarkers(filePath) ? LogType.Humr : LogType.NoData;;
+                var fileType = DetectLogMarkers(filePath) ? LogType.Humr : LogType.NoData;
                 var writeTime = File.GetLastWriteTime(filePath);
                 var fileName = BuildRecordingFileName(filePath, fileType);
                 discoveredFiles.Add(new RecordingFile
@@ -492,7 +489,7 @@ namespace DrSakuu.Humr.Editor
                 case LogType.Humr:
                     return CollectTargetTypesAndNames(file);
                 case LogType.Corrupt:
-                    return new []{ CorruptTargetTuple };
+                    return new[] { CorruptTargetTuple };
                 case LogType.NoData:
                 default:
                     return new[] { (TargetType.Unknown, "No HUMR data") };

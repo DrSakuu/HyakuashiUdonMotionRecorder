@@ -10,10 +10,9 @@ namespace DrSakuu.Humr
         [SerializeField] private float smoothTime = 0.3f;
         [SerializeField] private float smoothMaxDist = 0.2f;
         [SerializeField] private float smoothDistMult = 0.1f;
-        private Vector3 _velocity = Vector3.zero;
-
         [SerializeField] private float rotSmoothTime = 0.2f;
         private Vector3 _rotVelocity = Vector3.zero;
+        private Vector3 _velocity = Vector3.zero;
 
         private void Update()
         {
@@ -21,7 +20,7 @@ namespace DrSakuu.Humr
 
             var distance = Vector3.Distance(transform.position, targetTransform.position);
             var dynamicSmoothTime = Mathf.Lerp(smoothTime, smoothTime * smoothDistMult, distance / smoothMaxDist);
-        
+
             transform.position = Vector3.SmoothDamp(
                 transform.position, targetTransform.position, ref _velocity, dynamicSmoothTime);
 
@@ -42,7 +41,7 @@ namespace DrSakuu.Humr
             else
             {
                 var parentScale = transform.parent.lossyScale;
-            
+
                 transform.localScale = new Vector3(
                     targetScale.x / parentScale.x,
                     targetScale.y / parentScale.y,

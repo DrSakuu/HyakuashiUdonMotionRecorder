@@ -16,7 +16,7 @@ namespace DrSakuu.Humr
             // TODO: Hide targetName in inspector
             targetName = _player.displayName;
             RecordingObjects = new object[1 + (int)HumanBodyBones.LastBone];
-            
+
             base.Start();
         }
 

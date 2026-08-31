@@ -24,35 +24,34 @@ namespace DrSakuu.Humr
 
         [SerializeField] [Tooltip("Stop recording button, connect onClick to StartRecording custom event.")]
         private Button stopRecordButton;
-        
+
         [SerializeField] [Tooltip("Target mesh to that changes material to indicate recording state.")]
         private Renderer indicatorRenderer;
-        
+
         [SerializeField] [Tooltip("The material to set the indicator when HUMR is recording.")]
         private Material recordingMaterial;
 
+        protected object[] RecordingObjects;
+
+        protected TargetType TargetType = TargetType.Object;
+        private Material _indicatorDefaultMaterial;
+
         private bool _isRecording;
         private float _nextRecordTime;
+        private VRCPickup _pickup;
         private float _recordInterval;
         private float _recordTime;
         private long _takeTimestamp;
-        private VRCPickup _pickup;
-        private Material _indicatorDefaultMaterial;
-
-        protected TargetType TargetType = TargetType.Object;
-        protected object[] RecordingObjects;
 
         public virtual void Start()
         {
             if (recordOnStart) StartRecording();
-            
+
             _pickup = GetComponent<VRCPickup>();
             if (_pickup != null) _pickup.UseText = "Record";
-            
+
             if (indicatorRenderer != null && recordingMaterial != null)
-            {
                 _indicatorDefaultMaterial = indicatorRenderer.material;
-            }
         }
 
         private void Update()
@@ -94,9 +93,7 @@ namespace DrSakuu.Humr
             if (startRecordButton != null) startRecordButton.gameObject.SetActive(!_isRecording);
             if (stopRecordButton != null) stopRecordButton.gameObject.SetActive(_isRecording);
             if (indicatorRenderer != null && recordingMaterial != null)
-            {
                 indicatorRenderer.material = _isRecording ? recordingMaterial : _indicatorDefaultMaterial;
-            }
         }
 
         private void OnRecordTick()
@@ -111,7 +108,7 @@ namespace DrSakuu.Humr
         public override void Interact()
         {
             if (_pickup != null) return;
-            
+
             ToggleRecording();
         }
 
