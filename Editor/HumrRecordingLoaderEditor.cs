@@ -228,12 +228,14 @@ namespace DrSakuu.Humr.Editor
 
         private void LoadRecordingAndExportAnim()
         {
-            var (currentTargetType, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
             if (_loader.Animator == null) return;
-
-            var poseSnapshot = new AvatarPoseSnapshot();
-            if (currentTargetType == TargetType.BoneRotations || currentTargetType == TargetType.Legacy) 
-                poseSnapshot.Take(_loader.transform, _loader.Animator);
+            
+            var (currentTargetType, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
+            var originalLoader = _loader;
+            var tempLoaderObject = Instantiate(_loader.gameObject);
+            tempLoaderObject.transform.position = Vector3.zero;
+            tempLoaderObject.transform.rotation = Quaternion.identity;
+            _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
 
             try
             {
@@ -241,9 +243,8 @@ namespace DrSakuu.Humr.Editor
             }
             finally
             {
-                if (currentTargetType == TargetType.BoneRotations || currentTargetType == TargetType.Legacy) 
-                    poseSnapshot.Restore(_loader.transform);
-
+                _loader = originalLoader;
+                DestroyImmediate(tempLoaderObject);
             }
         }
 

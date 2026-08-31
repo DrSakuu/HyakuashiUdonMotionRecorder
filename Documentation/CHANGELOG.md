@@ -58,6 +58,10 @@ Can read pre-2.0.0 logs, but not write them.
 
 - PlayerRecorder: Origin marker, avatar scale warning
 
+### Changed
+
+- Loader: Create temp loader object for loading
+
 ### Fixed
 
 - Loader: Recollect takes when target index changes
