@@ -150,7 +150,7 @@ namespace DrSakuu.Humr
                         break;
                     }
                     default:
-                        outputString = string.Join(HumrLogger.VariableDelimiter, recObj.ToString());
+                        outputString = string.Join(HumrLogger.VariableDelimiter, outputString, recObj.ToString());
                         break;
                 }
             }
