@@ -32,11 +32,11 @@ namespace DrSakuu.Humr
         private Material recordingMaterial;
 
         protected object[] RecordingObjects;
-
         protected TargetType TargetType = TargetType.Object;
-        private Material _indicatorDefaultMaterial;
+        protected bool IsRecording;
+        protected bool RecordIsReady = true;
 
-        private bool _isRecording;
+        private Material _indicatorDefaultMaterial;
         private float _nextRecordTime;
         private VRCPickup _pickup;
         private float _recordInterval;
@@ -56,7 +56,13 @@ namespace DrSakuu.Humr
 
         private void Update()
         {
-            if (!_isRecording) return;
+            if (!IsRecording) return;
+            
+            if (!RecordIsReady)
+            {
+                StopRecording();
+                return;
+            }
 
             _recordTime += Time.deltaTime;
             if (_recordTime < _nextRecordTime) return;
@@ -67,16 +73,18 @@ namespace DrSakuu.Humr
 
         private void OnDestroy()
         {
-            if (_isRecording) StopRecording();
+            if (IsRecording) StopRecording();
         }
 
         public virtual void StartRecording()
         {
+            if (!RecordIsReady) return;
+            
             _recordTime = 0f;
             _nextRecordTime = _recordTime;
             _recordInterval = recordFramerate <= 0 ? Mathf.Infinity : 1f / recordFramerate;
             _takeTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            _isRecording = true;
+            IsRecording = true;
             RecordObjects();
             UpdateUI();
         }
@@ -84,16 +92,16 @@ namespace DrSakuu.Humr
         public virtual void StopRecording()
         {
             RecordObjects();
-            _isRecording = false;
+            IsRecording = false;
             UpdateUI();
         }
 
         private void UpdateUI()
         {
-            if (startRecordButton != null) startRecordButton.gameObject.SetActive(!_isRecording);
-            if (stopRecordButton != null) stopRecordButton.gameObject.SetActive(_isRecording);
+            if (startRecordButton != null) startRecordButton.gameObject.SetActive(!IsRecording);
+            if (stopRecordButton != null) stopRecordButton.gameObject.SetActive(IsRecording);
             if (indicatorRenderer != null && recordingMaterial != null)
-                indicatorRenderer.material = _isRecording ? recordingMaterial : _indicatorDefaultMaterial;
+                indicatorRenderer.material = IsRecording ? recordingMaterial : _indicatorDefaultMaterial;
         }
 
         private void OnRecordTick()
@@ -119,7 +127,7 @@ namespace DrSakuu.Humr
 
         private void ToggleRecording()
         {
-            if (_isRecording) StopRecording();
+            if (IsRecording) StopRecording();
             else StartRecording();
         }
 

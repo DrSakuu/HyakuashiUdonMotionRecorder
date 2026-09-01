@@ -6,7 +6,6 @@ namespace DrSakuu.Humr
 {
     public class PlayerRecorder : BaseRecorder
     {
-        private bool _avatarLoaded;
         private VRCPlayerApi _player;
 
         public override void Start()
@@ -17,15 +16,16 @@ namespace DrSakuu.Humr
             targetName = _player.displayName;
             RecordingObjects = new object[1 + (int)HumanBodyBones.LastBone];
 
+            RecordIsReady = false;
             base.Start();
         }
 
         public override void OnAvatarChanged(VRCPlayerApi player)
         {
-            if (!player.isLocal || _avatarLoaded) return;
+            if (!player.isLocal || RecordIsReady) return;
 
-            _avatarLoaded = true;
-            if (recordOnStart) StartRecording();
+            RecordIsReady = true;
+            if (recordOnStart && !IsRecording) StartRecording();
         }
 
         protected override void UpdateRecordingObjects()
