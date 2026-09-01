@@ -22,7 +22,7 @@ namespace DrSakuu.Humr.Editor
         public LogType type;
         public string fileName;
         public string foundTakesStr;
-        public List<RecordingTake> takes = new List<RecordingTake>();
+        public List<RecordingTake> takes = new();
         public DateTime LastWriteTime;
         public (TargetType targetType, string name)[] Targets;
     }
@@ -34,7 +34,7 @@ namespace DrSakuu.Humr.Editor
         public string targetName;
         public long takeTimestamp;
 
-        public List<Frame> Frames { get; set; } = new List<Frame>();
+        public List<Frame> Frames { get; set; } = new();
     }
 
     [Serializable]
@@ -47,7 +47,7 @@ namespace DrSakuu.Humr.Editor
     public class BoneRotationsFrame : Frame
     {
         public Vector3 HipPosition { get; set; }
-        public List<Quaternion> BoneRotations { get; set; } = new List<Quaternion>();
+        public List<Quaternion> BoneRotations { get; set; } = new();
     }
 
     [Serializable]
@@ -61,25 +61,21 @@ namespace DrSakuu.Humr.Editor
     public static class HumrLogParser
     {
         private const int MinimumComponentCount = 4;
-
         private const string LogMatchTarget = "-  [HUMR] RECORDING";
         private const string LegacyLogMatchTarget = "-  HUMR:";
         private static readonly (TargetType, string) CorruptTargetTuple = (TargetType.Unknown, "HUMR data is corrupt");
 
-        public static List<string> LoadLogFileLines(string path)
-        {
-            using (var reader = OpenReadOnlyTextFile(path))
-            {
-                return ReadAllLines(reader);
-            }
-        }
-
-        private static List<string> ReadAllLines(StreamReader reader)
+        public static string[] LoadHumrLogLines(string path)
         {
             var lines = new List<string>();
-            string line;
-            while ((line = reader.ReadLine()) != null) lines.Add(line);
-            return lines;
+            using var reader = OpenReadOnlyTextFile(path);
+            while (reader.ReadLine() is { } line)
+            {
+                if (line.IndexOf(LogMatchTarget, StringComparison.Ordinal) >=0 
+                    || line.IndexOf(LegacyLogMatchTarget, StringComparison.Ordinal) >=0) 
+                    lines.Add(line);
+            }
+            return lines.ToArray();
         }
 
         private static StreamReader OpenReadOnlyTextFile(string filePath)
@@ -99,33 +95,31 @@ namespace DrSakuu.Humr.Editor
 
             var foundTargets = new HashSet<(TargetType, string)>();
 
-            using (var reader = OpenReadOnlyTextFile(recordingFile.path))
+            using var reader = OpenReadOnlyTextFile(recordingFile.path);
+            while (reader.ReadLine() is { } line)
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    var (targetType, targetName) = ExtractHumrOrLegacyTarget(line);
-                    if (targetType == TargetType.Unknown) continue;
+                var (targetType, targetName) = ExtractHumrOrLegacyTarget(line);
+                if (targetType == TargetType.Unknown) continue;
 
-                    foundTargets.Add((targetType, targetName));
-                }
-
-                if (foundTargets.Count > 0) return foundTargets.ToArray();
-
-                recordingFile.type = LogType.Corrupt;
-                return new[] { CorruptTargetTuple };
+                foundTargets.Add((targetType, targetName));
             }
+
+            if (foundTargets.Count > 0) return foundTargets.ToArray();
+
+            recordingFile.type = LogType.Corrupt;
+            return new[] { CorruptTargetTuple };
         }
 
         private static (TargetType, string) ExtractHumrOrLegacyTarget(string line)
         {
-            if (line.Contains(LogMatchTarget)) return ExtractTarget(line);
-            return line.Contains(LegacyLogMatchTarget) ? ExtractLegacyTarget(line) : CorruptTargetTuple;
+            if (line.IndexOf(LogMatchTarget, StringComparison.Ordinal) >= 0) return ExtractTarget(line);
+            return line.IndexOf(LegacyLogMatchTarget, StringComparison.Ordinal) >= 0 
+                ? ExtractLegacyTarget(line) : CorruptTargetTuple;
         }
 
         private static (TargetType, string) ExtractTarget(string line)
         {
-            if (!line.Contains(LogMatchTarget)) return CorruptTargetTuple;
+            if (line.IndexOf(LogMatchTarget, StringComparison.Ordinal) < 0) return CorruptTargetTuple;
 
             var recordingFrame = line.Substring(
                 line.IndexOf(LogMatchTarget, StringComparison.Ordinal) + LogMatchTarget.Length + 1);
@@ -177,7 +171,7 @@ namespace DrSakuu.Humr.Editor
 
             foreach (var line in lines)
             {
-                if (!line.Contains(targetMatchStr)) continue;
+                if (line.IndexOf(targetMatchStr, StringComparison.Ordinal) < 0) continue;
 
                 var takeStr = line.Split(targetMatchStr)[1];
                 if (!TryParseTakeLine(takeStr, out var takeSplit, out var currentTime)) continue;
@@ -187,7 +181,7 @@ namespace DrSakuu.Humr.Editor
                 {
                     currentTake.takeTimestamp = lineTimestamp;
                 }
-                else if (ShouldStartNewTake(lineTimestamp, currentTime, beforeTime, currentTake))
+                else if (ShouldStartNewTake(currentTake, lineTimestamp, currentTime, beforeTime))
                 {
                     takes.Add(currentTake);
                     currentTake = new RecordingTake
@@ -227,12 +221,13 @@ namespace DrSakuu.Humr.Editor
 
         // TODO: reduce number of parameters
         private static bool ShouldStartNewTake(
-            long newTimestamp, float currentTime, float beforeTime, RecordingTake currentTake)
+            RecordingTake currentTake, long newTimestamp, float currentTime, float previousTime)
         {
-            var isNewTimestamp = newTimestamp != currentTake.takeTimestamp;
-            var isRewind = currentTime < beforeTime;
+            if (currentTake.Frames.Count == 0) return false;
 
-            return (isNewTimestamp || isRewind) && currentTake.Frames.Count > 0;
+            var timestampChanged = newTimestamp != currentTake.takeTimestamp;
+            var timeRewound = currentTime < previousTime;
+            return timestampChanged || timeRewound;
         }
 
         private static Frame ParseFrame(TargetType targetType, string[] takeSplit)
@@ -279,14 +274,19 @@ namespace DrSakuu.Humr.Editor
 
         private static Quaternion ParseQuaternion(string quaternionString)
         {
-            var quaternionValues = quaternionString.Split(HumrLogger.ComponentDelimiter);
-            if (quaternionValues.Length != 4) return default;
+            var quaternionParts = quaternionString.Split(HumrLogger.ComponentDelimiter);
+            return ParseQuaternion(quaternionParts);
+        }
+
+        private static Quaternion ParseQuaternion(params string[] quaternionParts)
+        {
+            if (quaternionParts.Length != 4) return default;
 
             return new Quaternion(
-                float.Parse(quaternionValues[0], CultureInfo.InvariantCulture),
-                float.Parse(quaternionValues[1], CultureInfo.InvariantCulture),
-                float.Parse(quaternionValues[2], CultureInfo.InvariantCulture),
-                float.Parse(quaternionValues[3], CultureInfo.InvariantCulture)
+                float.Parse(quaternionParts[0], CultureInfo.InvariantCulture),
+                float.Parse(quaternionParts[1], CultureInfo.InvariantCulture),
+                float.Parse(quaternionParts[2], CultureInfo.InvariantCulture),
+                float.Parse(quaternionParts[3], CultureInfo.InvariantCulture)
             );
         }
 
@@ -296,20 +296,15 @@ namespace DrSakuu.Humr.Editor
             {
                 if (string.IsNullOrWhiteSpace(parts[i])) continue;
 
-                var rotValues = parts[i].Split(HumrLogger.ComponentDelimiter);
-                if (rotValues.Length != 4) continue;
-
-                frame.BoneRotations.Add(new Quaternion(
-                    float.Parse(rotValues[0], CultureInfo.InvariantCulture),
-                    float.Parse(rotValues[1], CultureInfo.InvariantCulture),
-                    float.Parse(rotValues[2], CultureInfo.InvariantCulture),
-                    float.Parse(rotValues[3], CultureInfo.InvariantCulture)
-                ));
+                var rotation = ParseQuaternion(parts[i]);
+                frame.BoneRotations.Add(rotation);
             }
         }
 
         private static ObjectFrame ParseObjectFrame(string[] parts)
         {
+            if (parts.Length < 5) return null;
+            
             var frame = new ObjectFrame
             {
                 RecordTime = float.Parse(parts[1], CultureInfo.InvariantCulture),
@@ -371,37 +366,37 @@ namespace DrSakuu.Humr.Editor
             if (prefixIdx == -1) return null;
 
             var dataSegment = line.Substring(prefixIdx + matchTarget.Length).Trim();
-            if (!dataSegment.StartsWith(targetName)) return null;
-
-            return dataSegment.Substring(targetName.Length);
+            return !dataSegment.StartsWith(targetName) ? null : dataSegment.Substring(targetName.Length);
         }
 
-        private static BoneRotationsFrame BuildLegacyFrame(string[] tokens)
+        private static BoneRotationsFrame BuildLegacyFrame(string[] parts)
         {
             var frame = new BoneRotationsFrame
             {
-                RecordTime = float.Parse(tokens[0], CultureInfo.InvariantCulture),
+                RecordTime = float.Parse(parts[0], CultureInfo.InvariantCulture),
                 HipPosition = new Vector3(
-                    float.Parse(tokens[1], CultureInfo.InvariantCulture),
-                    float.Parse(tokens[2], CultureInfo.InvariantCulture),
-                    float.Parse(tokens[3], CultureInfo.InvariantCulture)
+                    float.Parse(parts[1], CultureInfo.InvariantCulture),
+                    float.Parse(parts[2], CultureInfo.InvariantCulture),
+                    float.Parse(parts[3], CultureInfo.InvariantCulture)
                 ),
-                BoneRotations = new List<Quaternion>()
+                BoneRotations = ParseBoneRotations(parts, 4)
             };
-
-            ParseBoneRotations(tokens, frame);
             return frame;
         }
 
-        private static void ParseBoneRotations(string[] tokens, BoneRotationsFrame frame)
+        private static List<Quaternion> ParseBoneRotations(string[] allQuaternionParts, int startIndex)
         {
-            for (var i = 4; i + 3 < tokens.Length; i += 4)
-                frame.BoneRotations.Add(new Quaternion(
-                    float.Parse(tokens[i], CultureInfo.InvariantCulture),
-                    float.Parse(tokens[i + 1], CultureInfo.InvariantCulture),
-                    float.Parse(tokens[i + 2], CultureInfo.InvariantCulture),
-                    float.Parse(tokens[i + 3], CultureInfo.InvariantCulture)
-                ));
+            var rotations = new List<Quaternion>();
+            for (var i = startIndex; i + 3 < allQuaternionParts.Length; i += 4)
+            {
+                var rotation = ParseQuaternion(
+                    allQuaternionParts[i],
+                    allQuaternionParts[i + 1],
+                    allQuaternionParts[i + 2],
+                    allQuaternionParts[i + 3]);
+                rotations.Add(rotation);
+            }
+            return rotations;
         }
 
         private static void HandleTakeBreak(Frame frame, List<Frame> currentFrames,
@@ -421,21 +416,19 @@ namespace DrSakuu.Humr.Editor
 
         private static bool DetectLogMarkers(string filePath)
         {
-            using (var reader = OpenReadOnlyTextFile(filePath))
+            using var reader = OpenReadOnlyTextFile(filePath);
+            var isHumr = false;
+            var isLegacy = false;
+
+            string line;
+            while ((line = reader.ReadLine()) != null)
             {
-                var isHumr = false;
-                var isLegacy = false;
-
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.Contains(LogMatchTarget)) isHumr = true;
-                    if (line.Contains(LegacyLogMatchTarget)) isLegacy = true;
-                    if (isHumr || isLegacy) return true;
-                }
-
-                return false;
+                if (line.IndexOf(LogMatchTarget, StringComparison.Ordinal) >= 0) isHumr = true;
+                if (line.IndexOf(LegacyLogMatchTarget, StringComparison.Ordinal) >= 0) isLegacy = true;
+                if (isHumr || isLegacy) return true;
             }
+
+            return false;
         }
 
         private static string BuildRecordingFileName(string filePath, LogType type)

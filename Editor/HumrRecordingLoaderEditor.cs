@@ -90,15 +90,13 @@ namespace DrSakuu.Humr.Editor
 
         private void DrawAdvancedPathSection()
         {
-            _loader.showAdvanced = EditorGUILayout.Foldout(
-                _loader.showAdvanced, "Advanced: Custom Log Path");
+            _loader.showAdvanced = EditorGUILayout.Foldout(_loader.showAdvanced, "Advanced: Custom Log Path");
             if (!_loader.showAdvanced) return;
 
             EditorGUI.indentLevel++;
             EditorGUILayout.BeginHorizontal();
 
             _logPath = EditorGUILayout.TextField("Output Log Path (resets when closed)", _logPath);
-
             if (GUILayout.Button("Explore", GUILayout.Width(100))) OpenLogFolder(_logPath);
 
             EditorGUILayout.EndHorizontal();
@@ -206,11 +204,12 @@ namespace DrSakuu.Humr.Editor
             if (_currentFile.Targets.Length == 0) return;
 
             var (currentTargetType, currentTargetName) = _currentFile.Targets[_loader.targetIndex];
-            var logLines = HumrLogParser.LoadLogFileLines(_currentFile.path);
+            var logLines = HumrLogParser.LoadHumrLogLines(_currentFile.path);
+            _currentFile.LastWriteTime = File.GetLastWriteTime(_currentFile.path);
 
             _currentFile.takes = currentTargetType == TargetType.Legacy
-                ? HumrLogParser.ParseLegacyTakes(logLines.ToArray(), currentTargetName)
-                : HumrLogParser.PartitionLogLinesIntoTakes(logLines.ToArray(), (currentTargetType, currentTargetName));
+                ? HumrLogParser.ParseLegacyTakes(logLines, currentTargetName)
+                : HumrLogParser.PartitionLogLinesIntoTakes(logLines, (currentTargetType, currentTargetName));
 
             if (_currentFile.takes == null)
                 _currentFile.foundTakesStr = "Found 0 takes.";
