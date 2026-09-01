@@ -247,15 +247,15 @@ namespace DrSakuu.Humr.Editor
         {
             PathUtils.CreateDirectoryIfNotExist(HumrPath);
 
-            var controllerBuilder = new AnimationControllerBuilder();
-            controllerBuilder.Setup(HumrPath);
+            var tempController = new TempControllerBuilder();
+            tempController.Setup(HumrPath);
 
             var animTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
 
             for (var i = 0; i < takes.Count; i++)
             {
                 var takeAnimStr = $"{targetName}_{animTimestamp}_Take{i + 1}";
-                AddTakeToControllerBuilder(takes[i], takeAnimStr, controllerBuilder);
+                AddTakeToControllerBuilder(takes[i], takeAnimStr, tempController);
             }
 
             if (!_loader.exportFbx) return;
@@ -264,7 +264,7 @@ namespace DrSakuu.Humr.Editor
             var previousAnimControl = _loader.Animator.runtimeAnimatorController;
             try
             {
-                _loader.Animator.runtimeAnimatorController = controllerBuilder.Controller;
+                _loader.Animator.runtimeAnimatorController = tempController.Controller;
 
                 var exportPath = GetAssetPath("FBXs", targetName, animTimestamp, "fbx");
                 ModelExporter.ExportObject(exportPath, _loader.gameObject);
@@ -288,6 +288,7 @@ namespace DrSakuu.Humr.Editor
                 if (originalRootBones.Count > 0)
                     foreach (var (renderer, rootBone) in originalRootBones)
                         renderer.rootBone = rootBone;
+                tempController.DeleteControllerAsset();
             }
         }
 
@@ -330,7 +331,7 @@ namespace DrSakuu.Humr.Editor
         }
 
         private void AddTakeToControllerBuilder(
-            RecordingTake take, string takeAnimStr, AnimationControllerBuilder controllerBuilder)
+            RecordingTake take, string takeAnimStr, TempControllerBuilder controllerBuilder)
         {
             AnimationClip takeClip;
             switch (take.targetType)
@@ -354,10 +355,9 @@ namespace DrSakuu.Humr.Editor
             takeClip.name = takeAnimStr;
             if (_loader.exportAnim)
             {
-                controllerBuilder.CleanControllerStates(false);
                 var animAssetPath = GetAssetPath(
                     "Animations", take.targetName, takeAnimStr, "anim");
-                AnimationControllerBuilder.SaveGenericAnimationAsset(takeClip, animAssetPath);
+                AnimationClipFactory.SaveGenericAnimationAsset(takeClip, animAssetPath);
             }
 
             controllerBuilder.AddClipToController(takeClip);

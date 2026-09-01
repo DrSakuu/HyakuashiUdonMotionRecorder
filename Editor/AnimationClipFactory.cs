@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 namespace DrSakuu.Humr.Editor
@@ -172,6 +173,24 @@ namespace DrSakuu.Humr.Editor
             for (var i = 0; i < propertyNames.Length; i++)
                 clip.SetCurve(transformPath, typeof(Transform), propertyNames[i],
                     new AnimationCurve(keyframes[startIndex + i]));
+        }
+
+        public static void SaveGenericAnimationAsset(AnimationClip clip, string animAssetPath)
+        {
+            if (File.Exists(animAssetPath))
+            {
+                AssetDatabase.DeleteAsset(animAssetPath);
+                HumrLogger.Warning($"Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
+            }
+
+            AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(animAssetPath));
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            EditorUtility.FocusProjectWindow();
+            var createdAsset = AssetDatabase.LoadAssetAtPath<AnimationClip>(AssetDatabase.GetAssetPath(clip));
+            Selection.activeObject = createdAsset;
+            EditorGUIUtility.PingObject(createdAsset);
         }
     }
 }
