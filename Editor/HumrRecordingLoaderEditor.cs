@@ -340,7 +340,7 @@ namespace DrSakuu.Humr.Editor
                     takeClip = AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator);
                     break;
                 case TargetType.Object:
-                    takeClip = AnimationClipFactory.PopulateObjectClip(take, _loader.gameObject.transform);
+                    takeClip = AnimationClipFactory.PopulateObjectClip(take);
                     break;
                 case TargetType.Unknown:
                 case TargetType.BoneRotationsWithIK:
