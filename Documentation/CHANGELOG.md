@@ -18,7 +18,7 @@ Can read pre-2.0.0 logs, but not write them.
 - VRChat Package Manager support
 - Button to explore log file path button in advanced foldout
 - Add recording button to `PlayerRecorder.prefab`
-- GitHub Action to build .unitypackage
+- GitHub Action to build package
 - Load Object recordings
 - Camera recorder
 - Show help box on error

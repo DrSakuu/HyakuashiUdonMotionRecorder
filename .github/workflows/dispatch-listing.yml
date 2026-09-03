@@ -1,0 +1,15 @@
+name: Dispatch Build VPM Listing 
+
+on: 
+  release: 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch DrSakuu/vpm-listing
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697
+        with:
+          token: ${{ secrets.PAT_VPM_ACTIONS }}
+          repository: DrSakuu/vpm-listing
+          event-type: build-listing
