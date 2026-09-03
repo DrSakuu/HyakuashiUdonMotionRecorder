@@ -76,7 +76,7 @@ namespace DrSakuu.Humr.Editor
         {
             for (var k = 0; k < HumanTrait.BoneName.Length; k++)
             {
-                if (k >= frame.BoneRotations.Count) break;
+                if (k >= frame.BoneRotations.Length) break;
 
                 var boneTransform = animator.GetBoneTransform((HumanBodyBones)k);
                 if (boneTransform == null) continue;

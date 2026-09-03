@@ -29,55 +29,90 @@ namespace DrSakuu.Humr.Editor
             if (_loader == null) return;
 
             var errorMessage = "";
+            DrawLogFileSelection(ref errorMessage);
+
+            if (!TryDrawTargetSelection()) return;
+
+            ValidateCurrentRecording(ref errorMessage);
+
+            GUILayout.Space(EditorGUIUtility.singleLineHeight);
+            GUILayout.Label(_currentFile.foundTakesStr);
+
+            DrawHumanoidOptions(ref errorMessage);
+            DrawExportOptions(ref errorMessage);
+
+            if (!string.IsNullOrEmpty(errorMessage))
+                EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
+
+            DrawExportButton(string.IsNullOrEmpty(errorMessage));
+        }
+
+        private void DrawLogFileSelection(ref string errorMessage)
+        {
             UpdateLogDirectory();
             DrawAdvancedPathSection();
             UpdateRecordingFiles();
-            if (!DrawLogFileDropdown()) SetError("No log files found.");
 
+            if (!DrawLogFileDropdown())
+                SetError(ref errorMessage, "No log files found.");
+        }
+
+        private bool TryDrawTargetSelection()
+        {
             var currentTargets = _currentFile.Targets;
             if (currentTargets == null)
             {
                 EditorGUILayout.HelpBox("Please select the log file again.", MessageType.Error);
-                CollectTargets();
-                return;
+                ScanTargets();
+                return false;
             }
 
             var targetStrList = currentTargets
                 .Select(t => $"{t.targetType}: {t.name}")
                 .ToArray();
+
             EditorGUI.BeginChangeCheck();
-            _loader.targetIndex = EditorGUILayout.Popup(
-                "Recording Target", _loader.targetIndex, targetStrList);
-            if (EditorGUI.EndChangeCheck()) CollectTakes();
+            _loader.targetIndex = EditorGUILayout.Popup("Recording Target", _loader.targetIndex, targetStrList);
+            if (EditorGUI.EndChangeCheck()) ParseTakes();
 
-            if (_currentFile.type == LogType.NoData) SetError("No HUMR data found.");
-            if (_currentFile.type == LogType.Corrupt) SetError("HUMR data is corrupt.");
+            return true;
+        }
 
-            GUILayout.Space(EditorGUIUtility.singleLineHeight);
-            GUILayout.Label(_currentFile.foundTakesStr);
+        private void ValidateCurrentRecording(ref string errorMessage)
+        {
+            if (_currentFile.type == LogType.NoData) SetError(ref errorMessage, "No HUMR data found.");
+            if (_currentFile.type == LogType.Corrupt) SetError(ref errorMessage, "HUMR data is corrupt.");
+        }
 
-            var isHumanoidBoneTarget = _currentFile.Targets[_loader.targetIndex].targetType == TargetType.BoneRotations;
-            if (isHumanoidBoneTarget)
-            {
-                var isHumanoidAvatar = _loader.Animator.avatar != null && _loader.Animator.avatar.isHuman;
-                if (!isHumanoidAvatar) SetError("The Avatar needs to be Humanoid.");
-                _loader.blenderHipFix = GUILayout.Toggle(_loader.blenderHipFix, new GUIContent("Blender hip fix",
+        private void DrawHumanoidOptions(ref string errorMessage)
+        {
+            var targetType = _currentFile.Targets[_loader.targetIndex].targetType;
+            var isHumanoidBoneTarget = targetType == TargetType.BoneRotations || targetType == TargetType.Legacy;
+            if (!isHumanoidBoneTarget) return;
+
+            var isHumanoidAvatar = _loader.Animator.avatar != null && _loader.Animator.avatar.isHuman;
+            if (!isHumanoidAvatar) SetError(ref errorMessage, "The Avatar needs to be Humanoid.");
+
+            _loader.blenderHipFix = GUILayout.Toggle(
+                _loader.blenderHipFix,
+                new GUIContent(
+                    "Blender hip fix",
                     "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure."));
-            }
+        }
 
+        private void DrawExportOptions(ref string errorMessage)
+        {
             _loader.exportFbx = GUILayout.Toggle(_loader.exportFbx, "Export .fbx");
             _loader.exportAnim = GUILayout.Toggle(_loader.exportAnim, "Export .anim");
+
             if (!_loader.exportFbx && !_loader.exportAnim)
-                SetError("Select either .fbx or .anim export.");
+                SetError(ref errorMessage, "Select either .fbx or .anim export.");
+        }
 
-            if (!string.IsNullOrEmpty(errorMessage)) EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
-            DrawExportButton(string.IsNullOrEmpty(errorMessage));
-            return;
-
-            void SetError(string msg)
-            {
-                if (string.IsNullOrEmpty(errorMessage)) errorMessage = msg;
-            }
+        private static void SetError(ref string errorMessage, string message)
+        {
+            if (string.IsNullOrEmpty(errorMessage))
+                errorMessage = message;
         }
 
         private void UpdateLogDirectory()
@@ -97,13 +132,13 @@ namespace DrSakuu.Humr.Editor
             EditorGUILayout.BeginHorizontal();
 
             _logPath = EditorGUILayout.TextField("Output Log Path (resets when closed)", _logPath);
-            if (GUILayout.Button("Explore", GUILayout.Width(100))) OpenLogFolder(_logPath);
+            if (GUILayout.Button("Explore", GUILayout.Width(100))) ExploreLogFolder(_logPath);
 
             EditorGUILayout.EndHorizontal();
             EditorGUI.indentLevel--;
         }
 
-        private static void OpenLogFolder(string path)
+        private static void ExploreLogFolder(string path)
         {
             if (Directory.Exists(path))
                 Process.Start(new ProcessStartInfo
@@ -124,6 +159,13 @@ namespace DrSakuu.Humr.Editor
             if (IsRectClick(popupRect)) onClick?.Invoke();
 
             setSelectedIndex(EditorGUI.Popup(popupRect, getSelectedIndex(), options));
+        }
+
+        private static bool IsRectClick(Rect rect)
+        {
+            return Event.current.type == EventType.MouseDown &&
+                   Event.current.button == 0 &&
+                   rect.Contains(Event.current.mousePosition);
         }
 
         private bool DrawLogFileDropdown()
@@ -147,15 +189,8 @@ namespace DrSakuu.Humr.Editor
             {
                 if (!GUILayout.Button("Export recording")) return;
 
-                LoadRecordingAndExportAnim();
+                ExportCurrentTargetTakes();
             }
-        }
-
-        private static bool IsRectClick(Rect rect)
-        {
-            return Event.current.type == EventType.MouseDown &&
-                   Event.current.button == 0 &&
-                   rect.Contains(Event.current.mousePosition);
         }
 
         public void UpdateRecordingFiles()
@@ -189,17 +224,17 @@ namespace DrSakuu.Humr.Editor
             // TODO: is this needed?
             _loader.fileIndex = Mathf.Clamp(_loader.fileIndex, 0, _recordingFiles.Count - 1);
             _currentFile = _recordingFiles[_loader.fileIndex];
-            CollectTargets();
-            CollectTakes();
+            ScanTargets();
+            ParseTakes();
         }
 
-        public void CollectTargets()
+        public void ScanTargets()
         {
-            _currentFile.Targets = HumrLogParser.ResolveTargets(_currentFile);
+            _currentFile.Targets = HumrLogParser.ScanTargets(_currentFile);
             _loader.targetIndex = 0;
         }
 
-        public void CollectTakes()
+        public void ParseTakes()
         {
             if (_currentFile.Targets.Length == 0) return;
 
@@ -209,7 +244,7 @@ namespace DrSakuu.Humr.Editor
 
             _currentFile.takes = currentTargetType == TargetType.Legacy
                 ? HumrLogParser.ParseLegacyTakes(logLines, currentTargetName)
-                : HumrLogParser.PartitionLogLinesIntoTakes(logLines, (currentTargetType, currentTargetName));
+                : HumrLogParser.ParseTakes(logLines, (currentTargetType, currentTargetName));
 
             if (_currentFile.takes == null)
                 _currentFile.foundTakesStr = "Found 0 takes.";
@@ -219,7 +254,7 @@ namespace DrSakuu.Humr.Editor
                 _currentFile.foundTakesStr = $"Found {_currentFile.takes.Count} takes.";
         }
 
-        private void LoadRecordingAndExportAnim()
+        private void ExportCurrentTargetTakes()
         {
             if (_loader.Animator == null) return;
 
@@ -232,7 +267,7 @@ namespace DrSakuu.Humr.Editor
 
             try
             {
-                ExecuteExportPipeline(_currentFile.takes, _currentFile.path, currentTargetType, currentTargetName);
+                ExportTargetTakes(_currentFile.takes, _currentFile.path, currentTargetType, currentTargetName);
             }
             finally
             {
@@ -241,7 +276,7 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void ExecuteExportPipeline(
+        private void ExportTargetTakes(
             List<RecordingTake> takes, string filePath, TargetType targetType, string targetName)
         {
             PathUtils.CreateDirectoryIfNotExist(HumrPath);
@@ -254,7 +289,7 @@ namespace DrSakuu.Humr.Editor
             for (var i = 0; i < takes.Count; i++)
             {
                 var takeAnimStr = $"{targetName}_{animTimestamp}_Take{i + 1}";
-                AddTakeToControllerBuilder(takes[i], takeAnimStr, tempController);
+                AddTakeToController(takes[i], takeAnimStr, tempController);
             }
 
             if (!_loader.exportFbx) return;
@@ -329,7 +364,7 @@ namespace DrSakuu.Humr.Editor
             importer.clipAnimations = importerClips;
         }
 
-        private void AddTakeToControllerBuilder(
+        private void AddTakeToController(
             RecordingTake take, string takeAnimStr, TempControllerBuilder controllerBuilder)
         {
             AnimationClip takeClip;

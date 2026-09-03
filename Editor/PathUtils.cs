@@ -25,5 +25,14 @@ namespace DrSakuu.Humr.Editor
 
             return match.Success ? match.Value : fileName;
         }
+
+        public static int FindFirstDigitIndex(string text)
+        {
+            for (var i = 0; i < text.Length; i++)
+                if (char.IsDigit(text[i]))
+                    return i;
+
+            return -1;
+        }
     }
 }
