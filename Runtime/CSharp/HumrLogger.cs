@@ -15,11 +15,13 @@ namespace DrSakuu.Humr
 
     public static class HumrLogger
     {
-        private const string HumrTag = "[HUMR]";
+        //TODO: make all private, access with methods
+        public const string HumrTag = "[HUMR]";
         public const string RecordingTag = "RECORDING";
         public const char VariableDelimiter = ';';
         public const char ComponentDelimiter = ',';
-        public const string FloatFormat = "F6";
+
+        private const string FloatFormat = "F6";
 
         public static void Log(object message)
         {
@@ -102,6 +104,11 @@ namespace DrSakuu.Humr
                 default:
                     return string.Join(VariableDelimiter, outputString, recObj.ToString());
             }
+        }
+        
+        public static string JoinComponents(params object[] components)
+        {
+            return string.Join(ComponentDelimiter, components);
         }
     }
 }

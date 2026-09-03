@@ -242,9 +242,11 @@ namespace DrSakuu.Humr.Editor
             var logLines = HumrLogParser.LoadHumrLogLines(_currentFile.path);
             _currentFile.LastWriteTime = File.GetLastWriteTime(_currentFile.path);
 
-            _currentFile.takes = currentTargetType == TargetType.Legacy
-                ? HumrLogParser.ParseLegacyTakes(logLines, currentTargetName)
-                : HumrLogParser.ParseTakes(logLines, (currentTargetType, currentTargetName));
+            if (currentTargetType == TargetType.Legacy)
+            {
+                logLines = HumrLogParser.ConvertLegacyLines(logLines, currentTargetName);
+            }
+            _currentFile.takes = HumrLogParser.ParseTakes(logLines, (currentTargetType, currentTargetName));
 
             if (_currentFile.takes == null)
                 _currentFile.foundTakesStr = "Found 0 takes.";
