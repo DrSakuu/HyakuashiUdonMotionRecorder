@@ -1,3 +1,4 @@
+using System.Globalization;
 using UnityEngine;
 
 namespace DrSakuu.Humr
@@ -72,6 +73,34 @@ namespace DrSakuu.Humr
                 case TargetType.Unknown:
                 default:
                     return "Unsupported";
+            }
+        }
+
+        public static string InitializeFrame(TargetType targetType, string targetName, long takeTimestamp, float time)
+        {
+            var typeStr = TargetTypeToString(targetType);
+            var timeStr = time.ToString(FloatFormat, CultureInfo.InvariantCulture);
+            return string.Join(VariableDelimiter, RecordingTag, typeStr, targetName, takeTimestamp, timeStr);
+        }
+
+        public static string AppendObject(string outputString, object recObj)
+        {
+            if (recObj == null) return string.Join(VariableDelimiter, outputString, "MISSING");
+            
+            switch (recObj.GetType().Name)
+            {
+                case "Vector3":
+                {
+                    var vector3Str = FormatVector3Components((Vector3)recObj);
+                    return string.Join(VariableDelimiter, outputString, vector3Str);
+                }
+                case "Quaternion":
+                {
+                    var quaternionStr = FormatQuaternionComponents((Quaternion)recObj);
+                    return string.Join(VariableDelimiter, outputString, quaternionStr);
+                }
+                default:
+                    return string.Join(VariableDelimiter, outputString, recObj.ToString());
             }
         }
     }

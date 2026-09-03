@@ -133,36 +133,9 @@ namespace DrSakuu.Humr
 
         private void RecordObjects()
         {
-            var timeStr = _recordTime.ToString(HumrLogger.FloatFormat, CultureInfo.InvariantCulture);
-            var typeStr = HumrLogger.TargetTypeToString(TargetType);
-            var outputString = string.Join(
-                HumrLogger.VariableDelimiter, HumrLogger.RecordingTag, typeStr, targetName, _takeTimestamp, timeStr);
-
+            var outputString = HumrLogger.InitializeFrame(TargetType, targetName, _takeTimestamp, _recordTime);
             UpdateRecordingObjects();
-            foreach (var recObj in RecordingObjects)
-            {
-                if (recObj == null) continue;
-
-                switch (recObj.GetType().Name)
-                {
-                    case "Vector3":
-                    {
-                        var vector3Str = HumrLogger.FormatVector3Components((Vector3)recObj);
-                        outputString = string.Join(HumrLogger.VariableDelimiter, outputString, vector3Str);
-                        break;
-                    }
-                    case "Quaternion":
-                    {
-                        var quaternionStr = HumrLogger.FormatQuaternionComponents((Quaternion)recObj);
-                        outputString = string.Join(HumrLogger.VariableDelimiter, outputString, quaternionStr);
-                        break;
-                    }
-                    default:
-                        outputString = string.Join(HumrLogger.VariableDelimiter, outputString, recObj.ToString());
-                        break;
-                }
-            }
-
+            foreach (var recObj in RecordingObjects) outputString = HumrLogger.AppendObject(outputString, recObj);
             HumrLogger.Log(outputString);
         }
     }
