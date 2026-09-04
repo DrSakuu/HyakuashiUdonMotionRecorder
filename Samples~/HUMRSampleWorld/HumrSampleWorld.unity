@@ -2268,8 +2268,8 @@ MonoBehaviour:
 
     HUMR
     is a motion capture tool that records player''s movements into the VRChat log
-    files and then reads them in a Unity project. This is version 2, which uses a
-    new log format.
+    files and then exports them to FBX in a Unity project. This is version 2, which
+    uses a new log format.
 
 
 '
@@ -2919,7 +2919,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6560133559062712785, guid: 787e3b216ab1b344f89339e0410214df, type: 3}
       propertyPath: m_Name
-      value: HumrChan Loader
+      value: HumrChanLoader
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

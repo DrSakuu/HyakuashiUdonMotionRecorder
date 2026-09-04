@@ -5,6 +5,7 @@ namespace DrSakuu.Humr
     [RequireComponent(typeof(Animator))]
     public class HumrRecordingLoader : MonoBehaviour
     {
+        public string logPath;
         public int fileIndex;
         public int targetIndex;
         public bool exportFbx = true;

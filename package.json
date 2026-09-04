@@ -28,8 +28,8 @@
   "license": "MIT",
   "samples": [
     {
-      "displayName": "HUMR Sample World",
-      "description": "A scene with a HumrPlayerRecorder prefab and HumrRecordingLoader script. Requires the VRChat World SDK.",
+      "displayName": "HUMR Sample VRChat World",
+      "description": "A scene with a HumrPlayerRecorder prefab and HumrRecordingLoader script. <br><br><b>Requires VRChat World SDK.</b>",
       "path": "Samples~/HumrSampleWorld"
     }
   ]

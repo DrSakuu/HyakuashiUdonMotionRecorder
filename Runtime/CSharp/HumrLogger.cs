@@ -24,6 +24,12 @@ namespace DrSakuu.Humr
         private const char ComponentDelimiter = ',';
         private const string FloatFormat = "F6";
 
+        private const string MissingValue = "MISSING";
+        private const string UnsupportedTargetType = "Unsupported";
+
+        private const string HumrRecordingPrefix = LogTagPrefix + HumrTag + " " + RecordingTag;
+        private const string LegacyHumrPrefix = LogTagPrefix + LegacyHumrTag;
+
         public static void Log(object message)
         {
             Debug.Log($"{HumrTag} {message}");
@@ -44,69 +50,33 @@ namespace DrSakuu.Humr
             Debug.LogAssertion($"{HumrTag} {message}");
         }
 
-        private static string FormatVector3Components(Vector3 vector3, string format = FloatFormat)
-        {
-            var vector3XStr = vector3.x.ToString(format);
-            var vector3YStr = vector3.y.ToString(format);
-            var vector3ZStr = vector3.z.ToString(format);
-            return string.Join(ComponentDelimiter, vector3XStr, vector3YStr, vector3ZStr);
-        }
-
-        private static string FormatQuaternionComponents(Quaternion quaternion, string format = FloatFormat)
-        {
-            var quaternionXStr = quaternion.x.ToString(format);
-            var quaternionYStr = quaternion.y.ToString(format);
-            var quaternionZStr = quaternion.z.ToString(format);
-            var quaternionWStr = quaternion.w.ToString(format);
-            return string.Join(ComponentDelimiter, quaternionXStr, quaternionYStr, quaternionZStr, quaternionWStr);
-        }
-
-        private static string TargetTypeToString(TargetType targetType)
-        {
-            switch (targetType)
-            {
-                case TargetType.Legacy:
-                    return "Legacy";
-                case TargetType.BoneRotations:
-                    return "BoneRotations";
-                case TargetType.Object:
-                    return "Object";
-                case TargetType.BoneRotationsWithIK:
-                case TargetType.HumanMuscles:
-                case TargetType.Unknown:
-                default:
-                    return "Unsupported";
-            }
-        }
-
         public static string InitializeFrame(TargetType targetType, string targetName, long takeTimestamp, float time)
         {
-            var typeStr = TargetTypeToString(targetType);
-            var timeStr = time.ToString(FloatFormat, CultureInfo.InvariantCulture);
-            return string.Join(VariableDelimiter, RecordingTag, typeStr, targetName, takeTimestamp, timeStr);
+            var typeText = TargetTypeToString(targetType);
+            var timeText = FormatFloat(time);
+        
+            return string.Join(VariableDelimiter, RecordingTag, typeText, targetName, takeTimestamp, timeText);
         }
 
-        public static string AppendObject(string outputString, object recObj)
+        public static string AppendObject(string outputString, object recordedObject)
         {
-            if (recObj == null) return string.Join(VariableDelimiter, outputString, "MISSING");
-            
-            switch (recObj.GetType().Name)
+            string valueText;
+            switch (recordedObject.GetType().Name)
             {
                 case "Vector3":
-                {
-                    var vector3Str = FormatVector3Components((Vector3)recObj);
-                    return string.Join(VariableDelimiter, outputString, vector3Str);
-                }
+                    valueText = FormatVector3Components((Vector3)recordedObject);
+                    break;
                 case "Quaternion":
-                {
-                    var quaternionStr = FormatQuaternionComponents((Quaternion)recObj);
-                    return string.Join(VariableDelimiter, outputString, quaternionStr);
-                }
+                    valueText = FormatQuaternionComponents((Quaternion)recordedObject);
+                    break;
                 default:
-                    return string.Join(VariableDelimiter, outputString, recObj.ToString());
+                    valueText = recordedObject.ToString();
+                    break;
             }
+            
+            return string.Join(VariableDelimiter, outputString, valueText);
         }
-        
+
         public static string JoinComponents(params object[] components)
         {
             return string.Join(ComponentDelimiter, components);
@@ -114,32 +84,26 @@ namespace DrSakuu.Humr
 
         public static int AnyHumrFrameStartIndex(string line)
         {
-            return HumrFrameStartIndex(line) != -1 ? HumrFrameStartIndex(line) : LegacyHumrFrameStartIndex(line);
+            var frameStartIndex = HumrFrameStartIndex(line);
+            return frameStartIndex >= 0 ? frameStartIndex : LegacyHumrFrameStartIndex(line);
         }
 
         public static int HumrFrameStartIndex(string line)
         {
-            var matchStr = $"{LogTagPrefix}{HumrTag} {RecordingTag}";
-            var targetMatchIndex = line.IndexOf(matchStr, StringComparison.Ordinal);
-            if (targetMatchIndex < 0) return -1;
-            
-            return targetMatchIndex + matchStr.Length + 1;
+            return FindDataStartIndex(line, HumrRecordingPrefix, 1);
         }
 
         public static int LegacyHumrFrameStartIndex(string line)
         {
-            var legacyMatchStr = string.Join("", LogTagPrefix, LegacyHumrTag);
-            var targetMatchIndex = line.IndexOf(legacyMatchStr, StringComparison.Ordinal);
-            if (targetMatchIndex < 0) return -1;
-
-            return targetMatchIndex + legacyMatchStr.Length;
+            return FindDataStartIndex(line, LegacyHumrPrefix);
         }
 
         public static string SplitNextVariable(string line, out string remaining)
         {
             remaining = line;
-            var delimiterIndex = line.IndexOf(VariableDelimiter, StringComparison.Ordinal);
-            if (delimiterIndex == -1) return null;
+
+            var delimiterIndex = line.IndexOf(VariableDelimiter);
+            if (delimiterIndex < 0) return null;
 
             remaining = line.Substring(delimiterIndex + 1);
             return line.Substring(0, delimiterIndex);
@@ -147,32 +111,32 @@ namespace DrSakuu.Humr
 
         public static string[] SplitLegacyLine(string line, string targetName)
         {
-            var legacyMatchStr = string.Join("", LogTagPrefix, LegacyHumrTag);
-            var legacyMatchTarget = string.Join("", legacyMatchStr, targetName);
-            return line.Split(legacyMatchTarget);
+            var targetPrefix = $"{LegacyHumrPrefix}{targetName}";
+            return line.Split(new[] { targetPrefix }, StringSplitOptions.None);
         }
 
         public static string[] SplitLegacyFrame(string frame)
         {
             return frame.Split(ComponentDelimiter);
         }
-        
+
         public static string JoinLogPrefixToFrame(string prefix, string frame)
         {
-            return $"{prefix}-  {HumrTag} {frame}";
+            return $"{prefix}{LogTagPrefix}{HumrTag} {frame}";
         }
 
-        public static int TargetFrameStartIndex(string line, (TargetType targetType, string targetName) target)
+        public static int TargetFrameStartIndex(string line, TargetType targetType, string targetName)
         {
-            var matchStr = $"{LogTagPrefix}{HumrTag} {RecordingTag}";
-            var targetMatchStr = string.Join(VariableDelimiter, 
-                matchStr, target.targetType, target.targetName, "");
-            var targetMatchIndex = line.IndexOf(targetMatchStr, StringComparison.Ordinal);
-            if (targetMatchIndex < 0) return -1;
-            
-            return targetMatchIndex + targetMatchStr.Length;
+            var targetPrefix = string.Join(
+                VariableDelimiter,
+                HumrRecordingPrefix,
+                targetType,
+                targetName,
+                string.Empty);
+
+            return FindDataStartIndex(line, targetPrefix);
         }
-        
+
         public static string[] SplitFrame(string frame)
         {
             return frame.Split(VariableDelimiter);
@@ -181,12 +145,13 @@ namespace DrSakuu.Humr
         public static bool TryParseVector3(string vector3String, out Vector3 vector)
         {
             vector = default;
-            var vector3Split = vector3String.Split(ComponentDelimiter);
-            if (vector3Split.Length != 3) return false;
 
-            if (!TryParseFloat(vector3Split[0], out var x)) return false;
-            if (!TryParseFloat(vector3Split[1], out var y)) return false;
-            if (!TryParseFloat(vector3Split[2], out var z)) return false;
+            var components = vector3String.Split(ComponentDelimiter);
+            if (components.Length != 3) return false;
+
+            if (!TryParseFloat(components[0], out var x)) return false;
+            if (!TryParseFloat(components[1], out var y)) return false;
+            if (!TryParseFloat(components[2], out var z)) return false;
 
             vector = new Vector3(x, y, z);
             return true;
@@ -195,21 +160,64 @@ namespace DrSakuu.Humr
         public static bool TryParseQuaternion(string quaternionString, out Quaternion quaternion)
         {
             quaternion = default;
-            var quaternionSplit = quaternionString.Split(ComponentDelimiter);
-            if (quaternionSplit.Length != 4) return false;
 
-            if (!TryParseFloat(quaternionSplit[0], out var x)) return false;
-            if (!TryParseFloat(quaternionSplit[1], out var y)) return false;
-            if (!TryParseFloat(quaternionSplit[2], out var z)) return false;
-            if (!TryParseFloat(quaternionSplit[3], out var w)) return false;
+            var components = quaternionString.Split(ComponentDelimiter);
+            if (components.Length != 4) return false;
+
+            if (!TryParseFloat(components[0], out var x)) return false;
+            if (!TryParseFloat(components[1], out var y)) return false;
+            if (!TryParseFloat(components[2], out var z)) return false;
+            if (!TryParseFloat(components[3], out var w)) return false;
 
             quaternion = new Quaternion(x, y, z, w);
             return true;
         }
-        
+
+        private static int FindDataStartIndex(string line, string prefix, int extraOffset = 0)
+        {
+            var prefixIndex = line.IndexOf(prefix, StringComparison.Ordinal);
+            return prefixIndex < 0 ? -1 : prefixIndex + prefix.Length + extraOffset;
+        }
+
+        private static string TargetTypeToString(TargetType targetType)
+        {
+            switch (targetType)
+            {
+                case TargetType.Legacy:
+                    return nameof(TargetType.Legacy);
+                case TargetType.BoneRotations:
+                    return nameof(TargetType.BoneRotations);
+                case TargetType.Object:
+                    return nameof(TargetType.Object);
+                default:
+                    return UnsupportedTargetType;
+            }
+        }
+
+        private static string FormatVector3Components(Vector3 vector)
+        {
+            return JoinComponents(
+                FormatFloat(vector.x),
+                FormatFloat(vector.y),
+                FormatFloat(vector.z));
+        }
+
+        private static string FormatQuaternionComponents(Quaternion quaternion)
+        {
+            return JoinComponents(
+                FormatFloat(quaternion.x),
+                FormatFloat(quaternion.y),
+                FormatFloat(quaternion.z),
+                FormatFloat(quaternion.w));
+        }
+
+        private static string FormatFloat(float value)
+        {
+            return value.ToString(FloatFormat, CultureInfo.InvariantCulture);
+        }
+
         private static bool TryParseFloat(string floatString, out float floatValue)
         {
-            floatValue = default;
             return float.TryParse(floatString, NumberStyles.Float, CultureInfo.InvariantCulture, out floatValue);
         }
     }
