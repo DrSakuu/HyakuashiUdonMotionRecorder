@@ -1,5 +1,7 @@
 # Recording
 
+[日本語](Recording.jp.md)
+
 > [!IMPORTANT]
 > You need to set Logging to Full in the VRChat Debug settings for HUMR recording to work.
 

@@ -2,53 +2,65 @@
 
 [English](../README.md)
 
-HUMR は、VRChat 上のプレイヤーの動きを VRChat のログファイルに記録し、Unity プロジェクト内で読み込むためのモーションキャプチャツールです。これは新しいログ形式を使う v2 です。
+HUMR は、ユーザーの動きを VRChat のログファイルに記録し、Unity プロジェクト内で FBX としてエクスポートするモーションキャプチャツールです。これは新しいログ形式を使用する v2 です。
 
 ## 導入
 
 > [!WARNING]
-> インポート前に、古い `HUMR OutputLogLoader` パッケージと `Assets/HUMR` 配下の `Prefabs`、`ReadMe`、`Scenes`、`Scripts` を削除してください。VPM から導入した場合は自動で削除されます。
+> インポート前に、v2.0.0 より前の `HUMR OutputLogLoader` パッケージと、`Assets/HUMR` 配下の `Prefabs`、`ReadMe`、`Scenes`、`Scripts` を削除してください。VPM から導入した場合は自動的に削除されます。
 
 ### 必須環境
 
-- Unity 2022.3.22f1
-- FBX Exporter =>4.2.1（インポート時に自動導入）
-- VRChat World SDK =>3.10.0（録画用）
+- [PC 版 VRChat](https://store.steampowered.com/app/438100/VRChat/)
+- [Unity 2022.3.22f1](https://unity.com/releases/editor/whats-new/2022.3.22f1)（6000.0.67f1 では FBX エクスポートが動作しません）
+- FBX Exporter `>= 4.2.1`（Unity Registry から自動的に導入されます）
+
+#### オプションパッケージ
+
+- [VRChat SDK](https://creators.vrchat.com/sdk/) `>= 3.10.0`（カスタムアバターやワールドのアップロードに必要です）
 
 ### VRChat Package Manager
 
-Sakuu 氏の VPM リストから導入してください: <https://drsakuu.github.io/vpm-listing/>（[ALCOM](https://vrc-get.anatawa12.com/alcom/) を使用）
+[Sakuu 氏の VPM リスト](https://drsakuu.github.io/vpm-listing/)<a href="https://drsakuu.github.io/vpm-listing/"><img src="README/AddToVCC.png" alt="VCC に追加" height="24"></a>から導入してください。 （[ALCOM](https://vrc-get.anatawa12.com/alcom/) を使用）
 
 ### その他
 
-アニメーションの読み込みには VRChat SDK は不要です。VPM を使わない場合は、[releases](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases) から `.unitypackage` をダウンロードして、任意の Unity プロジェクトにインポートしてください。
+録画データの読み込みに VRChat SDK は必要ありません。VPM を使わない場合は、[リリースページ](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases)から `.unitypackage` をダウンロードし、Unity 2022.3.22f1 のプロジェクトにインポートしてください。
 
 ## 使い方
 
 ### 録画
 
+*詳しい手順: [Recording.md](Recording/Recording.jp.md)*
+
 > [!IMPORTANT]
-> HUMR を動作させるには、VRChat のデバッグ設定でログの出力を完全に設定する必要があります。
+> HUMR で録画するには、VRChat のデバッグ設定で Logging を Full に設定する必要があります。
 
-[公開ワールド](https://vrchat.com/home/launch?worldId=wrld_1fbb2fea-788e-43a8-a588-8ee7edf8e680) を利用するか、VRChat ワールドプロジェクトに HumrPlayerRecorder prefab を追加してください。公開ワールドはパッケージマネージャーのサンプルタブにある HUMR Sample World に含まれています。
+[公開ワールド](https://vrchat.com/home/launch?worldId=wrld_1fbb2fea-788e-43a8-a588-8ee7edf8e680)を利用するか、[VRChat ワールドプロジェクト](https://creators.vrchat.com/worlds/)に HumrPlayerRecorder prefab を追加してください。
 
-ミラーのボタンを使って録画の開始と停止を行います。複数の録画は同じ出力ファイル内の take として分割されます。
-
-記録するアバターのボーン構造と、モーションを読み込むアバターのボーン構造は完全に一致している必要があります。VRChat アバターの .fbx が手元にない場合は、VRChat SDK に含まれているサンプルロボットを使うとよいでしょう。Unity でアニメーションを別アバターへリターゲットできますし、Blender で Rokoko plugin のようなツールを使って手動でリターゲットすることもできます。
-
-VRChat のログは約1週間後に削除されるため、保存したデータを読み込むか、別の場所にログファイルをコピーしておくことをおすすめします。
+![VRChat で HUMR を使ってアニメーションを録画](Recording/HumrRecordingStart.gif)
 
 ### 読み込み
 
-Unity 2022.3.22f1 のプロジェクトに `drsakuu.humr` の UnityPackage をインポートし、Humanoid Avatar を持つ Animator に `HumrRecordingLoader` コンポーネントを追加してください。録画済みの VRChat ログファイルをリストから選択し、`.fbx` または `.anim` としてエクスポートしてください。
+*詳しい手順: [Loading.md](Loading/Loading.jp.md)*
+
+人型アバターを持つ Animator に HumrRecordingLoader コンポーネントを追加してください。録画済みの VRChat ログファイルを選択し、録画データを `.fbx` または `.anim` としてエクスポートできます。
+
+![Unity でアニメーションを読み込み](Loading/HUMRLoading.gif)
+
+### 詳細ガイド
+
+アバターにアニメーションを適用する: [Avatar.md](Avatar/Avatar.md)
+
+カメラの動きを録画する: [Camera.md](Camera/Camera.md)
 
 ## 更新履歴
 
-[CHANGELOG.md](../CHANGELOG.md)
+[CHANGELOG.md](CHANGELOG.md)
 
 ## コントリビューション
 
-[Issues](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues) と [Pull requests](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/pulls) を歓迎します。次にやることの参考として [TODO.md](TODO.md) もご確認ください。
+[Issues](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues) と [Pull requests](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/pulls) を歓迎します。v2.1 の予定は[こちら](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues/2)、v2.2 の予定は[こちら](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues/3)で確認できます。
 
 ## License
 
