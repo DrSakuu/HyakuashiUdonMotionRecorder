@@ -17,15 +17,15 @@ HUMR is a motion capture tool that records user's movements into the VRChat log 
 
 #### Optional packages
 
-- [VRChat SDK](https://creators.vrchat.com/sdk/) `>= 3.10.0` - Required for uploading custom avatars and worlds
+- [VRChat SDK](https://creators.vrchat.com/sdk/) `>= 3.10.0` - Required for recording in a custom world
+
+### Install via Unity package
+
+The VRChat SDK is not needed to load a recording and export it as `.fbx`. If you want to do it without VPM, download [the `.unitypackage` from releases](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases/latest) and import it into a Unity 2022.3.22f1 project.
 
 ### VRChat Package Manager
 
 Install from [Sakuu's VPM Listing](https://drsakuu.github.io/vpm-listing/): <a href="https://drsakuu.github.io/vpm-listing/"><img src="Documentation/README/AddToVCC.png" alt="Add to VCC" height="24"></a> (with [ALCOM](https://vrc-get.anatawa12.com/alcom/)).
-
-### Other
-
-For loading recordings, the VRChat SDK is not needed. If you want to do it without VPM, download the `.unitypackage` from [releases](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases) and import it into a Unity 2022.3.22f1 project.
 
 ## Usage
 

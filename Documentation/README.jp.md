@@ -17,15 +17,15 @@ HUMR は、ユーザーの動きを VRChat のログファイルに記録し、U
 
 #### オプションパッケージ
 
-- [VRChat SDK](https://creators.vrchat.com/sdk/) `>= 3.10.0`（カスタムアバターやワールドのアップロードに必要です）
+- [VRChat SDK](https://creators.vrchat.com/sdk/) `>= 3.10.0`（カスタムワールドでの録画に必要です）
+
+### Unity パッケージで導入
+
+録画データの読み込みと `.fbx` へのエクスポートに VRChat SDK は必要ありません。VPM を使わない場合は、[リリースページから `.unitypackage`](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases/latest)をダウンロードし、Unity 2022.3.22f1 のプロジェクトにインポートしてください。
 
 ### VRChat Package Manager
 
 [Sakuu 氏の VPM リスト](https://drsakuu.github.io/vpm-listing/)<a href="https://drsakuu.github.io/vpm-listing/"><img src="README/AddToVCC.png" alt="VCC に追加" height="24"></a>から導入してください。 （[ALCOM](https://vrc-get.anatawa12.com/alcom/) を使用）
-
-### その他
-
-録画データの読み込みに VRChat SDK は必要ありません。VPM を使わない場合は、[リリースページ](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases)から `.unitypackage` をダウンロードし、Unity 2022.3.22f1 のプロジェクトにインポートしてください。
 
 ## 使い方
 
