@@ -4,7 +4,7 @@
 
 まず、アニメーションを録画する必要があります：[Recording.md](../Recording/Recording.ja.md)
 
-録画データの読み込みに VRChat SDK は必要ありません。VRChat Package Manager を使わない場合は、[リリースページ](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases)から `.unitypackage` をダウンロードし、Unity 2022.3.22f1 の任意のプロジェクトにインポートしてください。
+録画データの読み込みに VRChat SDK は必要ありません。VRChat Package Manager を使わない場合は、[リリースページから `.unitypackage`](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases)をダウンロードし、Unity 2022.3.22f1 の任意のプロジェクトにインポートしてください。
 
 VRChat アバターでアニメーションを読み込む場合は、Prefab ではなく元の `.fbx` ファイルを使用することをおすすめします。それでも Prefab を使用する場合は、読み込み前に「Tools - Modular Avatar - Manual bake avatar」を実行してください。
 

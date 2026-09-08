@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0] - Unreleased
+## [2.0.0] - 2026-09-08
 
 A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format:
 
@@ -8,10 +8,10 @@ A complete rewrite of the codebase so new features can be implemented more easil
 [HUMR] RECORDING;{TargetType};{TargetName};{TakeTimestamp};{RecordTime};{objects[]}
 ```
 
-Can read pre-2.0.0 logs, but not write them.
+v2 can read pre-2.0.0 logs, but not write them.
 
 > [!WARNING]
-> Remove the pre-2.0.0 `HUMR OutputLogLoader` from `Packages` and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` from `Assets/HUMR` before importing. This is done automatically if installed using VPM.
+> Remove old pre-2.0.0 files before importing: `Packages/HUMR OutputLogLoader` and `Prefabs`, `ReadMe`, `Scenes` and `Scripts` in `Assets/HUMR` folder. This is done automatically if installed using VPM.
 
 ### Added
 
@@ -24,8 +24,10 @@ Can read pre-2.0.0 logs, but not write them.
 - Show help box on error
 - Ping created assets
 - HUMR-Chan sample avatar
+- Public world as a sample
 - Guides in documentation
-- Recording origin marker, avatar scale warning
+- Recording origin marker
+- Avatar scale warning
 
 ### Changed
 
@@ -41,26 +43,21 @@ Can read pre-2.0.0 logs, but not write them.
 ### Fixed
 
 - Export animations relative to Animator transform
-- Restore original Animation Controller after export
+- Clone a temporary avatar for export
 - Explicit include .fbx extension to delete temp file
 - Only change .fbx animationType on export
 - Do not start recording until avatar loads
 - Open log file as read-only
-- Restore avatar pose after export
 
 ### Removed
 
-- Record all players
+- Record all players (to be added later)
 
-## [2.0.0-beta.6] - Unreleased
-
-### Added
+### Since 2.0.0-beta.5
 
 - BaseRecorder: Record only when RecordIsReady
-
-### Changed
-
 - Full code cleanup
+- Translate documentation and world to Japanese
 
 ## [2.0.0-beta.5] - 2026-09-01
 
