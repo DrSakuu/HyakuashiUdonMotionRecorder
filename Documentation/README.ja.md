@@ -31,7 +31,7 @@ HUMR は、ユーザーの動きを VRChat のログファイルに記録し、U
 
 ### 録画
 
-*詳しい手順: [Recording.md](Recording/Recording.jp.md)*
+*詳しい手順: [Recording.md](Recording/Recording.ja.md)*
 
 > [!IMPORTANT]
 > HUMR で録画するには、VRChat のデバッグ設定で Logging を Full に設定する必要があります。
@@ -42,7 +42,7 @@ HUMR は、ユーザーの動きを VRChat のログファイルに記録し、U
 
 ### 読み込み
 
-*詳しい手順: [Loading.md](Loading/Loading.jp.md)*
+*詳しい手順: [Loading.md](Loading/Loading.ja.md)*
 
 人型アバターを持つ Animator に HumrRecordingLoader コンポーネントを追加してください。録画済みの VRChat ログファイルを選択し、録画データを `.fbx` または `.anim` としてエクスポートできます。
 

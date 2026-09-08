@@ -1,6 +1,6 @@
 # Recording
 
-[日本語](Recording.jp.md)
+[日本語](Recording.ja.md)
 
 > [!IMPORTANT]
 > You need to set Logging to Full in the VRChat Debug settings for HUMR recording to work.
@@ -20,3 +20,5 @@ You can use the HUMR-Chan sample avatar from the pedestal in the public world, b
 VRChat logs are deleted after about a week, so make sure to load the saved data before that, or back up the log files.
 
 ![Recording an animation with HUMR in VRChat](HumrRecordingStart.gif)
+
+After recording, you can load the animation: [Loading.md](../Loading/Loading.md)

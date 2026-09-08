@@ -3,9 +3,9 @@
 [English](Recording.md)
 
 > [!IMPORTANT]
-> HUMR で録画するには、VRChat のデバッグ設定で Logging を Full に設定する必要があります。
+> HUMR で録画するには、VRChat のデバッグ設定でログの出力を元全に設定する必要があります。
 
-![Logging を Full に設定した VRChat のデバッグ設定](DebugLoggingFull.png)
+![Logging を Full に設定した VRChat のデバッグ設定](DebugLoggingFull.ja.png)
 
 カスタムワールドやカスタムアバターで録画するには、[VRChat アカウントを登録](https://vrchat.com/home/register)する必要があります。アップロードには[「New User」以上の Trust Rank](https://docs.vrchat.com/docs/vrchat-safety-and-trust-system#trust-rank)が必要ですが、HUMR の利用に必須とは限りません。この Trust Rank に到達するまでも、ワールドやアバターをローカルでビルドしてテストできます。
 
@@ -20,3 +20,5 @@ Prefab の録画開始・停止ボタンを使って録画を開始・停止し�
 VRChat のログは約 1 週間後に削除されるため、それまでに保存したデータを読み込むか、ログファイルをバックアップしてください。
 
 ![VRChat で HUMR を使ってアニメーションを録画](HumrRecordingStart.gif)
+
+録画後は、アニメーションを読み込めます：[Loading.md](../Loading/Loading.ja.md)

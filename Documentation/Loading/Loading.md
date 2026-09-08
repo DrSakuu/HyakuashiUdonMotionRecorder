@@ -1,6 +1,8 @@
 # Loading
 
-[日本語](Loading.jp.md)
+[日本語](Loading.ja.md)
+
+First you need to record an animation: [Recording.md](../Recording/Recording.md)
 
 For loading recordings, the VRChat SDK is not needed. If you want to do it without the VRChat Package Manager, download the `.unitypackage` from [releases](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/releases) and import it into any Unity 2022.3.22f1 project.
 

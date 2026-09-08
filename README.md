@@ -1,6 +1,6 @@
 # Hyakuashi Udon Motion Recorder
 
-[日本語](Documentation/README.jp.md)
+[日本語](Documentation/README.ja.md)
 
 HUMR is a motion capture tool that records user's movements into the VRChat log files and then exports them to FBX in a Unity project. This is version 2, which uses a new log format.
 
