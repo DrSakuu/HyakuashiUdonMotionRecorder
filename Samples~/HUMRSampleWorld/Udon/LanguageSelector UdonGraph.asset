@@ -98,7 +98,7 @@ MonoBehaviour:
           PublicKeyToken=b77a5c561934e089|False
     - fullName: Get_Variable
       uid: 6981ee70-614a-4c66-bba7-72a9157f96e7
-      position: {x: 736.95013, y: 742.50006}
+      position: {x: 811, y: 767}
       nodeUIDs:
       - 
       flowUIDs: []
