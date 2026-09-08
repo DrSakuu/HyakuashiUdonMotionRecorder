@@ -283,19 +283,19 @@ ModelImporter:
     - boneName: L_FaceEye
       humanName: LeftEye
       limit:
-        min: {x: 0, y: 0, z: 0}
-        max: {x: 0, y: 0, z: 0}
+        min: {x: 0, y: -8, z: -8}
+        max: {x: 0, y: 10, z: 3}
         value: {x: 0, y: 0, z: 0}
         length: 0
-        modified: 0
+        modified: 1
     - boneName: R_FaceEye
       humanName: RightEye
       limit:
-        min: {x: 0, y: 0, z: 0}
-        max: {x: 0, y: 0, z: 0}
+        min: {x: 0, y: -8, z: -8}
+        max: {x: 0, y: 10, z: 3}
         value: {x: 0, y: 0, z: 0}
         length: 0
-        modified: 0
+        modified: 1
     - boneName: L_Thumb1
       humanName: Left Thumb Proximal
       limit:
@@ -575,26 +575,6 @@ ModelImporter:
       position: {x: -1.6072006e-10, y: 0.12860687, z: -0.0016618837}
       rotation: {x: -0.10797554, y: 0.000000020268832, z: 0.000000008240744, w: 0.99415356}
       scale: {x: 1, y: 1, z: 1}
-    - name: L_Bust1
-      parentName: C_UpperChest
-      position: {x: -0.04964974, y: -0.033894524, z: 0.07143791}
-      rotation: {x: 0.76483214, y: -0.15500641, z: 0.1181067, w: 0.61404854}
-      scale: {x: 1, y: 1, z: 1}
-    - name: L_Bust2
-      parentName: L_Bust1
-      position: {x: 0.000000007450581, y: 0.06308679, z: -0.000000090221874}
-      rotation: {x: 0.0000012476813, y: -0.0000014714899, z: 0.00000025529883, w: 1}
-      scale: {x: 0.99999994, y: 0.9999999, z: 0.99999994}
-    - name: R_Bust1
-      parentName: C_UpperChest
-      position: {x: 0.04964974, y: -0.033894524, z: 0.07143792}
-      rotation: {x: 0.76483226, y: 0.15500693, z: -0.11810619, w: 0.6140484}
-      scale: {x: 1, y: 1, z: 0.9999999}
-    - name: R_Bust2
-      parentName: R_Bust1
-      position: {x: 0.000000011175871, y: 0.06308682, z: 0.000000003259629}
-      rotation: {x: 0.0000010862133, y: 0.0000001678709, z: -0.0000002431916, w: 1}
-      scale: {x: 1, y: 0.99999994, z: 0.99999994}
     - name: C_Neck
       parentName: C_UpperChest
       position: {x: 4.3872422e-10, y: 0.15677373, z: 0.0087859}
@@ -605,31 +585,6 @@ ModelImporter:
       position: {x: 0.000000002776054, y: 0.08497162, z: 0.00040729158}
       rotation: {x: -0.054336075, y: -0.00000018733131, z: -0.000000009664756, w: 0.9985227}
       scale: {x: 1, y: 1, z: 1}
-    - name: L_FaceEye
-      parentName: C_Head
-      position: {x: -0.015232276, y: 0.06985577, z: 0.022573825}
-      rotation: {x: 0.7086283, y: -0.12924972, z: 0.13796271, w: 0.67978436}
-      scale: {x: 1, y: 1, z: 1}
-    - name: R_FaceEye
-      parentName: C_Head
-      position: {x: 0.015232282, y: 0.06985577, z: 0.022573827}
-      rotation: {x: 0.7086282, y: 0.1292493, z: -0.13796328, w: 0.6797845}
-      scale: {x: 0.99999994, y: 1, z: 0.99999994}
-    - name: HairJoint.001
-      parentName: C_Head
-      position: {x: -0.004075389, y: 0.12071203, z: 0.11908006}
-      rotation: {x: 0.00009487954, y: 0.013388357, z: 0.9998852, w: -0.00709714}
-      scale: {x: 0.99999994, y: 1.0000001, z: 1}
-    - name: HairJ.005
-      parentName: HairJoint.001
-      position: {x: 0.000011462636, y: 0.035262235, z: -0.00000004789369}
-      rotation: {x: -0.16121358, y: 0.041221503, z: 0.23068976, w: 0.9586935}
-      scale: {x: 1, y: 1, z: 0.9999999}
-    - name: HairJ.006
-      parentName: HairJ.005
-      position: {x: 0.0003232872, y: 0.0339752, z: 0.00000015015252}
-      rotation: {x: 0.0000002903725, y: 0.0000000742573, z: -0.00000007543712, w: 1}
-      scale: {x: 1.0000001, y: 1.0000001, z: 1.0000001}
     - name: HairJ.008
       parentName: C_Head
       position: {x: 0.105086945, y: 0.08315419, z: 0.0036807833}
@@ -643,7 +598,8 @@ ModelImporter:
     - name: HairJ.010
       parentName: HairJ.009
       position: {x: 0.00039508007, y: 0.03817728, z: 0.000000108482396}
-      rotation: {x: -0.000000092819505, y: 0.00000018444035, z: -0.00000016763806, w: 1}
+      rotation: {x: -0.000000092819505, y: 0.00000018444035, z: -0.00000016763806,
+        w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: HairJ.012
       parentName: C_Head
@@ -658,18 +614,24 @@ ModelImporter:
     - name: HairJ.014
       parentName: HairJ.013
       position: {x: -0.00025464012, y: 0.04209049, z: 0.0000001618555}
-      rotation: {x: 0.00000024897247, y: -0.00000080994704, z: -0.000000099651515, w: 1}
+      rotation: {x: 0.00000024897247, y: -0.00000080994704, z: -0.000000099651515,
+        w: 1}
       scale: {x: 1, y: 1, z: 1.0000001}
     - name: HairJ.016
       parentName: C_Head
       position: {x: -0.0898391, y: 0.057368517, z: -0.07780423}
       rotation: {x: 0.014067672, y: 0.08876883, z: 0.9836753, w: -0.15590115}
       scale: {x: 0.99999917, y: 1, z: 0.9999998}
-    - name: HairJ.018
+    - name: HairJ.017
       parentName: HairJ.016
-      position: {x: 0.016369, y: 0.080202006, z: -0.0015880342}
-      rotation: {x: -0.019697005, y: 0.0021312085, z: -0.20508717, w: 0.9785432}
-      scale: {x: 0.9999998, y: 0.9999999, z: 0.99999994}
+      position: {x: 0.0000000144355, y: 0.04331556, z: 0.000000006824905}
+      rotation: {x: -0.020154564, y: -0.0002545777, z: -0.20718734, w: 0.9780936}
+      scale: {x: 1, y: 0.99999994, z: 1}
+    - name: HairJ.018
+      parentName: HairJ.017
+      position: {x: 0.00000003585592, y: 0.040386405, z: 0.000000024825567}
+      rotation: {x: -0.000037176105, y: 0.0023861101, z: 0.002195303, w: 0.99999475}
+      scale: {x: 1, y: 1, z: 1}
     - name: HairJ.020
       parentName: C_Head
       position: {x: -0.028824644, y: 0.07205593, z: -0.12408033}
@@ -683,7 +645,8 @@ ModelImporter:
     - name: HairJ.022
       parentName: HairJ.021
       position: {x: -0.0000908277, y: 0.047919046, z: -0.00000012449198}
-      rotation: {x: 0.00000016952846, y: -0.000000036948382, z: 0.00000009324869, w: 1}
+      rotation: {x: 0.00000016952846, y: -0.000000036948382, z: 0.00000009324869,
+        w: 1}
       scale: {x: 0.99999994, y: 0.99999994, z: 0.99999994}
     - name: HairJ.024
       parentName: C_Head
@@ -698,7 +661,8 @@ ModelImporter:
     - name: HairJ.026
       parentName: HairJ.025
       position: {x: 0.00007389183, y: 0.041443445, z: -0.00000009423184}
-      rotation: {x: 0.00000040640805, y: 0.000000035847506, z: -0.00000010267832, w: 1}
+      rotation: {x: 0.00000040640805, y: 0.000000035847506, z: -0.00000010267832,
+        w: 1}
       scale: {x: 1, y: 0.99999994, z: 1}
     - name: HairJ.028
       parentName: C_Head
@@ -708,7 +672,8 @@ ModelImporter:
     - name: HairJ.029
       parentName: HairJ.028
       position: {x: 0.00015868153, y: 0.035428382, z: -0.00000022061127}
-      rotation: {x: -0.00000016987116, y: 0.00000018305875, z: 0.000000018626453, w: 1}
+      rotation: {x: -0.00000016987116, y: 0.00000018305875, z: 0.000000018626453,
+        w: 1}
       scale: {x: 1, y: 0.99999994, z: 1}
     - name: HairJ.031
       parentName: C_Head
@@ -720,20 +685,31 @@ ModelImporter:
       position: {x: 0.00009578571, y: 0.033407565, z: -0.000000037330082}
       rotation: {x: -0.0000002705296, y: 0.00000015526666, z: 0.00000020905283, w: 1}
       scale: {x: 1, y: 0.99999994, z: 1}
+    - name: HairJ.034
+      parentName: C_Head
+      position: {x: 0.050829828, y: -0.017308794, z: -0.054614227}
+      rotation: {x: 0.06948651, y: 0.0053911237, z: 0.9975683, w: 0.00037545664}
+      scale: {x: 1, y: 1.0000002, z: 1}
     - name: HairJ.035
+      parentName: HairJ.034
+      position: {x: 0.0000000066170855, y: 0.037595402, z: 0.000000008332528}
+      rotation: {x: -0.13437127, y: 0.07023554, z: 0.019591443, w: 0.9882447}
+      scale: {x: 0.9999999, y: 1, z: 0.9999998}
+    - name: HairJ.037
       parentName: C_Head
-      position: {x: 0.050829828, y: -0.05490216, z: -0.05420789}
-      rotation: {x: -0.0013397031, y: -0.13005139, z: 0.99145377, w: -0.010214542}
-      scale: {x: 0.99999994, y: 0.99999964, z: 0.9999954}
+      position: {x: -0.047905203, y: 0.14330257, z: 0.084833235}
+      rotation: {x: 0.26028815, y: -0.056812316, z: 0.94723463, w: 0.17823882}
+      scale: {x: 1.0000023, y: 1.0000001, z: 1.0000001}
     - name: HairJ.038
-      parentName: C_Head
-      position: {x: -0.071351245, y: 0.08392788, z: 0.08388567}
-      rotation: {x: 0.0070623117, y: 0.049315635, z: 0.9886792, w: -0.14153315}
-      scale: {x: 0.9999991, y: 0.99999994, z: 0.99999994}
+      parentName: HairJ.037
+      position: {x: -0.00000006519258, y: 0.06384328, z: 0.000000052154064}
+      rotation: {x: 0.14098099, y: 0.2514009, z: 0.2970482, w: 0.910321}
+      scale: {x: 1, y: 1, z: 1}
     - name: HairJ.039
       parentName: HairJ.038
-      position: {x: 0.00023064925, y: 0.037312135, z: -0.0000000058176113}
-      rotation: {x: -0.00000022055349, y: 0.00000009768348, z: -0.0000005522743, w: 1}
+      position: {x: 0.00023066334, y: 0.037311904, z: -0.000000016050905}
+      rotation: {x: -0.00000018001751, y: -0.0000003358731, z: -0.00000051467214,
+        w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: HairJ.041
       parentName: C_Head
@@ -748,7 +724,8 @@ ModelImporter:
     - name: HairJ.043
       parentName: HairJ.042
       position: {x: -0.00041550677, y: 0.042226166, z: 0.00000010229533}
-      rotation: {x: -0.00000006041695, y: -0.00000006601988, z: 0.00000016205013, w: 1}
+      rotation: {x: -0.00000006041695, y: -0.00000006601988, z: 0.00000016205013,
+        w: 1}
       scale: {x: 1, y: 1.0000001, z: 1}
     - name: HairJoint
       parentName: C_Head
@@ -768,8 +745,44 @@ ModelImporter:
     - name: HairJ.003
       parentName: HairJ.002
       position: {x: -0.0004169778, y: 0.037847362, z: -0.00000002051576}
-      rotation: {x: 0.000000012560157, y: -0.00000014065648, z: 0.000000096624724, w: 1}
+      rotation: {x: 0.000000012560157, y: -0.00000014065648, z: 0.000000096624724,
+        w: 1}
       scale: {x: 1, y: 0.99999994, z: 1}
+    - name: HairJoint.001
+      parentName: C_Head
+      position: {x: -0.004075389, y: 0.12071203, z: 0.11908006}
+      rotation: {x: 0.00009487954, y: 0.013388357, z: 0.9998852, w: -0.00709714}
+      scale: {x: 0.99999994, y: 1.0000001, z: 1}
+    - name: HairJ.005
+      parentName: HairJoint.001
+      position: {x: 0.000011462636, y: 0.035262235, z: -0.00000004789369}
+      rotation: {x: -0.16121358, y: 0.041221503, z: 0.23068976, w: 0.9586935}
+      scale: {x: 1, y: 1, z: 0.9999999}
+    - name: HairJ.006
+      parentName: HairJ.005
+      position: {x: 0.0003232872, y: 0.0339752, z: 0.00000015015252}
+      rotation: {x: 0.0000002903725, y: 0.0000000742573, z: -0.00000007543712, w: 1}
+      scale: {x: 1.0000001, y: 1.0000001, z: 1.0000001}
+    - name: L_FaceEye
+      parentName: C_Head
+      position: {x: -0.015232276, y: 0.06985577, z: 0.022573825}
+      rotation: {x: -0.005404199, y: 0.00000022615255, z: 0.00000002559579, w: 0.9999854}
+      scale: {x: 1, y: 1, z: 1}
+    - name: R_FaceEye
+      parentName: C_Head
+      position: {x: 0.015232284, y: 0.06985577, z: 0.02257381}
+      rotation: {x: -0.005404199, y: 0.00000022615255, z: 0.00000002559579, w: 0.9999854}
+      scale: {x: 1, y: 1, z: 1}
+    - name: L_Bust1
+      parentName: C_UpperChest
+      position: {x: -0.04964974, y: -0.033894524, z: 0.07143791}
+      rotation: {x: 0.76483214, y: -0.15500641, z: 0.1181067, w: 0.61404854}
+      scale: {x: 1, y: 1, z: 1}
+    - name: L_Bust2
+      parentName: L_Bust1
+      position: {x: 0.000000007450581, y: 0.06308679, z: -0.000000090221874}
+      rotation: {x: 0.0000012476813, y: -0.0000014714899, z: 0.00000025529883, w: 1}
+      scale: {x: 0.99999994, y: 0.9999999, z: 0.99999994}
     - name: L_Shoulder
       parentName: C_UpperChest
       position: {x: -0.020679908, y: 0.12499266, z: 0.0077442727}
@@ -783,7 +796,8 @@ ModelImporter:
     - name: L_LowerArm
       parentName: L_UpperArm
       position: {x: 0.00000009415519, y: 0.25063217, z: 0.0000000019556508}
-      rotation: {x: -0.000000041500627, y: -0.0000002378172, z: -0.00000023841807, w: 1}
+      rotation: {x: -0.000000041500627, y: -0.0000002378172, z: -0.00000023841807,
+        w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: L_Hand
       parentName: L_LowerArm
@@ -865,6 +879,16 @@ ModelImporter:
       position: {x: 0.000000037252903, y: 0.03267641, z: 0.000000017695129}
       rotation: {x: 0.008008132, y: -0.0003845764, z: -0.04017771, w: 0.9991604}
       scale: {x: 0.99999994, y: 1, z: 0.99999994}
+    - name: R_Bust1
+      parentName: C_UpperChest
+      position: {x: 0.04964974, y: -0.033894524, z: 0.07143792}
+      rotation: {x: 0.76483226, y: 0.15500693, z: -0.11810619, w: 0.6140484}
+      scale: {x: 1, y: 1, z: 0.9999999}
+    - name: R_Bust2
+      parentName: R_Bust1
+      position: {x: 0.000000011175871, y: 0.06308682, z: 0.000000003259629}
+      rotation: {x: 0.0000010862133, y: 0.0000001678709, z: -0.0000002431916, w: 1}
+      scale: {x: 1, y: 0.99999994, z: 0.99999994}
     - name: R_Shoulder
       parentName: C_UpperChest
       position: {x: 0.02067992, y: 0.12499267, z: 0.007744255}
@@ -878,7 +902,8 @@ ModelImporter:
     - name: R_LowerArm
       parentName: R_UpperArm
       position: {x: -0.00000010068928, y: 0.2506321, z: 5.084033e-10}
-      rotation: {x: -0.000000007520933, y: 0.00000035702658, z: 0.00000023841807, w: 1}
+      rotation: {x: -0.000000007520933, y: 0.00000035702658, z: 0.00000023841807,
+        w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: R_Hand
       parentName: R_LowerArm
