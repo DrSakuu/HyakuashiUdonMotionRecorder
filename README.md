@@ -2,6 +2,8 @@
 
 [日本語](Documentation/README/README.ja.md)
 
+![HUMR Logo](Documentation/README/Social.png)
+
 HUMR is a motion capture tool that records user's movements into the VRChat log files and then exports them to FBX in a Unity project. This is version 2, which uses a new log format.
 
 ## Installation

@@ -2,6 +2,8 @@
 
 [English](../../README.md)
 
+![HUMR Logo](Social.png)
+
 HUMR は、ユーザーの動きを VRChat のログファイルに記録し、Unity プロジェクト内で FBX としてエクスポートするモーションキャプチャツールです。これは新しいログ形式を使用する v2 です。
 
 ## 導入
