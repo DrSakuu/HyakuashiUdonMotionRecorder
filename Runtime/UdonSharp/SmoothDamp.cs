@@ -1,6 +1,8 @@
 ﻿#if UDONSHARP
+using System;
 using UdonSharp;
 using UnityEngine;
+using VRC.Dynamics;
 
 namespace DrSakuu.Humr
 {
@@ -13,6 +15,27 @@ namespace DrSakuu.Humr
         [SerializeField] private float rotSmoothTime = 0.2f;
         private Vector3 _rotVelocity = Vector3.zero;
         private Vector3 _velocity = Vector3.zero;
+        [SerializeField] private bool removeConstraints = true;
+
+        private void Start()
+        {
+            if (!removeConstraints) return;
+
+            var components = GetComponents<Component>();
+            foreach (var component in components)
+            {
+                var typeName = component.GetType().Name;
+                if (typeName == "VRCParentConstraint" ||
+                    typeName == "VRCPositionConstraint" ||
+                    typeName == "VRCRotationConstraint" ||
+                    typeName == "VRCScaleConstraint" ||
+                    typeName == "VRCAimConstraint" ||
+                    typeName == "VRCLookAtConstraint")
+                {
+                    Destroy(component);
+                }
+            }
+        }
 
         private void Update()
         {
