@@ -6,6 +6,10 @@
 
 - Toggle for world absolute position recording
 
+### Fixed
+
+- Set Loader editor only to not prevent VRChat upload
+
 ## [2.0.0] - 2026-09-08
 
 A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format:
