@@ -1,3 +1,5 @@
+using UnityEngine;
+
 #if UDONSHARP
 namespace DrSakuu.Humr
 {
@@ -12,7 +14,7 @@ namespace DrSakuu.Humr
 
         protected override void UpdateRecordingObjects()
         {
-            RecordingObjects[0] = transform.position;
+            RecordingObjects[0] = worldAbsolutePosition ? transform.position : transform.localPosition;
             RecordingObjects[1] = transform.rotation;
             RecordingObjects[2] = transform.localScale;
         }

@@ -31,7 +31,8 @@ namespace DrSakuu.Humr
         protected override void UpdateRecordingObjects()
         {
             var hipsPosition = _player.GetBonePosition(HumanBodyBones.Hips);
-            RecordingObjects[0] = hipsPosition;
+            var localHipsPosition = transform.InverseTransformPoint(hipsPosition);
+            RecordingObjects[0] = worldAbsolutePosition ? hipsPosition : localHipsPosition;
             for (var i = 0; i < (int)HumanBodyBones.LastBone; i++)
             {
                 var boneRotation = _player.GetBoneRotation((HumanBodyBones)i);

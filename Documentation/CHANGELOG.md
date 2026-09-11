@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.0] - Unreleased
+
+### Added
+
+- Toggle for world absolute position recording
+
 ## [2.0.0] - 2026-09-08
 
 A complete rewrite of the codebase so new features can be implemented more easily. Uses a new log format:

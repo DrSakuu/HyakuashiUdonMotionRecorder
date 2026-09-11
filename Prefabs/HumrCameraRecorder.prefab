@@ -180,6 +180,7 @@ MonoBehaviour:
   targetName: Camera
   recordFramerate: 30
   recordOnStart: 0
+  worldAbsolutePosition: 1
   startRecordButton: {fileID: 0}
   stopRecordButton: {fileID: 0}
   indicatorRenderer: {fileID: 9213624219594192218}
@@ -265,6 +266,7 @@ MonoBehaviour:
   DropEventName: 
   ThrowVelocityBoostMinSpeed: 1
   ThrowVelocityBoostScale: 1
+  OutlineRenderers: []
   currentlyHeldBy: {fileID: 0}
   pickupable: 1
   proximity: 2

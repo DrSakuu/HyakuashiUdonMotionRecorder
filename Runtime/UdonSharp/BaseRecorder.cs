@@ -18,6 +18,9 @@ namespace DrSakuu.Humr
 
         [SerializeField] [Tooltip("Start recording immediately on scene load.")]
         protected bool recordOnStart = true;
+        
+        [SerializeField] [Tooltip("Record position relative to world origin, otherwise local position relative to parent.")]
+        protected bool worldAbsolutePosition;
 
         [SerializeField] [Tooltip("Start recording button, connect onClick to StartRecording custom event.")]
         private Button startRecordButton;
