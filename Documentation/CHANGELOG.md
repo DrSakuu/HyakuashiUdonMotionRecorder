@@ -5,6 +5,7 @@
 ### Added
 
 - Toggle for world absolute position recording
+- Button to refresh Log Files and reset Log Path
 
 ### Fixed
 

@@ -6,7 +6,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Formats.Fbx.Exporter;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace DrSakuu.Humr.Editor
@@ -37,10 +36,15 @@ namespace DrSakuu.Humr.Editor
         {
             _loader = (HumrRecordingLoader)target;
             if (_loader == null) return;
+            
+            if (string.IsNullOrEmpty(_loader.logPath)) ResetLogPath();
+            
+            DrawAdvancedSection();
 
             var errorMessage = string.Empty;
-
-            DrawLogFileSelection(ref errorMessage);
+            if (!DrawLogFileDropdown())
+                SetError(ref errorMessage, "No log files found.");
+            
             if (!TryDrawTargetSelection(ref errorMessage))
             {
                 DrawError(errorMessage);
@@ -64,8 +68,6 @@ namespace DrSakuu.Humr.Editor
             }
 
             var logFilePaths = Directory.GetFiles(_loader.logPath, "*.txt");
-            if (logFilePaths.Length == _recordingFiles.Count) return;
-
             _recordingFiles = HumrLogParser.CollectRecordingFiles(logFilePaths);
             if (_recordingFiles.Count == 0)
             {
@@ -120,16 +122,6 @@ namespace DrSakuu.Humr.Editor
 
             _currentFile.takes = HumrLogParser.ParseTakes(logLines, (target.targetType, target.name));
             _currentFile.foundTakesStr = BuildTakeSummary(_currentFile.takes?.Count ?? 0);
-        }
-
-        private void DrawLogFileSelection(ref string errorMessage)
-        {
-            UpdateLogDirectory();
-            DrawAdvancedPathSection();
-            UpdateRecordingFiles();
-
-            if (!DrawLogFileDropdown())
-                SetError(ref errorMessage, "No log files found.");
         }
 
         private bool TryDrawTargetSelection(ref string errorMessage)
@@ -207,36 +199,51 @@ namespace DrSakuu.Humr.Editor
                 SetError(ref errorMessage, "Select either .fbx or .anim export.");
         }
 
-        private void DrawAdvancedPathSection()
+        private void DrawAdvancedSection()
         {
-            _loader.showAdvanced = EditorGUILayout.Foldout(_loader.showAdvanced, "Advanced: Custom Log Path");
+            _loader.showAdvanced = EditorGUILayout.Foldout(_loader.showAdvanced, "Advanced settings");
             if (!_loader.showAdvanced) return;
 
             EditorGUI.indentLevel++;
             EditorGUILayout.BeginHorizontal();
-
-            _loader.logPath = EditorGUILayout.TextField("Output Log Path (resets when closed)", _loader.logPath);
-            if (GUILayout.Button("Explore", GUILayout.Width(100)))
-                ExploreLogFolder(_loader.logPath);
+            
+            EditorGUILayout.PrefixLabel("Log Path");
+            
+            if (GUILayout.Button(new GUIContent("↺", "Reset to default Log Path"), GUILayout.Width(50)))
+                ResetLogPath();
+            
+            if (GUILayout.Button(new GUIContent(_loader.logPath,"Open folder...")))
+            {
+                var selectedPath = EditorUtility.OpenFolderPanel("Select Log Folder", _loader.logPath, string.Empty);
+                if (!string.IsNullOrEmpty(selectedPath))
+                {
+                    _loader.logPath = selectedPath;
+                    EditorUtility.SetDirty(_loader);
+                    UpdateRecordingFiles();
+                }
+            }
 
             EditorGUILayout.EndHorizontal();
+            GUILayout.Space(EditorGUIUtility.singleLineHeight);
             EditorGUI.indentLevel--;
         }
 
         private bool DrawLogFileDropdown()
         {
+            EditorGUILayout.BeginHorizontal();
+            
+            EditorGUILayout.PrefixLabel("Recording Log File");
+            if (GUILayout.Button("Refresh", GUILayout.Width(70))) 
+                UpdateRecordingFiles();
+            
             EditorGUI.BeginChangeCheck();
-
-            DrawClickableDropdown(
-                "Recording Log File",
-                UpdateRecordingFiles,
-                () => _loader.fileIndex,
-                value => _loader.fileIndex = value,
-                _recordingFileNames);
-
+            _loader.fileIndex = EditorGUILayout.Popup(_loader.fileIndex, _recordingFileNames);
+            
+            EditorGUILayout.EndHorizontal();
+            
             if (!HasRecordingFiles) return false;
 
-            if (EditorGUI.EndChangeCheck())
+            if (EditorGUI.EndChangeCheck()) 
                 SetCurrentRecordingFile();
 
             return true;
@@ -400,12 +407,12 @@ namespace DrSakuu.Humr.Editor
             };
         }
 
-        private void UpdateLogDirectory()
+        private void ResetLogPath()
         {
-            if (_loader.showAdvanced) return;
-
             _userProfile ??= Environment.GetEnvironmentVariable("USERPROFILE");
             _loader.logPath = $"{_userProfile}{VrcLogPathSuffix}";
+            EditorUtility.SetDirty(_loader);
+            UpdateRecordingFiles();
         }
 
         private void SelectFirstHumrFile()
@@ -420,47 +427,6 @@ namespace DrSakuu.Humr.Editor
             _currentFile = null;
             _recordingFiles.Clear();
             _recordingFileNames = new[] { NoLogsOption };
-        }
-
-        private static void DrawClickableDropdown(
-            string label,
-            Action onClick,
-            Func<int> getSelectedIndex,
-            Action<int> setSelectedIndex,
-            string[] options)
-        {
-            var lineRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
-            var popupRect = EditorGUI.PrefixLabel(lineRect, new GUIContent(label));
-
-            if (IsRectClick(popupRect))
-                onClick?.Invoke();
-
-            setSelectedIndex(EditorGUI.Popup(popupRect, getSelectedIndex(), options));
-        }
-
-        private static bool IsRectClick(Rect rect)
-        {
-            var currentEvent = Event.current;
-
-            return currentEvent.type == EventType.MouseDown &&
-                   currentEvent.button == 0 &&
-                   rect.Contains(currentEvent.mousePosition);
-        }
-
-        private static void ExploreLogFolder(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                HumrLogger.Error($"Log path does not exist: {path}");
-                return;
-            }
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = path,
-                UseShellExecute = true,
-                Verb = "open"
-            });
         }
 
         private static void SelectExportedAsset(string exportPath)
