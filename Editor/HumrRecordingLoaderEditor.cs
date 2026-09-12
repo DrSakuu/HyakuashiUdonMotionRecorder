@@ -17,23 +17,31 @@ namespace DrSakuu.Humr.Editor
         private const string NoLogsOption = "No logs found";
         private const string DefaultAnimationClipName = "HUMRAnimation";
 
+        private static readonly Dictionary<string, (DateTime, RecordingFile)> RecordingFileCache = new();
+
         private RecordingFile _currentFile;
         private HumrRecordingLoader _loader;
         private string[] _recordingFileNames = { NoLogsOption };
-        private List<RecordingFile> _recordingFiles = new();
+        private RecordingFile[] _recordingFiles;
         private string _userProfile;
 
-        private bool HasRecordingFiles => _recordingFiles is { Count: > 0 };
+        private bool HasRecordingFiles => _recordingFiles is { Length: > 0 };
 
         private TargetType CurrentTargetType => _currentFile.Targets[_loader.targetIndex].targetType;
 
-        public override void OnInspectorGUI()
+        private void OnEnable()
         {
             _loader = (HumrRecordingLoader)target;
             if (_loader == null) return;
-            
-            if (string.IsNullOrEmpty(_loader.logPath)) ResetLogPath();
-            
+
+            if (string.IsNullOrEmpty(_loader.logPath))
+                ResetLogPath();
+            else
+                UpdateRecordingFiles();
+        }
+
+        public override void OnInspectorGUI()
+        {
             DrawAdvancedSection();
 
             var errorMessage = string.Empty;
@@ -54,8 +62,10 @@ namespace DrSakuu.Humr.Editor
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
         }
 
-        public void UpdateRecordingFiles()
+        public void UpdateRecordingFiles(bool clearCache = false)
         {
+            if (clearCache) RecordingFileCache.Clear();
+            
             if (string.IsNullOrEmpty(_loader.logPath) || !Directory.Exists(_loader.logPath))
             {
                 ClearRecordingFiles();
@@ -63,8 +73,27 @@ namespace DrSakuu.Humr.Editor
             }
 
             var logFilePaths = Directory.GetFiles(_loader.logPath, "*.txt");
-            _recordingFiles = HumrLogParser.CollectRecordingFiles(logFilePaths);
-            if (_recordingFiles.Count == 0)
+            List<RecordingFile> recordFileList = new();
+
+            foreach (var filePath in logFilePaths)
+            {
+                var lastWriteTime = File.GetLastWriteTime(filePath);
+
+                if (RecordingFileCache.TryGetValue(filePath, out var cachedFile) &&
+                    cachedFile.Item1 == lastWriteTime)
+                {
+                    recordFileList.Add(cachedFile.Item2);
+                    continue;
+                }
+
+                var recordingFile = HumrLogParser.CreateRecordingFile(filePath);
+                RecordingFileCache[filePath] = (lastWriteTime, recordingFile);
+                recordFileList.Add(recordingFile);
+            }
+
+            _recordingFiles = recordFileList.OrderByDescending(file => file.LastWriteTime).ToArray();
+
+            if (_recordingFiles.Length == 0)
             {
                 ClearRecordingFiles();
                 return;
@@ -86,7 +115,7 @@ namespace DrSakuu.Humr.Editor
                 return;
             }
 
-            _loader.fileIndex = Mathf.Clamp(_loader.fileIndex, 0, _recordingFiles.Count - 1);
+            _loader.fileIndex = Mathf.Clamp(_loader.fileIndex, 0, _recordingFiles.Length - 1);
             _currentFile = _recordingFiles[_loader.fileIndex];
 
             ScanTargets();
@@ -232,7 +261,7 @@ namespace DrSakuu.Humr.Editor
             
             EditorGUILayout.PrefixLabel("Recording Log File");
             if (GUILayout.Button("Refresh", GUILayout.Width(70))) 
-                UpdateRecordingFiles();
+                UpdateRecordingFiles(true);
             
             EditorGUI.BeginChangeCheck();
             _loader.fileIndex = EditorGUILayout.Popup(_loader.fileIndex, _recordingFileNames);
@@ -415,15 +444,14 @@ namespace DrSakuu.Humr.Editor
 
         private void SelectFirstHumrFile()
         {
-            var humrIndex = _recordingFiles.FindIndex(file => file.type == LogType.Humr);
-            if (humrIndex >= 0)
-                _loader.fileIndex = humrIndex;
+            var humrIndex = Array.FindIndex(_recordingFiles, file => file.type == LogType.Humr);
+            _loader.fileIndex = humrIndex >= 0 ? humrIndex : 0;
         }
 
         private void ClearRecordingFiles()
         {
             _currentFile = null;
-            _recordingFiles.Clear();
+            _recordingFiles = null;
             _recordingFileNames = new[] { NoLogsOption };
         }
 

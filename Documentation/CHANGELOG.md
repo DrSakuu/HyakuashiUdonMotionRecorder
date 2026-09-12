@@ -10,6 +10,7 @@
 ### Fixed
 
 - Set Loader editor only to not prevent VRChat upload
+- Cache created recording files
 
 ## [2.0.0] - 2026-09-08
 

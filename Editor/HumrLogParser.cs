@@ -186,24 +186,15 @@ namespace DrSakuu.Humr.Editor
             return takes;
         }
 
-        public static List<RecordingFile> CollectRecordingFiles(string[] filePaths)
+        public static RecordingFile CreateRecordingFile(string filePath)
         {
-            return filePaths
-                .Select(CreateRecordingFile)
-                .OrderByDescending(file => file.LastWriteTime)
-                .ToList();
-        }
-
-        private static RecordingFile CreateRecordingFile(string filePath)
-        {
-            var fileType = DetectHumrMarkers(filePath) ? LogType.Humr : LogType.NoData;
-
+            var type = DetectHumrMarkers(filePath) ? LogType.Humr : LogType.NoData;
             return new RecordingFile
             {
                 path = filePath,
-                type = fileType,
+                type = type,
                 LastWriteTime = File.GetLastWriteTime(filePath),
-                fileName = BuildRecordingDisplayName(filePath, fileType)
+                fileName = BuildRecordingDisplayName(filePath, type)
             };
         }
 
