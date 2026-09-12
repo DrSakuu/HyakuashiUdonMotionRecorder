@@ -24,6 +24,8 @@ namespace DrSakuu.Humr
             var components = GetComponents<Component>();
             foreach (var component in components)
             {
+                if (component == null) continue;
+                
                 var typeName = component.GetType().Name;
                 if (typeName == "VRCParentConstraint" ||
                     typeName == "VRCPositionConstraint" ||

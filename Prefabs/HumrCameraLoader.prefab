@@ -66,10 +66,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f9df6fa54e171f41bdc968c43763f02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fileIndex: 62
+  logPath: 
+  fileIndex: 0
   targetIndex: 0
   exportFbx: 1
-  exportAnim: 0
   showAdvanced: 0
   blenderHipFix: 1
 --- !u!1 &8609757946879584960
@@ -131,7 +131,7 @@ Transform:
   m_GameObject: {fileID: 8781444189059765935}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.199995, z: 0}
+  m_LocalPosition: {x: 0, y: 1.1999862, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -268,7 +268,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7587389269854326963, guid: 59325cbcfedde7447a722671b3b97c61, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.00000054359435
+      value: -0.00000027894976
       objectReference: {fileID: 0}
     - target: {fileID: 7587389269854326963, guid: 59325cbcfedde7447a722671b3b97c61, type: 3}
       propertyPath: m_LocalPosition.z
