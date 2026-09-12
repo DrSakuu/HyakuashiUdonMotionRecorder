@@ -53,11 +53,11 @@ namespace DrSakuu.Humr.Editor
                 DrawError(errorMessage);
                 return;
             }
-
             ValidateCurrentRecording(ref errorMessage);
+            
+            GUILayout.Space(EditorGUIUtility.singleLineHeight);
             DrawTakeSummary();
             ValidateHumanAnimator(ref errorMessage);
-            DrawExportOptions(ref errorMessage);
             DrawError(errorMessage);
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
         }
@@ -136,15 +136,15 @@ namespace DrSakuu.Humr.Editor
 
             _loader.targetIndex = Mathf.Clamp(_loader.targetIndex, 0, _currentFile.Targets.Length - 1);
 
-            var target = _currentFile.Targets[_loader.targetIndex];
+            var targetTuple = _currentFile.Targets[_loader.targetIndex];
             var logLines = HumrLogParser.LoadHumrLogLines(_currentFile.path);
 
             _currentFile.LastWriteTime = File.GetLastWriteTime(_currentFile.path);
 
-            if (target.targetType == TargetType.Legacy)
-                logLines = HumrLogParser.ConvertLegacyLines(logLines, target.name);
+            if (targetTuple.targetType == TargetType.Legacy)
+                logLines = HumrLogParser.ConvertLegacyLines(logLines, targetTuple.name);
 
-            _currentFile.takes = HumrLogParser.ParseTakes(logLines, (target.targetType, target.name));
+            _currentFile.takes = HumrLogParser.ParseTakes(logLines, (targetTuple.targetType, targetTuple.name));
             _currentFile.foundTakesStr = BuildTakeSummary(_currentFile.takes?.Count ?? 0);
         }
 
@@ -172,7 +172,7 @@ namespace DrSakuu.Humr.Editor
             _loader.targetIndex = Mathf.Clamp(_loader.targetIndex, 0, _currentFile.Targets.Length - 1);
 
             var targetOptions = _currentFile.Targets
-                .Select(target => $"{target.targetType}: {target.name}")
+                .Select(targetTuple => $"{targetTuple.targetType}: {targetTuple.name}")
                 .ToArray();
 
             EditorGUI.BeginChangeCheck();
@@ -198,8 +198,25 @@ namespace DrSakuu.Humr.Editor
 
         private void DrawTakeSummary()
         {
-            GUILayout.Space(EditorGUIUtility.singleLineHeight);
-            GUILayout.Label(_currentFile.foundTakesStr);
+            EditorGUILayout.PrefixLabel("Include in .fbx");
+            for (var i = 0; i < _currentFile.takes.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                var include = true;
+                include = EditorGUILayout.Toggle(include, GUILayout.Width(15));
+                
+                var take = _currentFile.takes[i];
+                var frameCount = take.Frames.Count;
+                var lastRecordTime = take.Frames[^1].RecordTime;
+                EditorGUILayout.PrefixLabel($"Take {i+1}: {lastRecordTime:F2} seconds, {frameCount} frames" );
+                if (GUILayout.Button(new GUIContent("Export .anim")))
+                {
+                    var animationTimestamp = PathUtils.GetDateTimeFromFileName(_currentFile.fileName);
+                    ExportAnim(take, animationTimestamp);
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
         }
 
         private void ValidateHumanAnimator(ref string errorMessage)
@@ -210,15 +227,6 @@ namespace DrSakuu.Humr.Editor
             var isHumanoidAvatar = animator != null && animator.avatar != null && animator.avatar.isHuman;
             if (!isHumanoidAvatar)
                 SetError(ref errorMessage, "The Avatar needs to be Humanoid.");
-        }
-
-        private void DrawExportOptions(ref string errorMessage)
-        {
-            _loader.exportFbx = GUILayout.Toggle(_loader.exportFbx, "Export .fbx");
-            _loader.exportAnim = GUILayout.Toggle(_loader.exportAnim, "Export .anim");
-
-            if (!_loader.exportFbx && !_loader.exportAnim)
-                SetError(ref errorMessage, "Select either .fbx or .anim export.");
         }
 
         private void DrawAdvancedSection()
@@ -280,16 +288,16 @@ namespace DrSakuu.Humr.Editor
         {
             using var disabledScope = new EditorGUI.DisabledScope(!enabled);
 
-            if (GUILayout.Button("Export recording"))
-                ExportCurrentTargetTakes();
+            if (GUILayout.Button("Export .fbx"))
+                ExportFbx();
         }
 
-        private void ExportCurrentTargetTakes()
+        private void ExportFbx()
         {
             if (_loader.Animator == null || _currentFile?.takes == null || _currentFile.takes.Count == 0)
                 return;
 
-            var target = _currentFile.Targets[_loader.targetIndex];
+            var targetTuple = _currentFile.Targets[_loader.targetIndex];
 
             var originalLoader = _loader;
             var tempLoaderObject = Instantiate(_loader.gameObject);
@@ -299,7 +307,7 @@ namespace DrSakuu.Humr.Editor
 
             try
             {
-                ExportTargetTakes(_currentFile.takes, _currentFile.path, target.targetType, target.name);
+                ExportTargetTakes(_currentFile.takes, _currentFile.path, targetTuple.targetType, targetTuple.name);
             }
             finally
             {
@@ -404,6 +412,19 @@ namespace DrSakuu.Humr.Editor
             return originalRootBones;
         }
 
+        private void ExportAnim(RecordingTake take, string animationTimestamp)
+        {
+            var takeClip = CreateAnimationClip(take);
+            if (takeClip == null) return;
+
+            var targetName = take.targetName;
+            var takeStamp = take.takeTimestamp;
+            var animationName = $"{targetName}_{animationTimestamp}_Take{takeStamp}";
+            takeClip.name = animationName;
+            var animationAssetPath = GetAssetPath("Animations", take.targetName, animationName, "anim");
+            AnimationClipFactory.SaveGenericAnimationAsset(takeClip, animationAssetPath);
+        }
+
         private void AddTakeToController(
             RecordingTake take,
             string animationName,
@@ -413,12 +434,6 @@ namespace DrSakuu.Humr.Editor
             if (takeClip == null) return;
 
             takeClip.name = animationName;
-
-            if (_loader.exportAnim)
-            {
-                var animationAssetPath = GetAssetPath("Animations", take.targetName, animationName, "anim");
-                AnimationClipFactory.SaveGenericAnimationAsset(takeClip, animationAssetPath);
-            }
 
             controllerBuilder.AddClipToController(takeClip);
         }
