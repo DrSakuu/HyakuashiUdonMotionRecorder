@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -17,10 +16,6 @@ namespace DrSakuu.Humr.Editor
         private const string HumrPath = @"Assets\HUMR";
         private const string NoLogsOption = "No logs found";
         private const string DefaultAnimationClipName = "HUMRAnimation";
-
-        private static readonly GUIContent BlenderHipFixContent = new(
-            "Blender hip fix",
-            "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure.");
 
         private RecordingFile _currentFile;
         private HumrRecordingLoader _loader;
@@ -53,7 +48,7 @@ namespace DrSakuu.Humr.Editor
 
             ValidateCurrentRecording(ref errorMessage);
             DrawTakeSummary();
-            DrawHumanoidOptions(ref errorMessage);
+            ValidateHumanAnimator(ref errorMessage);
             DrawExportOptions(ref errorMessage);
             DrawError(errorMessage);
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
@@ -178,7 +173,7 @@ namespace DrSakuu.Humr.Editor
             GUILayout.Label(_currentFile.foundTakesStr);
         }
 
-        private void DrawHumanoidOptions(ref string errorMessage)
+        private void ValidateHumanAnimator(ref string errorMessage)
         {
             if (!IsHumanoidBoneTarget(CurrentTargetType)) return;
 
@@ -186,8 +181,6 @@ namespace DrSakuu.Humr.Editor
             var isHumanoidAvatar = animator != null && animator.avatar != null && animator.avatar.isHuman;
             if (!isHumanoidAvatar)
                 SetError(ref errorMessage, "The Avatar needs to be Humanoid.");
-
-            _loader.blenderHipFix = GUILayout.Toggle(_loader.blenderHipFix, BlenderHipFixContent);
         }
 
         private void DrawExportOptions(ref string errorMessage)
@@ -224,6 +217,11 @@ namespace DrSakuu.Humr.Editor
             }
 
             EditorGUILayout.EndHorizontal();
+            
+            _loader.blenderHipFix = EditorGUILayout.Toggle(new GUIContent("Blender hip fix", 
+                    "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure."), 
+                _loader.blenderHipFix);
+            
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             EditorGUI.indentLevel--;
         }
