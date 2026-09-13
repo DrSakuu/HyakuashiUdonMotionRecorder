@@ -145,7 +145,6 @@ namespace DrSakuu.Humr.Editor
                 logLines = HumrLogParser.ConvertLegacyLines(logLines, targetTuple.name);
 
             _currentFile.takes = HumrLogParser.ParseTakes(logLines, (targetTuple.targetType, targetTuple.name));
-            _currentFile.foundTakesStr = BuildTakeSummary(_currentFile.takes?.Count ?? 0);
         }
 
         private bool TryDrawTargetSelection(ref string errorMessage)
@@ -199,16 +198,15 @@ namespace DrSakuu.Humr.Editor
         private void DrawTakeSummary()
         {
             EditorGUILayout.PrefixLabel("Include in .fbx");
-            for (var i = 0; i < _currentFile.takes.Count; i++)
+            foreach (var take in _currentFile.takes)
             {
                 EditorGUILayout.BeginHorizontal();
                 var include = true;
                 include = EditorGUILayout.Toggle(include, GUILayout.Width(15));
                 
-                var take = _currentFile.takes[i];
                 var frameCount = take.Frames.Count;
                 var lastRecordTime = take.Frames[^1].RecordTime;
-                EditorGUILayout.PrefixLabel($"Take {i+1}: {lastRecordTime:F2} seconds, {frameCount} frames" );
+                EditorGUILayout.PrefixLabel($"{take.takeName}: {lastRecordTime:F2} seconds, {frameCount} frames" );
                 if (GUILayout.Button(new GUIContent("Export .anim")))
                 {
                     var animationTimestamp = PathUtils.GetDateTimeFromFileName(_currentFile.fileName);
@@ -294,7 +292,7 @@ namespace DrSakuu.Humr.Editor
 
         private void ExportFbx()
         {
-            if (_loader.Animator == null || _currentFile?.takes == null || _currentFile.takes.Count == 0)
+            if (_loader.Animator == null || _currentFile?.takes == null || _currentFile.takes.Length == 0)
                 return;
 
             var targetTuple = _currentFile.Targets[_loader.targetIndex];
@@ -317,7 +315,7 @@ namespace DrSakuu.Humr.Editor
         }
 
         private void ExportTargetTakes(
-            List<RecordingTake> takes,
+            RecordingTake[] takes,
             string filePath,
             TargetType targetType,
             string targetName)
@@ -329,11 +327,16 @@ namespace DrSakuu.Humr.Editor
 
             try
             {
-                var animationTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
-                AddTakesToController(takes, targetName, animationTimestamp, tempController);
+                foreach (var take in takes)
+                {
+                    AddTakeToController(take, filePath, tempController);
+                }
 
                 if (_loader.exportFbx)
-                    ExportFbx(targetType, targetName, animationTimestamp, tempController);
+                {
+                    var logTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
+                    ExportFbx(targetType, targetName, logTimestamp, tempController);
+                }
             }
             finally
             {
@@ -341,23 +344,10 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void AddTakesToController(
-            IReadOnlyList<RecordingTake> takes,
-            string targetName,
-            string animationTimestamp,
-            TempControllerBuilder controllerBuilder)
-        {
-            for (var i = 0; i < takes.Count; i++)
-            {
-                var animationName = $"{targetName}_{animationTimestamp}_Take{i + 1}";
-                AddTakeToController(takes[i], animationName, controllerBuilder);
-            }
-        }
-
         private void ExportFbx(
             TargetType targetType,
             string targetName,
-            string animationTimestamp,
+            string logTimestamp,
             TempControllerBuilder tempController)
         {
             var originalRootBones = ApplyBlenderHipFix();
@@ -367,7 +357,8 @@ namespace DrSakuu.Humr.Editor
             {
                 _loader.Animator.runtimeAnimatorController = tempController.Controller;
 
-                var exportPath = GetAssetPath("FBXs", targetName, animationTimestamp, "fbx");
+                var fileName = $"{targetName}_{logTimestamp}";
+                var exportPath = GetAssetPath("FBXs", targetName, fileName, "fbx");
                 ModelExporter.ExportObject(exportPath, _loader.gameObject);
 
                 SelectExportedAsset(exportPath);
@@ -412,29 +403,25 @@ namespace DrSakuu.Humr.Editor
             return originalRootBones;
         }
 
-        private void ExportAnim(RecordingTake take, string animationTimestamp)
+        private void ExportAnim(RecordingTake take, string logTimestamp)
         {
             var takeClip = CreateAnimationClip(take);
             if (takeClip == null) return;
 
-            var targetName = take.targetName;
-            var takeStamp = take.takeTimestamp;
-            var animationName = $"{targetName}_{animationTimestamp}_Take{takeStamp}";
+            var animationName = PathUtils.BuildAnimationName(take, logTimestamp);
             takeClip.name = animationName;
             var animationAssetPath = GetAssetPath("Animations", take.targetName, animationName, "anim");
             AnimationClipFactory.SaveGenericAnimationAsset(takeClip, animationAssetPath);
         }
 
         private void AddTakeToController(
-            RecordingTake take,
-            string animationName,
-            TempControllerBuilder controllerBuilder)
+            RecordingTake take, string filePath, TempControllerBuilder controllerBuilder)
         {
             var takeClip = CreateAnimationClip(take);
             if (takeClip == null) return;
 
+            var animationName = PathUtils.BuildAnimationName(take, filePath);
             takeClip.name = animationName;
-
             controllerBuilder.AddClipToController(takeClip);
         }
 
@@ -515,15 +502,6 @@ namespace DrSakuu.Humr.Editor
         private static bool IsHumanoidBoneTarget(TargetType targetType)
         {
             return targetType is TargetType.BoneRotations or TargetType.Legacy;
-        }
-
-        private static string BuildTakeSummary(int takeCount)
-        {
-            return takeCount switch
-            {
-                1 => "Found 1 take.",
-                _ => $"Found {takeCount} takes."
-            };
         }
 
         private static void DrawError(string errorMessage)

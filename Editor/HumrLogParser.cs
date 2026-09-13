@@ -21,8 +21,7 @@ namespace DrSakuu.Humr.Editor
         public string path;
         public LogType type;
         public string fileName;
-        public string foundTakesStr;
-        public List<RecordingTake> takes = new();
+        public RecordingTake[] takes;
         public DateTime LastWriteTime;
         public (TargetType targetType, string name)[] Targets;
     }
@@ -33,6 +32,7 @@ namespace DrSakuu.Humr.Editor
         public TargetType targetType;
         public string targetName;
         public long takeTimestamp;
+        public string takeName;
 
         public List<Frame> Frames { get; set; } = new();
     }
@@ -146,11 +146,11 @@ namespace DrSakuu.Humr.Editor
             return convertedLines.ToArray();
         }
 
-        public static List<RecordingTake> ParseTakes(
+        public static RecordingTake[] ParseTakes(
             string[] lines,
             (TargetType targetType, string targetName) target)
         {
-            var takes = new List<RecordingTake>();
+            var takesList = new List<RecordingTake>();
             var currentTake = CreateRecordingTake(target);
             var previousTime = -1f;
 
@@ -168,7 +168,7 @@ namespace DrSakuu.Humr.Editor
                 }
                 else if (IsNewTake(currentTake, parsedFrame.timestamp, parsedFrame.recordTime, previousTime))
                 {
-                    takes.Add(currentTake);
+                    takesList.Add(currentTake);
                     currentTake = CreateRecordingTake(target, parsedFrame.timestamp);
                     previousTime = -1f;
                 }
@@ -181,9 +181,16 @@ namespace DrSakuu.Humr.Editor
             }
 
             if (currentTake.Frames.Count > 0)
-                takes.Add(currentTake);
+                takesList.Add(currentTake);
 
-            return takes;
+            var takes = takesList.ToArray();
+            
+            for (var i = 0; i < takes.Length; i++)
+            {
+                if (string.IsNullOrEmpty(takesList[i].takeName)) takesList[i].takeName = $"Take{i + 1}";
+            }
+            
+            return takesList.ToArray();
         }
 
         public static RecordingFile CreateRecordingFile(string filePath)

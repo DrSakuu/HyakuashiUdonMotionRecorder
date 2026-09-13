@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 88a2681677a7abe4aaafeaae87b629bc, type: 3}
       propertyPath: m_Name
-      value: HumrChan Loader
+      value: HumrChanLoader
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 88a2681677a7abe4aaafeaae87b629bc, type: 3}
       propertyPath: m_TagString
@@ -81,9 +81,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f9df6fa54e171f41bdc968c43763f02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fileIndex: 1
+  logPath: 
+  fileIndex: 0
   targetIndex: 0
   exportFbx: 1
-  exportAnim: 0
   showAdvanced: 0
   blenderHipFix: 1

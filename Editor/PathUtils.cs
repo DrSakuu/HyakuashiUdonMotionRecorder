@@ -34,5 +34,15 @@ namespace DrSakuu.Humr.Editor
 
             return -1;
         }
+
+        public static string BuildAnimationName(RecordingTake take, string filePath)
+        {
+            var logTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
+            var targetName = take.targetName;
+            var takeStamp = take.takeTimestamp;
+            var takeName = take.takeName;
+            var animationName = string.Join('_', targetName, logTimestamp, takeStamp, takeName);
+            return animationName;
+        }
     }
 }
