@@ -13,6 +13,7 @@
 - Set Loader editor only to not prevent VRChat upload
 - Cache created recording files
 - Store takes as an array, better name handling
+- Remove Animator requirement from Object recording export
 
 ## [2.0.0] - 2026-09-08
 

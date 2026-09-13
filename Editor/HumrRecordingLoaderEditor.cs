@@ -56,8 +56,10 @@ namespace DrSakuu.Humr.Editor
             ValidateCurrentRecording(ref errorMessage);
             
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
-            DrawTakeSummary();
-            ValidateHumanAnimator(ref errorMessage);
+            var validHuman = ValidateHumanAnimator();
+            if (!validHuman) SetError(ref errorMessage, "The Avatar in the Animator needs to be Humanoid.");
+            DrawTakeSummary(validHuman);
+            
             DrawError(errorMessage);
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
         }
@@ -195,9 +197,11 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void DrawTakeSummary()
+        private void DrawTakeSummary(bool validHuman)
         {
             EditorGUILayout.PrefixLabel("Include in .fbx");
+            
+            using var disabledScope = new EditorGUI.DisabledScope(!validHuman);
             foreach (var take in _currentFile.takes)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -217,14 +221,15 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void ValidateHumanAnimator(ref string errorMessage)
+        private bool ValidateHumanAnimator()
         {
-            if (!IsHumanoidBoneTarget(CurrentTargetType)) return;
+            if (!IsHumanoidBoneTarget(CurrentTargetType)) return true;
 
             var animator = _loader.Animator;
             var isHumanoidAvatar = animator != null && animator.avatar != null && animator.avatar.isHuman;
-            if (!isHumanoidAvatar)
-                SetError(ref errorMessage, "The Avatar needs to be Humanoid.");
+            if (isHumanoidAvatar) return true;
+            
+            return false;
         }
 
         private void DrawAdvancedSection()
@@ -292,8 +297,17 @@ namespace DrSakuu.Humr.Editor
 
         private void ExportFbx()
         {
-            if (_loader.Animator == null || _currentFile?.takes == null || _currentFile.takes.Length == 0)
+            if (!ValidateHumanAnimator())
+            {
+                HumrLogger.Error("The Avatar in the Animator needs to be Humanoid.");
                 return;
+            }
+
+            if (_currentFile?.takes == null || _currentFile.takes.Length == 0)
+            {
+                HumrLogger.Error("No takes found.");
+                return;
+            }
 
             var targetTuple = _currentFile.Targets[_loader.targetIndex];
 
@@ -302,6 +316,10 @@ namespace DrSakuu.Humr.Editor
 
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
+            if (_loader.Animator == null)
+            {
+                _loader.gameObject.AddComponent<Animator>();
+            }
 
             try
             {

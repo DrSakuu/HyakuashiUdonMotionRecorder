@@ -4,10 +4,8 @@ namespace DrSakuu.Humr
 {
 #if VRC_SDK_VRCSDK3
     using VRC.SDKBase;
-    [RequireComponent(typeof(Animator))]
     public class HumrRecordingLoader : MonoBehaviour, IEditorOnly
 #else
-    [RequireComponent(typeof(Animator))]
     public class HumrRecordingLoader : MonoBehaviour
 #endif
     {
