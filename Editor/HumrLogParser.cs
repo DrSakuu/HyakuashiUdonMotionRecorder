@@ -33,7 +33,7 @@ namespace DrSakuu.Humr.Editor
         public string targetName;
         public long takeTimestamp;
         public string takeName;
-
+        public bool includeInFbx = true;
         public List<Frame> Frames { get; set; } = new();
     }
 

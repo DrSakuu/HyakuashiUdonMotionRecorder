@@ -12,7 +12,6 @@ namespace DrSakuu.Humr
         public string logPath;
         public int fileIndex;
         public int targetIndex;
-        public bool exportFbx = true;
         public bool showAdvanced;
         public bool blenderHipFix = true;
         public Animator Animator => GetComponent<Animator>();

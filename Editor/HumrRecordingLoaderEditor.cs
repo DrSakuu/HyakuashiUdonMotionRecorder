@@ -205,13 +205,11 @@ namespace DrSakuu.Humr.Editor
             foreach (var take in _currentFile.takes)
             {
                 EditorGUILayout.BeginHorizontal();
-                var include = true;
-                include = EditorGUILayout.Toggle(include, GUILayout.Width(15));
-                
                 var frameCount = take.Frames.Count;
                 var lastRecordTime = take.Frames[^1].RecordTime;
-                EditorGUILayout.PrefixLabel($"{take.takeName}: {lastRecordTime:F2} seconds, {frameCount} frames" );
-                if (GUILayout.Button(new GUIContent("Export .anim")))
+                var takeContent = new GUIContent($"{take.takeName}: {lastRecordTime:F2} seconds, {frameCount} frames");
+                take.includeInFbx = GUILayout.Toggle(take.includeInFbx, takeContent);
+                if (GUILayout.Button(new GUIContent("Export .anim"), GUILayout.Width(100)))
                 {
                     var animationTimestamp = PathUtils.GetDateTimeFromFileName(_currentFile.fileName);
                     ExportAnim(take, animationTimestamp);
@@ -347,14 +345,11 @@ namespace DrSakuu.Humr.Editor
             {
                 foreach (var take in takes)
                 {
-                    AddTakeToController(take, filePath, tempController);
+                    if (take.includeInFbx) AddTakeToController(take, filePath, tempController);
                 }
-
-                if (_loader.exportFbx)
-                {
-                    var logTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
-                    ExportFbx(targetType, targetName, logTimestamp, tempController);
-                }
+                
+                var logTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
+                ExportFbx(targetType, targetName, logTimestamp, tempController);
             }
             finally
             {
