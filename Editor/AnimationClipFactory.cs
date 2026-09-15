@@ -78,7 +78,7 @@ namespace DrSakuu.Humr.Editor
             return CreateObjectClip(keyframes);
         }
 
-        public static void SaveGenericAnimationAsset(AnimationClip clip, string animAssetPath)
+        public static void SaveAnimationAsset(AnimationClip clip, string animAssetPath)
         {
             if (clip == null || string.IsNullOrEmpty(animAssetPath))
                 return;

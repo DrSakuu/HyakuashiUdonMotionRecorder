@@ -58,7 +58,7 @@ namespace DrSakuu.Humr.Editor
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             var validHuman = ValidateHumanAnimator();
             if (!validHuman) SetError(ref errorMessage, "The Avatar in the Animator needs to be Humanoid.");
-            DrawTakeSummary(validHuman);
+            DrawTakeSummary(ref errorMessage, validHuman);
             
             DrawError(errorMessage);
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
@@ -197,8 +197,14 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void DrawTakeSummary(bool validHuman)
+        private void DrawTakeSummary(ref string errorMessage, bool validHuman)
         {
+            if (_currentFile.takes.Length == 0)
+            {
+                SetError(ref errorMessage, "No takes found");
+                return;
+            }
+            
             EditorGUILayout.PrefixLabel("Include in .fbx");
             
             using var disabledScope = new EditorGUI.DisabledScope(!validHuman);
@@ -414,13 +420,33 @@ namespace DrSakuu.Humr.Editor
 
         private void ExportAnim(RecordingTake take, string logTimestamp)
         {
-            var takeClip = CreateAnimationClip(take);
-            if (takeClip == null) return;
+            var originalLoader = _loader;
+            var tempLoaderObject = Instantiate(_loader.gameObject);
 
+            tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
+            if (_loader.Animator == null)
+            {
+                _loader.gameObject.AddComponent<Animator>();
+            }
+
+            AnimationClip takeClip;
+            try
+            {
+                takeClip = CreateAnimationClip(take);
+            }
+            finally
+            {
+                _loader = originalLoader;
+                DestroyImmediate(tempLoaderObject);
+            }
+            if (takeClip == null) return;
+            
             var animationName = PathUtils.BuildAnimationName(take, logTimestamp);
             takeClip.name = animationName;
-            var animationAssetPath = GetAssetPath("Animations", take.targetName, animationName, "anim");
-            AnimationClipFactory.SaveGenericAnimationAsset(takeClip, animationAssetPath);
+            var animationAssetPath = GetAssetPath(
+                "Animations", take.targetName, animationName, "anim");
+            AnimationClipFactory.SaveAnimationAsset(takeClip, animationAssetPath);
         }
 
         private void AddTakeToController(
