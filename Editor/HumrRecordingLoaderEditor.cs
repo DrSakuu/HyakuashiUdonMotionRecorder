@@ -307,8 +307,6 @@ namespace DrSakuu.Humr.Editor
                 return;
             }
 
-            var targetTuple = _currentFile.Targets[_loader.targetIndex];
-
             var originalLoader = _loader;
             var tempLoaderObject = Instantiate(_loader.gameObject);
 
@@ -321,7 +319,7 @@ namespace DrSakuu.Humr.Editor
 
             try
             {
-                ExportTargetTakes(_currentFile.takes, _currentFile.path, targetTuple.targetType, targetTuple.name);
+                PrepareFbxController(_currentFile.takes, _currentFile.path);
             }
             finally
             {
@@ -330,11 +328,7 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void ExportTargetTakes(
-            RecordingTake[] takes,
-            string filePath,
-            TargetType targetType,
-            string targetName)
+        private void PrepareFbxController(RecordingTake[] takes, string filePath)
         {
             PathUtils.CreateDirectoryIfNotExist(HumrPath);
 
@@ -343,13 +337,15 @@ namespace DrSakuu.Humr.Editor
 
             try
             {
+                var targetType = takes[0].targetType;
+                var targetName = takes[0].targetName;
                 foreach (var take in takes)
                 {
                     if (take.includeInFbx) AddTakeToController(take, filePath, tempController);
                 }
                 
                 var logTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
-                ExportFbx(targetType, targetName, logTimestamp, tempController);
+                ExportControllerToFbx(targetType, targetName, logTimestamp, tempController);
             }
             finally
             {
@@ -357,7 +353,7 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void ExportFbx(
+        private void ExportControllerToFbx(
             TargetType targetType,
             string targetName,
             string logTimestamp,
