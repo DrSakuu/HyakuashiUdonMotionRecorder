@@ -251,12 +251,21 @@ namespace DrSakuu.Humr.Editor
             
             if (GUILayout.Button(new GUIContent(_loader.logPath,"Open folder...")))
             {
-                var selectedPath = EditorUtility.OpenFolderPanel("Select Log Folder", _loader.logPath, string.Empty);
-                if (!string.IsNullOrEmpty(selectedPath))
+                var currentDirectory = Directory.GetCurrentDirectory();
+
+                try
                 {
-                    _loader.logPath = selectedPath;
-                    EditorUtility.SetDirty(_loader);
-                    UpdateRecordingFiles();
+                    var selectedPath = EditorUtility.OpenFolderPanel("Select Log Folder", _loader.logPath, string.Empty);
+                    if (!string.IsNullOrEmpty(selectedPath))
+                    {
+                        _loader.logPath = selectedPath;
+                        EditorUtility.SetDirty(_loader);
+                        UpdateRecordingFiles();
+                    }
+                }
+                finally
+                {
+                    Directory.SetCurrentDirectory(currentDirectory);
                 }
             }
 
