@@ -84,6 +84,5 @@ MonoBehaviour:
   logPath: 
   fileIndex: 0
   targetIndex: 0
-  exportFbx: 1
   showAdvanced: 0
   blenderHipFix: 1

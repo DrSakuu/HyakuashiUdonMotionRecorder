@@ -15,6 +15,29 @@
 - Cache created recording files
 - Store takes as an array, better name handling
 - Remove Animator requirement from Object recording export
+- Unity 6 .fbx import
+
+## [2.1.0-beta.2] - Unreleased
+
+### Fixed
+
+- Unity 6 .fbx import
+
+## [2.1.0-beta.1] - 2026-09-15
+
+### Added
+
+- Toggle for world absolute position recording
+- Button to refresh Log Files and reset Log Path
+- Buttons to export individual takes as .anim
+- Toggles to include individual animations in .fbx
+
+### Fixed
+
+- Set Loader editor only to not prevent VRChat upload
+- Cache created recording files
+- Store takes as an array, better name handling
+- Remove Animator requirement from Object recording export
 
 ## [2.0.0] - 2026-09-08
 

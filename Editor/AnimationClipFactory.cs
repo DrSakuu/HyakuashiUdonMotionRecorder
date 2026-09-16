@@ -7,14 +7,6 @@ namespace DrSakuu.Humr.Editor
 {
     public static class AnimationClipFactory
     {
-        private const int PositionCurveCount = 3;
-        private const int RotationCurveCount = 4;
-        private const int ScaleCurveCount = 3;
-        private const int RootTransformCurveCount = PositionCurveCount + RotationCurveCount + ScaleCurveCount;
-
-        private const int HipPositionCurveStartIndex = 0;
-        private const int BoneRotationCurveStartIndex = PositionCurveCount;
-
         private const string RootTransformPath = "";
 
         private static readonly string[] PositionProperties =
@@ -38,6 +30,13 @@ namespace DrSakuu.Humr.Editor
             "localScale.y",
             "localScale.z"
         };
+
+        private static readonly int PositionCurveCount = PositionProperties.Length;
+        private static readonly int RotationCurveCount = RotationProperties.Length;
+        private static readonly int ScaleCurveCount = ScaleProperties.Length;
+        private static readonly int RootTransformCurveCount = PositionCurveCount + RotationCurveCount + ScaleCurveCount;
+        private const int HipPositionCurveStartIndex = 0;
+        private static readonly int BoneRotationCurveStartIndex = PositionProperties.Length;
 
         public static AnimationClip PopulateBoneRotationsClip(RecordingTake take, Animator animator)
         {
@@ -265,11 +264,20 @@ namespace DrSakuu.Humr.Editor
             IReadOnlyList<string> propertyNames)
         {
             for (var i = 0; i < propertyNames.Count; i++)
+            {
+                var curve = new AnimationCurve(keyframes[startIndex + i]);
+                for (var k = 0; k < curve.keys.Length; k++)
+                {
+                    AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
+                    AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
+                }
+
                 clip.SetCurve(
                     transformPath,
                     typeof(Transform),
                     propertyNames[i],
-                    new AnimationCurve(keyframes[startIndex + i]));
+                    curve);
+            }
         }
 
         private static int GetBoneRotationCurveStartIndex(int boneIndex)
