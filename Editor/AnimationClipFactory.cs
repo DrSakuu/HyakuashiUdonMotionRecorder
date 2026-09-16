@@ -9,72 +9,165 @@ namespace DrSakuu.Humr.Editor
     {
         private const string RootTransformPath = "";
 
-        private static readonly string[] PositionProperties =
-        {
-            "localPosition.x",
-            "localPosition.y",
-            "localPosition.z"
-        };
-
-        private static readonly string[] RotationProperties =
-        {
-            "localRotation.x",
-            "localRotation.y",
-            "localRotation.z",
-            "localRotation.w"
-        };
-
-        private static readonly string[] ScaleProperties =
-        {
-            "localScale.x",
-            "localScale.y",
-            "localScale.z"
-        };
-
-        private static readonly int PositionCurveCount = PositionProperties.Length;
-        private static readonly int RotationCurveCount = RotationProperties.Length;
-        private static readonly int ScaleCurveCount = ScaleProperties.Length;
-        private static readonly int RootTransformCurveCount = PositionCurveCount + RotationCurveCount + ScaleCurveCount;
-        private const int HipPositionCurveStartIndex = 0;
-        private static readonly int BoneRotationCurveStartIndex = PositionProperties.Length;
-
         public static AnimationClip PopulateBoneRotationsClip(RecordingTake take, Animator animator)
         {
-            if (take == null || animator == null || take.Frames.Count == 0)
+            if (take is not BoneRotationsTake boneTake || animator == null || boneTake.IsEmpty)
                 return null;
 
-            var frameCount = take.Frames.Count;
-            var totalCurves = PositionCurveCount + HumanTrait.BoneName.Length * RotationCurveCount;
-            var keyframes = CreateKeyframeArrays(totalCurves, frameCount);
+            var frameCount = boneTake.HipCurves[0].curve.length;
+            var rotationCount = boneTake.BoneCurves.Length;
+
+            // Extract all key arrays upfront for rapid batch modification without memory allocations
+            var hipKeysX = boneTake.HipCurves[0].curve.keys;
+            var hipKeysY = boneTake.HipCurves[1].curve.keys;
+            var hipKeysZ = boneTake.HipCurves[2].curve.keys;
+
+            var boneKeys = new Keyframe[rotationCount][][];
+            for (var i = 0; i < rotationCount; i++)
+            {
+                if (boneTake.BoneCurves[i][0].curve.length <= 0) continue;
+                
+                boneKeys[i] = new Keyframe[4][];
+                boneKeys[i][0] = boneTake.BoneCurves[i][0].curve.keys;
+                boneKeys[i][1] = boneTake.BoneCurves[i][1].curve.keys;
+                boneKeys[i][2] = boneTake.BoneCurves[i][2].curve.keys;
+                boneKeys[i][3] = boneTake.BoneCurves[i][3].curve.keys;
+            }
 
             for (var frameIndex = 0; frameIndex < frameCount; frameIndex++)
             {
-                if (take.Frames[frameIndex] is not BoneRotationsFrame frame)
-                    continue;
+                // 1. Convert world space values from curves and apply to Animator
+                var worldHipPos = new Vector3(
+                    hipKeysX[frameIndex].value,
+                    hipKeysY[frameIndex].value,
+                    hipKeysZ[frameIndex].value
+                );
 
-                ProcessBoneRotationsFrame(frame, keyframes, frameIndex, animator);
+                for (var boneIndex = 0; boneIndex < rotationCount; boneIndex++)
+                {
+                    if (boneKeys[boneIndex] == null) continue;
+                    
+                    var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
+                    if (boneTransform == null) continue;
+
+                    var worldRot = new Quaternion(
+                        boneKeys[boneIndex][0][frameIndex].value,
+                        boneKeys[boneIndex][1][frameIndex].value,
+                        boneKeys[boneIndex][2][frameIndex].value,
+                        boneKeys[boneIndex][3][frameIndex].value
+                    );
+                    
+                    boneTransform.rotation = worldRot;
+                }
+
+                // 2. Read back local space values and overwrite keys in place
+                var localHipPos = ToLocalHipPosition(worldHipPos, animator);
+                hipKeysX[frameIndex].value = localHipPos.x;
+                hipKeysY[frameIndex].value = localHipPos.y;
+                hipKeysZ[frameIndex].value = localHipPos.z;
+
+                for (var boneIndex = 0; boneIndex < rotationCount; boneIndex++)
+                {
+                    if (boneKeys[boneIndex] == null) continue;
+                    
+                    var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
+                    if (boneTransform == null) continue;
+
+                    var localRot = boneTransform.localRotation;
+                    boneKeys[boneIndex][0][frameIndex].value = localRot.x;
+                    boneKeys[boneIndex][1][frameIndex].value = localRot.y;
+                    boneKeys[boneIndex][2][frameIndex].value = localRot.z;
+                    boneKeys[boneIndex][3][frameIndex].value = localRot.w;
+                }
             }
 
-            return CreateBoneRotationClip(keyframes, animator);
+            // 3. Re-assign updated keyframes back to the curves
+            boneTake.HipCurves[0].curve.keys = hipKeysX;
+            boneTake.HipCurves[1].curve.keys = hipKeysY;
+            boneTake.HipCurves[2].curve.keys = hipKeysZ;
+
+            for (var i = 0; i < rotationCount; i++)
+            {
+                if (boneKeys[i] == null) continue;
+                
+                boneTake.BoneCurves[i][0].curve.keys = boneKeys[i][0];
+                boneTake.BoneCurves[i][1].curve.keys = boneKeys[i][1];
+                boneTake.BoneCurves[i][2].curve.keys = boneKeys[i][2];
+                boneTake.BoneCurves[i][3].curve.keys = boneKeys[i][3];
+            }
+
+            return CreateBoneRotationClip(boneTake, animator);
+        }
+
+        private static AnimationClip CreateBoneRotationClip(BoneRotationsTake take, Animator animator)
+        {
+            var clip = CreateAnimationClip();
+
+            var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
+            if (hipsTransform != null)
+            {
+                var hipsPath = AnimationUtility.CalculateTransformPath(hipsTransform, animator.transform);
+                SetPropertyCurves(clip, hipsPath, take.HipCurves);
+            }
+
+            for (var boneIndex = 0; boneIndex < take.BoneCurves.Length; boneIndex++)
+            {
+                var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
+                if (boneTransform == null) continue;
+
+                var bonePath = AnimationUtility.CalculateTransformPath(boneTransform, animator.transform);
+                SetPropertyCurves(clip, bonePath, take.BoneCurves[boneIndex]);
+            }
+
+            clip.EnsureQuaternionContinuity();
+            return clip;
         }
 
         public static AnimationClip PopulateObjectClip(RecordingTake take)
         {
-            if (take == null || take.Frames.Count == 0)
+            if (take is not ObjectTake objectTake || objectTake.ObjectCurves == null)
                 return null;
 
-            var frameCount = take.Frames.Count;
-            var keyframes = CreateKeyframeArrays(RootTransformCurveCount, frameCount);
+            var clip = CreateAnimationClip();
+            SetPropertyCurves(clip, RootTransformPath, objectTake.ObjectCurves);
+            clip.EnsureQuaternionContinuity();
+            return clip;
+        }
 
-            for (var frameIndex = 0; frameIndex < frameCount; frameIndex++)
+        private static void SetPropertyCurves(AnimationClip clip, string transformPath, PropertyCurve[] propertyCurves)
+        {
+            foreach (var propertyCurve in propertyCurves)
             {
-                if (take.Frames[frameIndex] is not ObjectFrame frame)
-                    continue;
+                var curve = propertyCurve.curve;
+                if (curve == null || curve.length == 0) continue;
 
-                ProcessObjectFrame(frame, keyframes, frameIndex);
+                for (var k = 0; k < curve.keys.Length; k++)
+                {
+                    AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
+                    AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
+                }
+
+                clip.SetCurve(transformPath, typeof(Transform), propertyCurve.propertyName, curve);
             }
+        }
 
-            return CreateObjectClip(keyframes);
+        private static AnimationClip CreateAnimationClip()
+        {
+            return new AnimationClip
+            {
+                legacy = false,
+                frameRate = 60f
+            };
+        }
+
+        private static Vector3 ToLocalHipPosition(Vector3 worldHipPosition, Animator animator)
+        {
+            var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
+            var armatureRoot = hipsTransform != null ? hipsTransform.parent : null;
+
+            return armatureRoot == null
+                ? worldHipPosition
+                : armatureRoot.InverseTransformPoint(worldHipPosition);
         }
 
         public static void SaveAnimationAsset(AnimationClip clip, string animAssetPath)
@@ -93,196 +186,6 @@ namespace DrSakuu.Humr.Editor
             AssetDatabase.Refresh();
 
             SelectCreatedAsset(clip);
-        }
-
-        private static Keyframe[][] CreateKeyframeArrays(int curveCount, int frameCount)
-        {
-            var keyframes = new Keyframe[curveCount][];
-
-            for (var i = 0; i < curveCount; i++)
-                keyframes[i] = new Keyframe[frameCount];
-
-            return keyframes;
-        }
-
-        private static void ProcessObjectFrame(ObjectFrame frame, Keyframe[][] keyframes, int frameIndex)
-        {
-            SetVector3Keyframes(keyframes, frameIndex, frame.RecordTime, 0, frame.Position);
-            SetQuaternionKeyframes(keyframes, frameIndex, frame.RecordTime, PositionCurveCount, frame.Rotation);
-            SetVector3Keyframes(
-                keyframes,
-                frameIndex,
-                frame.RecordTime,
-                PositionCurveCount + RotationCurveCount,
-                frame.LocalScale);
-        }
-
-        private static void ProcessBoneRotationsFrame(
-            BoneRotationsFrame frame,
-            Keyframe[][] keyframes,
-            int frameIndex,
-            Animator animator)
-        {
-            var localHipPosition = ToLocalHipPosition(frame.HipPosition, animator);
-            SetVector3Keyframes(
-                keyframes,
-                frameIndex,
-                frame.RecordTime,
-                HipPositionCurveStartIndex,
-                localHipPosition);
-
-            ApplyWorldBoneRotations(frame, animator);
-            RecordLocalBoneRotations(keyframes, frameIndex, frame.RecordTime, animator);
-        }
-
-        private static Vector3 ToLocalHipPosition(Vector3 worldHipPosition, Animator animator)
-        {
-            var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
-            var armatureRoot = hipsTransform != null ? hipsTransform.parent : null;
-
-            return armatureRoot == null
-                ? worldHipPosition
-                : armatureRoot.InverseTransformPoint(worldHipPosition);
-        }
-
-        private static void ApplyWorldBoneRotations(BoneRotationsFrame frame, Animator animator)
-        {
-            var rotationCount = Mathf.Min(frame.BoneRotations.Length, HumanTrait.BoneName.Length);
-
-            for (var boneIndex = 0; boneIndex < rotationCount; boneIndex++)
-            {
-                var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
-                if (boneTransform == null) continue;
-
-                boneTransform.rotation = frame.BoneRotations[boneIndex];
-            }
-        }
-
-        private static void RecordLocalBoneRotations(
-            Keyframe[][] keyframes,
-            int frameIndex,
-            float recordTime,
-            Animator animator)
-        {
-            for (var boneIndex = 0; boneIndex < HumanTrait.BoneName.Length; boneIndex++)
-            {
-                var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
-                if (boneTransform == null) continue;
-
-                var curveStartIndex = GetBoneRotationCurveStartIndex(boneIndex);
-                SetQuaternionKeyframes(
-                    keyframes,
-                    frameIndex,
-                    recordTime,
-                    curveStartIndex,
-                    boneTransform.localRotation);
-            }
-        }
-
-        private static AnimationClip CreateBoneRotationClip(Keyframe[][] keyframes, Animator animator)
-        {
-            var clip = CreateAnimationClip();
-
-            var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
-            if (hipsTransform != null)
-            {
-                var hipsPath = AnimationUtility.CalculateTransformPath(hipsTransform, animator.transform);
-                SetTransformCurves(clip, hipsPath, keyframes, HipPositionCurveStartIndex, PositionProperties);
-            }
-
-            for (var boneIndex = 0; boneIndex < HumanTrait.BoneName.Length; boneIndex++)
-            {
-                var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
-                if (boneTransform == null) continue;
-
-                var bonePath = AnimationUtility.CalculateTransformPath(boneTransform, animator.transform);
-                var curveStartIndex = GetBoneRotationCurveStartIndex(boneIndex);
-
-                SetTransformCurves(clip, bonePath, keyframes, curveStartIndex, RotationProperties);
-            }
-
-            clip.EnsureQuaternionContinuity();
-            return clip;
-        }
-
-        private static AnimationClip CreateObjectClip(Keyframe[][] keyframes)
-        {
-            var clip = CreateAnimationClip();
-
-            SetTransformCurves(clip, RootTransformPath, keyframes, 0, PositionProperties);
-            SetTransformCurves(clip, RootTransformPath, keyframes, PositionCurveCount, RotationProperties);
-            SetTransformCurves(
-                clip,
-                RootTransformPath,
-                keyframes,
-                PositionCurveCount + RotationCurveCount,
-                ScaleProperties);
-
-            clip.EnsureQuaternionContinuity();
-            return clip;
-        }
-
-        private static AnimationClip CreateAnimationClip()
-        {
-            return new AnimationClip
-            {
-                legacy = false,
-                frameRate = 60f
-            };
-        }
-
-        private static void SetVector3Keyframes(
-            Keyframe[][] keyframes,
-            int frameIndex,
-            float recordTime,
-            int startIndex,
-            Vector3 value)
-        {
-            keyframes[startIndex][frameIndex] = new Keyframe(recordTime, value.x);
-            keyframes[startIndex + 1][frameIndex] = new Keyframe(recordTime, value.y);
-            keyframes[startIndex + 2][frameIndex] = new Keyframe(recordTime, value.z);
-        }
-
-        private static void SetQuaternionKeyframes(
-            Keyframe[][] keyframes,
-            int frameIndex,
-            float recordTime,
-            int startIndex,
-            Quaternion value)
-        {
-            keyframes[startIndex][frameIndex] = new Keyframe(recordTime, value.x);
-            keyframes[startIndex + 1][frameIndex] = new Keyframe(recordTime, value.y);
-            keyframes[startIndex + 2][frameIndex] = new Keyframe(recordTime, value.z);
-            keyframes[startIndex + 3][frameIndex] = new Keyframe(recordTime, value.w);
-        }
-
-        private static void SetTransformCurves(
-            AnimationClip clip,
-            string transformPath,
-            Keyframe[][] keyframes,
-            int startIndex,
-            IReadOnlyList<string> propertyNames)
-        {
-            for (var i = 0; i < propertyNames.Count; i++)
-            {
-                var curve = new AnimationCurve(keyframes[startIndex + i]);
-                for (var k = 0; k < curve.keys.Length; k++)
-                {
-                    AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
-                    AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
-                }
-
-                clip.SetCurve(
-                    transformPath,
-                    typeof(Transform),
-                    propertyNames[i],
-                    curve);
-            }
-        }
-
-        private static int GetBoneRotationCurveStartIndex(int boneIndex)
-        {
-            return BoneRotationCurveStartIndex + boneIndex * RotationCurveCount;
         }
 
         private static void SelectCreatedAsset(AnimationClip clip)

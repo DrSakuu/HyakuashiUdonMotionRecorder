@@ -34,28 +34,78 @@ namespace DrSakuu.Humr.Editor
         public long takeTimestamp;
         public string takeName;
         public bool includeInFbx = true;
-        public List<Frame> Frames { get; set; } = new();
+
+        public virtual bool IsEmpty => true;
     }
 
     [Serializable]
-    public abstract class Frame
+    public class BoneRotationsTake : RecordingTake
     {
-        public float RecordTime { get; set; }
+        public PropertyCurve[] HipCurves { get; set; }
+        public PropertyCurve[][] BoneCurves { get; set; }
+
+        public BoneRotationsTake()
+        {
+            HipCurves = new[]
+            {
+                new PropertyCurve("localPosition.x"),
+                new PropertyCurve("localPosition.y"),
+                new PropertyCurve("localPosition.z")
+            };
+
+            var boneCount = HumanTrait.BoneCount;
+            BoneCurves = new PropertyCurve[boneCount][];
+            for (var i = 0; i < boneCount; i++)
+            {
+                BoneCurves[i] = new[]
+                {
+                    new PropertyCurve("localRotation.x"),
+                    new PropertyCurve("localRotation.y"),
+                    new PropertyCurve("localRotation.z"),
+                    new PropertyCurve("localRotation.w")
+                };
+            }
+        }
+
+        public override bool IsEmpty => HipCurves == null || HipCurves[0].curve.length == 0;
     }
 
     [Serializable]
-    public class BoneRotationsFrame : Frame
+    public class ObjectTake : RecordingTake
     {
-        public Vector3 HipPosition { get; set; }
-        public Quaternion[] BoneRotations { get; set; }
+        public PropertyCurve[] ObjectCurves { get; set; }
+
+        public ObjectTake()
+        {
+            ObjectCurves = new[]
+            {
+                new PropertyCurve("localPosition.x"),
+                new PropertyCurve("localPosition.y"),
+                new PropertyCurve("localPosition.z"),
+                new PropertyCurve("localRotation.x"),
+                new PropertyCurve("localRotation.y"),
+                new PropertyCurve("localRotation.z"),
+                new PropertyCurve("localRotation.w"),
+                new PropertyCurve("localScale.x"),
+                new PropertyCurve("localScale.y"),
+                new PropertyCurve("localScale.z")
+            };
+        }
+
+        public override bool IsEmpty => ObjectCurves == null || ObjectCurves[0].curve.length == 0;
     }
 
     [Serializable]
-    public class ObjectFrame : Frame
+    public class PropertyCurve
     {
-        public Vector3 Position { get; set; }
-        public Quaternion Rotation { get; set; }
-        public Vector3 LocalScale { get; set; }
+        public string propertyName;
+        public AnimationCurve curve;
+
+        public PropertyCurve(string propertyName)
+        {
+            this.propertyName = propertyName;
+            this.curve = new AnimationCurve();
+        }
     }
 
     public static class HumrLogParser
@@ -147,50 +197,167 @@ namespace DrSakuu.Humr.Editor
         }
 
         public static RecordingTake[] ParseTakes(
-            string[] lines,
-            (TargetType targetType, string targetName) target)
+            string[] lines, (TargetType targetType, string targetName) targetTuple)
         {
             var takesList = new List<RecordingTake>();
-            var currentTake = CreateRecordingTake(target);
+            var currentTake = CreateRecordingTake(targetTuple);
             var previousTime = -1f;
 
             foreach (var line in lines)
             {
-                var frameStartIndex = HumrLogger.TargetFrameStartIndex(line, target.targetType, target.targetName);
+                var frameStartIndex = HumrLogger.TargetFrameStartIndex(
+                    line, targetTuple.targetType, targetTuple.targetName);
                 if (frameStartIndex < 0) continue;
 
                 var frameText = line.Substring(frameStartIndex);
                 if (!TryParseFrame(frameText, out var parsedFrame)) continue;
 
-                if (currentTake.takeTimestamp == 0 && currentTake.Frames.Count == 0)
+                if (currentTake.takeTimestamp == 0 && currentTake.IsEmpty)
                 {
                     currentTake.takeTimestamp = parsedFrame.timestamp;
                 }
                 else if (IsNewTake(currentTake, parsedFrame.timestamp, parsedFrame.recordTime, previousTime))
                 {
                     takesList.Add(currentTake);
-                    currentTake = CreateRecordingTake(target, parsedFrame.timestamp);
+                    currentTake = CreateRecordingTake(targetTuple, parsedFrame.timestamp);
                     previousTime = -1f;
                 }
 
-                var frame = ParseFrame(target.targetType, parsedFrame.parts);
-                if (frame == null) continue;
+                switch (currentTake)
+                {
+                    case ObjectTake objectTake:
+                    {
+                        if (TryParseObjectValues(parsedFrame.parts, out var recordTime, out var pos, out var rot, out var scale))
+                        {
+                            AddObjectCurveKeys(objectTake, recordTime, pos, rot, scale);
+                            previousTime = recordTime;
+                        }
 
-                currentTake.Frames.Add(frame);
-                previousTime = parsedFrame.recordTime;
+                        break;
+                    }
+                    case BoneRotationsTake boneTake:
+                    {
+                        if (TryParseBoneValues(parsedFrame.parts, out var recordTime, out var hipPos, out var rotations))
+                        {
+                            AddBoneCurveKeys(boneTake, recordTime, hipPos, rotations);
+                            previousTime = recordTime;
+                        }
+                        break;
+                    }
+                }
             }
 
-            if (currentTake.Frames.Count > 0)
-                takesList.Add(currentTake);
+            if (!currentTake.IsEmpty) takesList.Add(currentTake);
 
             var takes = takesList.ToArray();
-            
             for (var i = 0; i < takes.Length; i++)
             {
-                if (string.IsNullOrEmpty(takesList[i].takeName)) takesList[i].takeName = $"Take{i + 1}";
+                if (string.IsNullOrEmpty(takes[i].takeName)) takes[i].takeName = $"Take{i + 1}";
             }
             
-            return takesList.ToArray();
+            return takes;
+        }
+
+        private static RecordingTake CreateRecordingTake(
+            (TargetType targetType, string targetName) targetTuple, long takeTimestamp = 0)
+        {
+            RecordingTake take = targetTuple.targetType == TargetType.Object
+                ? new ObjectTake()
+                : new BoneRotationsTake();
+        
+            take.targetType = targetTuple.targetType;
+            take.targetName = targetTuple.targetName;
+            take.takeTimestamp = takeTimestamp;
+            return take;
+        }
+
+        private static bool IsNewTake(
+            RecordingTake currentTake,
+            long newTimestamp,
+            float currentTime,
+            float previousTime)
+        {
+            if (currentTake.IsEmpty) return false;
+            return newTimestamp != currentTake.takeTimestamp || currentTime < previousTime;
+        }
+
+        private static bool TryParseBoneValues(
+            string[] parts,
+            out float recordTime,
+            out Vector3 hipPosition,
+            out Quaternion[] rotations)
+        {
+            recordTime = 0f;
+            hipPosition = Vector3.zero;
+            rotations = null;
+
+            if (parts.Length < 3) return false;
+    
+            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out recordTime)) 
+                return false;
+        
+            if (!HumrLogger.TryParseVector3(parts[2], out hipPosition)) 
+                return false;
+
+            var rotationList = new List<Quaternion>();
+            for (var i = 3; i < parts.Length; i++)
+            {
+                if (HumrLogger.TryParseQuaternion(parts[i], out var rotation))
+                    rotationList.Add(rotation);
+            }
+
+            if (rotationList.Count == 0) return false;
+
+            rotations = rotationList.ToArray();
+            return true;
+        }
+
+        private static bool TryParseObjectValues(
+            string[] parts, out float recordTime, out Vector3 position, out Quaternion rotation, out Vector3 localScale)
+        {
+            recordTime = 0f;
+            position = Vector3.zero;
+            rotation = Quaternion.identity;
+            localScale = Vector3.one;
+
+            if (parts.Length < 5) return false;
+            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out recordTime)) return false;
+            if (!HumrLogger.TryParseVector3(parts[2], out position)) return false;
+            if (!HumrLogger.TryParseQuaternion(parts[3], out rotation)) return false;
+            if (!HumrLogger.TryParseVector3(parts[4], out localScale)) return false;
+
+            return true;
+        }
+
+        private static void AddObjectCurveKeys(ObjectTake take, float time, Vector3 pos, Quaternion rot, Vector3 scale)
+        {
+            var curves = take.ObjectCurves;
+            curves[0].curve.AddKey(time, pos.x);
+            curves[1].curve.AddKey(time, pos.y);
+            curves[2].curve.AddKey(time, pos.z);
+            curves[3].curve.AddKey(time, rot.x);
+            curves[4].curve.AddKey(time, rot.y);
+            curves[5].curve.AddKey(time, rot.z);
+            curves[6].curve.AddKey(time, rot.w);
+            curves[7].curve.AddKey(time, scale.x);
+            curves[8].curve.AddKey(time, scale.y);
+            curves[9].curve.AddKey(time, scale.z);
+        }
+        
+        private static void AddBoneCurveKeys(BoneRotationsTake take, float time, Vector3 hipPos, Quaternion[] rotations)
+        {
+            take.HipCurves[0].curve.AddKey(time, hipPos.x);
+            take.HipCurves[1].curve.AddKey(time, hipPos.y);
+            take.HipCurves[2].curve.AddKey(time, hipPos.z);
+
+            var rotationCount = Mathf.Min(rotations.Length, take.BoneCurves.Length);
+            for (var i = 0; i < rotationCount; i++)
+            {
+                take.BoneCurves[i][0].curve.AddKey(time, rotations[i].x);
+                take.BoneCurves[i][1].curve.AddKey(time, rotations[i].y);
+                take.BoneCurves[i][2].curve.AddKey(time, rotations[i].z);
+                take.BoneCurves[i][3].curve.AddKey(time, rotations[i].w);
+            }
         }
 
         public static RecordingFile CreateRecordingFile(string filePath)
@@ -268,18 +435,6 @@ namespace DrSakuu.Humr.Editor
                 : (TargetType.Legacy, dataSegment.Substring(0, digitIndex));
         }
 
-        private static RecordingTake CreateRecordingTake(
-            (TargetType targetType, string targetName) target,
-            long takeTimestamp = 0)
-        {
-            return new RecordingTake
-            {
-                targetType = target.targetType,
-                targetName = target.targetName,
-                takeTimestamp = takeTimestamp
-            };
-        }
-
         private static bool TryParseFrame(
             string frameText,
             out (long timestamp, float recordTime, string[] parts) frame)
@@ -297,86 +452,6 @@ namespace DrSakuu.Humr.Editor
 
             frame = (timestamp, recordTime, parts);
             return true;
-        }
-
-        private static bool IsNewTake(
-            RecordingTake currentTake,
-            long newTimestamp,
-            float currentTime,
-            float previousTime)
-        {
-            if (currentTake.Frames.Count == 0) return false;
-
-            return newTimestamp != currentTake.takeTimestamp || currentTime < previousTime;
-        }
-
-        private static Frame ParseFrame(TargetType targetType, string[] parts)
-        {
-            return targetType switch
-            {
-                TargetType.BoneRotations => ParseBoneRotationsFrame(parts),
-                TargetType.Legacy => ParseBoneRotationsFrame(parts),
-                TargetType.Object => ParseObjectFrame(parts),
-                _ => null
-            };
-        }
-
-        private static BoneRotationsFrame ParseBoneRotationsFrame(string[] parts)
-        {
-            if (parts.Length < 3) return null;
-
-            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var recordTime))
-                return null;
-
-            if (!HumrLogger.TryParseVector3(parts[2], out var hipPosition))
-                return null;
-
-            if (!TryParseBoneRotations(parts, out var rotations))
-                return null;
-
-            return new BoneRotationsFrame
-            {
-                RecordTime = recordTime,
-                HipPosition = hipPosition,
-                BoneRotations = rotations
-            };
-        }
-
-        private static bool TryParseBoneRotations(string[] parts, out Quaternion[] rotations)
-        {
-            var rotationList = new List<Quaternion>();
-
-            for (var i = 3; i < parts.Length; i++)
-                if (HumrLogger.TryParseQuaternion(parts[i], out var rotation))
-                    rotationList.Add(rotation);
-
-            rotations = rotationList.ToArray();
-            return rotations.Length > 0;
-        }
-
-        private static ObjectFrame ParseObjectFrame(string[] parts)
-        {
-            if (parts.Length < 5) return null;
-
-            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var recordTime))
-                return null;
-
-            if (!HumrLogger.TryParseVector3(parts[2], out var position))
-                return null;
-
-            if (!HumrLogger.TryParseQuaternion(parts[3], out var rotation))
-                return null;
-
-            if (!HumrLogger.TryParseVector3(parts[4], out var localScale))
-                return null;
-
-            return new ObjectFrame
-            {
-                RecordTime = recordTime,
-                Position = position,
-                Rotation = rotation,
-                LocalScale = localScale
-            };
         }
 
         private static string LogTypeToDisplayString(LogType type)
