@@ -8,6 +8,7 @@
 - Button to refresh Log Files and reset Log Path
 - Buttons to export individual takes as .anim
 - Toggles to include individual animations in .fbx
+- Toggle to show frame information
 
 ### Changed
 
@@ -22,6 +23,10 @@
 - Unity 6 .fbx import
 
 ## [2.1.0-beta.2] - Unreleased
+
+### Added
+
+- Toggle to show frame information
 
 ### Changed
 

@@ -19,8 +19,8 @@ namespace DrSakuu.Humr.Editor
         private const string LogPathKey = "DrSakuu.Humr.LogPath";
         private const string ShowAdvancedKey = "DrSakuu.Humr.ShowAdvanced";
         private const string BlenderHipFixKey = "DrSakuu.Humr.BlenderHipFix";
-
-
+        private const string ShowFrameInfoKey = "DrSakuu.Humr.ShowFrameInfo";
+        
         private static readonly Dictionary<string, (DateTime, RecordingFile)> RecordingFileCache = new();
 
         private RecordingFile _currentFile;
@@ -45,6 +45,12 @@ namespace DrSakuu.Humr.Editor
         {
             get => EditorPrefs.GetBool(BlenderHipFixKey, true);
             set => EditorPrefs.SetBool(BlenderHipFixKey, value);
+        }
+
+        private static bool ShowFrameInfo
+        {
+            get => EditorPrefs.GetBool(ShowFrameInfoKey, false);
+            set => EditorPrefs.SetBool(ShowFrameInfoKey, value);
         }
         
         private bool HasRecordingFiles => _recordingFiles is { Length: > 0 };
@@ -235,7 +241,9 @@ namespace DrSakuu.Humr.Editor
                 EditorGUILayout.BeginHorizontal();
                 var frameCount = take.Frames.Count;
                 var lastRecordTime = take.Frames[^1].RecordTime;
-                var takeContent = new GUIContent($"{take.takeName}: {lastRecordTime:F2} seconds, {frameCount} frames");
+                var simpleTakeSummary = $"{take.takeName}: {lastRecordTime:F2} seconds";
+                var frameInfoSummary = $"{take.takeName}: {lastRecordTime:F2} seconds, {frameCount} frames";
+                var takeContent = new GUIContent(ShowFrameInfo ? frameInfoSummary : simpleTakeSummary);
                 take.includeInFbx = GUILayout.Toggle(take.includeInFbx, takeContent);
                 if (GUILayout.Button(new GUIContent("Export .anim"), GUILayout.Width(100)))
                 {
@@ -296,6 +304,10 @@ namespace DrSakuu.Humr.Editor
             BlenderHipFix = EditorGUILayout.Toggle(new GUIContent("Blender hip fix", 
                     "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure."), 
                 BlenderHipFix);
+            
+            ShowFrameInfo = EditorGUILayout.Toggle(new GUIContent("Show frame info", 
+                    "Show number of frames and other information"), 
+                ShowFrameInfo);
             
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             EditorGUI.indentLevel--;
