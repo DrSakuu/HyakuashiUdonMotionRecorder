@@ -20,7 +20,7 @@ namespace DrSakuu.Humr.Editor
         private const string ShowAdvancedKey = "DrSakuu.Humr.ShowAdvanced";
         private const string BlenderHipFixKey = "DrSakuu.Humr.BlenderHipFix";
         private const string ShowFrameInfoKey = "DrSakuu.Humr.ShowFrameInfo";
-        
+
         private static readonly Dictionary<string, (DateTime, RecordingFile)> RecordingFileCache = new();
 
         private RecordingFile _currentFile;
@@ -52,7 +52,7 @@ namespace DrSakuu.Humr.Editor
             get => EditorPrefs.GetBool(ShowFrameInfoKey, false);
             set => EditorPrefs.SetBool(ShowFrameInfoKey, value);
         }
-        
+
         private bool HasRecordingFiles => _recordingFiles is { Length: > 0 };
 
         private TargetType CurrentTargetType => _currentFile.Targets[_loader.targetIndex].targetType;
@@ -75,19 +75,20 @@ namespace DrSakuu.Humr.Editor
             var errorMessage = string.Empty;
             if (!DrawLogFileDropdown())
                 SetError(ref errorMessage, "No log files found.");
-            
+
             if (!TryDrawTargetSelection(ref errorMessage))
             {
                 DrawError(errorMessage);
                 return;
             }
+
             ValidateCurrentRecording(ref errorMessage);
-            
+
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             var validHuman = ValidateHumanAnimator();
             if (!validHuman) SetError(ref errorMessage, "The Avatar in the Animator needs to be Humanoid.");
             DrawTakeSummary(ref errorMessage, validHuman);
-            
+
             DrawError(errorMessage);
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
         }
@@ -95,7 +96,7 @@ namespace DrSakuu.Humr.Editor
         public void UpdateRecordingFiles(bool clearCache = false)
         {
             if (clearCache) RecordingFileCache.Clear();
-            
+
             if (string.IsNullOrEmpty(LogPath) || !Directory.Exists(LogPath))
             {
                 ClearRecordingFiles();
@@ -232,9 +233,9 @@ namespace DrSakuu.Humr.Editor
                 SetError(ref errorMessage, "No takes found");
                 return;
             }
-            
+
             EditorGUILayout.PrefixLabel("Include in .fbx");
-            
+
             using var disabledScope = new EditorGUI.DisabledScope(!validHuman);
             foreach (var take in _currentFile.takes)
             {
@@ -263,7 +264,7 @@ namespace DrSakuu.Humr.Editor
             var animator = _loader.Animator;
             var isHumanoidAvatar = animator != null && animator.avatar != null && animator.avatar.isHuman;
             if (isHumanoidAvatar) return true;
-            
+
             return false;
         }
 
@@ -274,13 +275,13 @@ namespace DrSakuu.Humr.Editor
 
             EditorGUI.indentLevel++;
             EditorGUILayout.BeginHorizontal();
-            
+
             EditorGUILayout.PrefixLabel("Log Path");
-            
+
             if (GUILayout.Button(new GUIContent("↺", "Reset to default Log Path"), GUILayout.Width(50)))
                 ResetLogPath();
-            
-            if (GUILayout.Button(new GUIContent(LogPath,"Open folder...")))
+
+            if (GUILayout.Button(new GUIContent(LogPath, "Open folder...")))
             {
                 var currentDirectory = Directory.GetCurrentDirectory();
 
@@ -301,15 +302,15 @@ namespace DrSakuu.Humr.Editor
             }
 
             EditorGUILayout.EndHorizontal();
-            
-            BlenderHipFix = EditorGUILayout.Toggle(new GUIContent("Blender hip fix", 
-                    "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure."), 
+
+            BlenderHipFix = EditorGUILayout.Toggle(new GUIContent("Blender hip fix",
+                    "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure."),
                 BlenderHipFix);
-            
-            ShowFrameInfo = EditorGUILayout.Toggle(new GUIContent("Show frame info", 
-                    "Show number of frames and other information"), 
+
+            ShowFrameInfo = EditorGUILayout.Toggle(new GUIContent("Show frame info",
+                    "Show number of frames and other information"),
                 ShowFrameInfo);
-            
+
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             EditorGUI.indentLevel--;
         }
@@ -317,19 +318,19 @@ namespace DrSakuu.Humr.Editor
         private bool DrawLogFileDropdown()
         {
             EditorGUILayout.BeginHorizontal();
-            
+
             EditorGUILayout.PrefixLabel("Recording Log File");
-            if (GUILayout.Button("Refresh", GUILayout.Width(70))) 
+            if (GUILayout.Button("Refresh", GUILayout.Width(70)))
                 UpdateRecordingFiles(true);
-            
+
             EditorGUI.BeginChangeCheck();
             _loader.fileIndex = EditorGUILayout.Popup(_loader.fileIndex, _recordingFileNames);
-            
+
             EditorGUILayout.EndHorizontal();
-            
+
             if (!HasRecordingFiles) return false;
 
-            if (EditorGUI.EndChangeCheck()) 
+            if (EditorGUI.EndChangeCheck())
                 SetCurrentRecordingFile();
 
             return true;
@@ -362,10 +363,7 @@ namespace DrSakuu.Humr.Editor
 
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
-            if (_loader.Animator == null)
-            {
-                _loader.gameObject.AddComponent<Animator>();
-            }
+            if (_loader.Animator == null) _loader.gameObject.AddComponent<Animator>();
 
             try
             {
@@ -390,10 +388,9 @@ namespace DrSakuu.Humr.Editor
                 var targetType = takes[0].targetType;
                 var targetName = takes[0].targetName;
                 foreach (var take in takes)
-                {
-                    if (take.includeInFbx) AddTakeToController(take, filePath, tempController);
-                }
-                
+                    if (take.includeInFbx)
+                        AddTakeToController(take, filePath, tempController);
+
                 var logTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
                 ExportControllerToFbx(targetType, targetName, logTimestamp, tempController);
             }
@@ -469,10 +466,7 @@ namespace DrSakuu.Humr.Editor
 
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
-            if (_loader.Animator == null)
-            {
-                _loader.gameObject.AddComponent<Animator>();
-            }
+            if (_loader.Animator == null) _loader.gameObject.AddComponent<Animator>();
 
             AnimationClip takeClip;
             try
@@ -484,8 +478,9 @@ namespace DrSakuu.Humr.Editor
                 _loader = originalLoader;
                 DestroyImmediate(tempLoaderObject);
             }
+
             if (takeClip == null) return;
-            
+
             var animationName = PathUtils.BuildAnimationName(take, logTimestamp);
             takeClip.name = animationName;
             var animationAssetPath = GetAssetPath(
@@ -493,10 +488,9 @@ namespace DrSakuu.Humr.Editor
             AnimationClipFactory.SaveAnimationAsset(takeClip, animationAssetPath);
         }
 
-        private void AddTakeToController(
-            RecordingTake take, string filePath, TempControllerBuilder controllerBuilder)
+        private void AddTakeToController(RecordingTake take, string filePath, TempControllerBuilder controllerBuilder)
         {
-            var takeClip = CreateAnimationClip(take);
+            var takeClip = CreateFbxClip(take);
             if (takeClip == null) return;
 
             var animationName = PathUtils.BuildAnimationName(take, filePath);
@@ -505,6 +499,17 @@ namespace DrSakuu.Humr.Editor
         }
 
         private AnimationClip CreateAnimationClip(RecordingTake take)
+        {
+            return take.targetType switch
+            {
+                TargetType.BoneRotations => AnimationClipFactory.PopulateHumanoidClip(take, _loader.Animator),
+                TargetType.Legacy => AnimationClipFactory.PopulateHumanoidClip(take, _loader.Animator),
+                TargetType.Object => AnimationClipFactory.PopulateObjectClip(take),
+                _ => throw new NotImplementedException($"Unsupported target type: {take.targetType}")
+            };
+        }
+
+        private AnimationClip CreateFbxClip(RecordingTake take)
         {
             return take.targetType switch
             {

@@ -13,6 +13,7 @@
 ### Changed
 
 - Save settings in EditorPrefs
+- Output Humanoid AnimationClips
 
 ### Fixed
 
@@ -31,6 +32,7 @@
 ### Changed
 
 - Save settings in EditorPrefs
+- Output Humanoid AnimationClips
 
 ### Fixed
 
