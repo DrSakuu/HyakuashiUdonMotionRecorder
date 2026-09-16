@@ -9,11 +9,8 @@ namespace DrSakuu.Humr
     public class HumrRecordingLoader : MonoBehaviour
 #endif
     {
-        public string logPath;
         public int fileIndex;
         public int targetIndex;
-        public bool showAdvanced;
-        public bool blenderHipFix = true;
         public Animator Animator => GetComponent<Animator>();
     }
 }

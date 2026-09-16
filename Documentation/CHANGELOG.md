@@ -9,6 +9,10 @@
 - Buttons to export individual takes as .anim
 - Toggles to include individual animations in .fbx
 
+### Changed
+
+- Save settings in EditorPrefs
+
 ### Fixed
 
 - Set Loader editor only to not prevent VRChat upload
@@ -18,6 +22,10 @@
 - Unity 6 .fbx import
 
 ## [2.1.0-beta.2] - Unreleased
+
+### Changed
+
+- Save settings in EditorPrefs
 
 ### Fixed
 

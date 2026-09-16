@@ -16,6 +16,10 @@ namespace DrSakuu.Humr.Editor
         private const string HumrPath = @"Assets\HUMR";
         private const string NoLogsOption = "No logs found";
         private const string DefaultAnimationClipName = "HUMRAnimation";
+        private const string LogPathKey = "DrSakuu.Humr.LogPath";
+        private const string ShowAdvancedKey = "DrSakuu.Humr.ShowAdvanced";
+        private const string BlenderHipFixKey = "DrSakuu.Humr.BlenderHipFix";
+
 
         private static readonly Dictionary<string, (DateTime, RecordingFile)> RecordingFileCache = new();
 
@@ -25,6 +29,24 @@ namespace DrSakuu.Humr.Editor
         private RecordingFile[] _recordingFiles;
         private string _userProfile;
 
+        private static string LogPath
+        {
+            get => EditorPrefs.GetString(LogPathKey, string.Empty);
+            set => EditorPrefs.SetString(LogPathKey, value);
+        }
+
+        private static bool ShowAdvanced
+        {
+            get => EditorPrefs.GetBool(ShowAdvancedKey, false);
+            set => EditorPrefs.SetBool(ShowAdvancedKey, value);
+        }
+
+        private static bool BlenderHipFix
+        {
+            get => EditorPrefs.GetBool(BlenderHipFixKey, true);
+            set => EditorPrefs.SetBool(BlenderHipFixKey, value);
+        }
+        
         private bool HasRecordingFiles => _recordingFiles is { Length: > 0 };
 
         private TargetType CurrentTargetType => _currentFile.Targets[_loader.targetIndex].targetType;
@@ -34,7 +56,7 @@ namespace DrSakuu.Humr.Editor
             _loader = (HumrRecordingLoader)target;
             if (_loader == null) return;
 
-            if (string.IsNullOrEmpty(_loader.logPath))
+            if (string.IsNullOrEmpty(LogPath))
                 ResetLogPath();
             else
                 UpdateRecordingFiles();
@@ -68,13 +90,13 @@ namespace DrSakuu.Humr.Editor
         {
             if (clearCache) RecordingFileCache.Clear();
             
-            if (string.IsNullOrEmpty(_loader.logPath) || !Directory.Exists(_loader.logPath))
+            if (string.IsNullOrEmpty(LogPath) || !Directory.Exists(LogPath))
             {
                 ClearRecordingFiles();
                 return;
             }
 
-            var logFilePaths = Directory.GetFiles(_loader.logPath, "*.txt");
+            var logFilePaths = Directory.GetFiles(LogPath, "*.txt");
             List<RecordingFile> recordFileList = new();
 
             foreach (var filePath in logFilePaths)
@@ -238,8 +260,8 @@ namespace DrSakuu.Humr.Editor
 
         private void DrawAdvancedSection()
         {
-            _loader.showAdvanced = EditorGUILayout.Foldout(_loader.showAdvanced, "Advanced settings");
-            if (!_loader.showAdvanced) return;
+            ShowAdvanced = EditorGUILayout.Foldout(ShowAdvanced, "Advanced settings");
+            if (!ShowAdvanced) return;
 
             EditorGUI.indentLevel++;
             EditorGUILayout.BeginHorizontal();
@@ -249,16 +271,16 @@ namespace DrSakuu.Humr.Editor
             if (GUILayout.Button(new GUIContent("↺", "Reset to default Log Path"), GUILayout.Width(50)))
                 ResetLogPath();
             
-            if (GUILayout.Button(new GUIContent(_loader.logPath,"Open folder...")))
+            if (GUILayout.Button(new GUIContent(LogPath,"Open folder...")))
             {
                 var currentDirectory = Directory.GetCurrentDirectory();
 
                 try
                 {
-                    var selectedPath = EditorUtility.OpenFolderPanel("Select Log Folder", _loader.logPath, string.Empty);
+                    var selectedPath = EditorUtility.OpenFolderPanel("Select Log Folder", LogPath, string.Empty);
                     if (!string.IsNullOrEmpty(selectedPath))
                     {
-                        _loader.logPath = selectedPath;
+                        LogPath = selectedPath;
                         EditorUtility.SetDirty(_loader);
                         UpdateRecordingFiles();
                     }
@@ -271,9 +293,9 @@ namespace DrSakuu.Humr.Editor
 
             EditorGUILayout.EndHorizontal();
             
-            _loader.blenderHipFix = EditorGUILayout.Toggle(new GUIContent("Blender hip fix", 
+            BlenderHipFix = EditorGUILayout.Toggle(new GUIContent("Blender hip fix", 
                     "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure."), 
-                _loader.blenderHipFix);
+                BlenderHipFix);
             
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             EditorGUI.indentLevel--;
@@ -406,7 +428,7 @@ namespace DrSakuu.Humr.Editor
         {
             var originalRootBones = new List<(SkinnedMeshRenderer renderer, Transform rootBone)>();
 
-            if (!_loader.blenderHipFix || _loader.Animator == null || !_loader.Animator.isHuman)
+            if (!BlenderHipFix || _loader.Animator == null || !_loader.Animator.isHuman)
                 return originalRootBones;
 
             var hipsTransform = _loader.Animator.GetBoneTransform(HumanBodyBones.Hips);
@@ -483,7 +505,7 @@ namespace DrSakuu.Humr.Editor
         private void ResetLogPath()
         {
             _userProfile ??= Environment.GetEnvironmentVariable("USERPROFILE");
-            _loader.logPath = $"{_userProfile}{VrcLogPathSuffix}";
+            LogPath = $"{_userProfile}{VrcLogPathSuffix}";
             EditorUtility.SetDirty(_loader);
             UpdateRecordingFiles();
         }
