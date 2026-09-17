@@ -9,9 +9,7 @@ namespace DrSakuu.Humr
         Unknown,
         Legacy,
         BoneRotations,
-        Object,
-        BoneRotationsWithIK,
-        HumanMuscles
+        Object
     }
 
     public static class HumrLogger
@@ -23,10 +21,7 @@ namespace DrSakuu.Humr
         private const char VariableDelimiter = ';';
         private const char ComponentDelimiter = ',';
         private const string FloatFormat = "F6";
-
-        private const string MissingValue = "MISSING";
         private const string UnsupportedTargetType = "Unsupported";
-
         private const string HumrRecordingPrefix = LogTagPrefix + HumrTag + " " + RecordingTag;
         private const string LegacyHumrPrefix = LogTagPrefix + LegacyHumrTag;
 

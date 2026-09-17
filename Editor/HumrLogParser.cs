@@ -23,7 +23,7 @@ namespace DrSakuu.Humr.Editor
         public string fileName;
         public RecordingTake[] takes;
         public DateTime LastWriteTime;
-        public (TargetType targetType, string name)[] Targets;
+        public (TargetType type, string name)[] Targets;
     }
 
     [Serializable]
@@ -41,9 +41,6 @@ namespace DrSakuu.Humr.Editor
     [Serializable]
     public class BoneRotationsTake : RecordingTake
     {
-        public PropertyCurve[] HipCurves { get; set; }
-        public PropertyCurve[][] BoneCurves { get; set; }
-
         public BoneRotationsTake()
         {
             HipCurves = new[]
@@ -56,7 +53,6 @@ namespace DrSakuu.Humr.Editor
             var boneCount = HumanTrait.BoneCount;
             BoneCurves = new PropertyCurve[boneCount][];
             for (var i = 0; i < boneCount; i++)
-            {
                 BoneCurves[i] = new[]
                 {
                     new PropertyCurve("localRotation.x"),
@@ -64,8 +60,10 @@ namespace DrSakuu.Humr.Editor
                     new PropertyCurve("localRotation.z"),
                     new PropertyCurve("localRotation.w")
                 };
-            }
         }
+
+        public PropertyCurve[] HipCurves { get; set; }
+        public PropertyCurve[][] BoneCurves { get; set; }
 
         public override bool IsEmpty => HipCurves == null || HipCurves[0].curve.length == 0;
     }
@@ -73,8 +71,6 @@ namespace DrSakuu.Humr.Editor
     [Serializable]
     public class ObjectTake : RecordingTake
     {
-        public PropertyCurve[] ObjectCurves { get; set; }
-
         public ObjectTake()
         {
             ObjectCurves = new[]
@@ -92,6 +88,8 @@ namespace DrSakuu.Humr.Editor
             };
         }
 
+        public PropertyCurve[] ObjectCurves { get; set; }
+
         public override bool IsEmpty => ObjectCurves == null || ObjectCurves[0].curve.length == 0;
     }
 
@@ -101,10 +99,10 @@ namespace DrSakuu.Humr.Editor
         public string propertyName;
         public AnimationCurve curve;
 
-        public PropertyCurve(string propertyName)
+        public PropertyCurve(string newPropertyName)
         {
-            this.propertyName = propertyName;
-            this.curve = new AnimationCurve();
+            propertyName = newPropertyName;
+            curve = new AnimationCurve();
         }
     }
 
@@ -113,25 +111,16 @@ namespace DrSakuu.Humr.Editor
         private static readonly (TargetType, string) CorruptTargetTuple = (TargetType.Unknown, "HUMR data is corrupt");
         private static readonly Regex LogFileNameCleanupRegex = new(@"^output_log_|\.txt$", RegexOptions.Compiled);
 
-        public static string[] LoadHumrLogLines(string path)
+        public static RecordingFile CreateRecordingFile(string filePath)
         {
-            var lines = new List<string>();
-            using var reader = OpenReadOnlyTextFile(path);
-            while (reader.ReadLine() is { } line)
-                if (HumrLogger.AnyHumrFrameStartIndex(line) >= 0)
-                    lines.Add(line);
-            return lines.ToArray();
-        }
-
-        private static StreamReader OpenReadOnlyTextFile(string filePath)
-        {
-            var fileStream = new FileStream(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite);
-
-            return new StreamReader(fileStream);
+            var type = DetectHumrMarkers(filePath) ? LogType.Humr : LogType.NoData;
+            return new RecordingFile
+            {
+                path = filePath,
+                type = type,
+                LastWriteTime = File.GetLastWriteTime(filePath),
+                fileName = BuildRecordingDisplayName(filePath, type)
+            };
         }
 
         public static (TargetType, string)[] ScanTargets(RecordingFile file)
@@ -142,6 +131,16 @@ namespace DrSakuu.Humr.Editor
                 LogType.Corrupt => new[] { CorruptTargetTuple },
                 _ => new[] { (TargetType.Unknown, "No HUMR data") }
             };
+        }
+
+        public static string[] LoadHumrLogLines(string path)
+        {
+            var lines = new List<string>();
+            using var reader = OpenReadOnlyTextFile(path);
+            while (reader.ReadLine() is { } line)
+                if (HumrLogger.AnyHumrFrameStartIndex(line) >= 0)
+                    lines.Add(line);
+            return lines.ToArray();
         }
 
         public static string[] ConvertLegacyLines(string[] logLines, string targetName)
@@ -171,14 +170,14 @@ namespace DrSakuu.Humr.Editor
 
                 var frame = HumrLogger.InitializeFrame(targetType, targetName, takeTimestamp, time);
                 previousTime = time;
-                
+
                 var hipsPosition = HumrLogger.JoinComponents(
                     legacyFrameParts[1],
                     legacyFrameParts[2],
                     legacyFrameParts[3]);
-                
+
                 frame = HumrLogger.AppendObject(frame, hipsPosition);
-                
+
                 for (var i = 4; i + 3 < legacyFrameParts.Length; i += 4)
                 {
                     var quaternion = HumrLogger.JoinComponents(
@@ -186,18 +185,17 @@ namespace DrSakuu.Humr.Editor
                         legacyFrameParts[i + 1],
                         legacyFrameParts[i + 2],
                         legacyFrameParts[i + 3]);
-                
+
                     frame = HumrLogger.AppendObject(frame, quaternion);
                 }
-                
+
                 convertedLines.Add(HumrLogger.JoinLogPrefixToFrame(legacyLineParts[0], frame));
             }
 
             return convertedLines.ToArray();
         }
 
-        public static RecordingTake[] ParseTakes(
-            string[] lines, (TargetType targetType, string targetName) targetTuple)
+        public static RecordingTake[] ParseTakes(string[] lines, (TargetType type, string name) targetTuple)
         {
             var takesList = new List<RecordingTake>();
             var currentTake = CreateRecordingTake(targetTuple);
@@ -206,7 +204,7 @@ namespace DrSakuu.Humr.Editor
             foreach (var line in lines)
             {
                 var frameStartIndex = HumrLogger.TargetFrameStartIndex(
-                    line, targetTuple.targetType, targetTuple.targetName);
+                    line, targetTuple.type, targetTuple.name);
                 if (frameStartIndex < 0) continue;
 
                 var frameText = line.Substring(frameStartIndex);
@@ -227,7 +225,8 @@ namespace DrSakuu.Humr.Editor
                 {
                     case ObjectTake objectTake:
                     {
-                        if (TryParseObjectValues(parsedFrame.parts, out var recordTime, out var pos, out var rot, out var scale))
+                        if (TryParseObjectValues(parsedFrame.parts, out var recordTime, out var pos, out var rot,
+                                out var scale))
                         {
                             AddObjectCurveKeys(objectTake, recordTime, pos, rot, scale);
                             previousTime = recordTime;
@@ -237,11 +236,13 @@ namespace DrSakuu.Humr.Editor
                     }
                     case BoneRotationsTake boneTake:
                     {
-                        if (TryParseBoneValues(parsedFrame.parts, out var recordTime, out var hipPos, out var rotations))
+                        if (TryParseBoneValues(parsedFrame.parts, out var recordTime, out var hipPos,
+                                out var rotations))
                         {
                             AddBoneCurveKeys(boneTake, recordTime, hipPos, rotations);
                             previousTime = recordTime;
                         }
+
                         break;
                     }
                 }
@@ -251,125 +252,53 @@ namespace DrSakuu.Humr.Editor
 
             var takes = takesList.ToArray();
             for (var i = 0; i < takes.Length; i++)
-            {
-                if (string.IsNullOrEmpty(takes[i].takeName)) takes[i].takeName = $"Take{i + 1}";
-            }
-            
+                if (string.IsNullOrEmpty(takes[i].takeName))
+                    takes[i].takeName = $"Take{i + 1}";
+
             return takes;
         }
 
-        private static RecordingTake CreateRecordingTake(
-            (TargetType targetType, string targetName) targetTuple, long takeTimestamp = 0)
+        private static bool DetectHumrMarkers(string filePath)
         {
-            RecordingTake take = targetTuple.targetType == TargetType.Object
-                ? new ObjectTake()
-                : new BoneRotationsTake();
-        
-            take.targetType = targetTuple.targetType;
-            take.targetName = targetTuple.targetName;
-            take.takeTimestamp = takeTimestamp;
-            return take;
-        }
-
-        private static bool IsNewTake(
-            RecordingTake currentTake,
-            long newTimestamp,
-            float currentTime,
-            float previousTime)
-        {
-            if (currentTake.IsEmpty) return false;
-            return newTimestamp != currentTake.takeTimestamp || currentTime < previousTime;
-        }
-
-        private static bool TryParseBoneValues(
-            string[] parts,
-            out float recordTime,
-            out Vector3 hipPosition,
-            out Quaternion[] rotations)
-        {
-            recordTime = 0f;
-            hipPosition = Vector3.zero;
-            rotations = null;
-
-            if (parts.Length < 3) return false;
-    
-            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out recordTime)) 
-                return false;
-        
-            if (!HumrLogger.TryParseVector3(parts[2], out hipPosition)) 
-                return false;
-
-            var rotationList = new List<Quaternion>();
-            for (var i = 3; i < parts.Length; i++)
+            using var reader = OpenReadOnlyTextFile(filePath);
+            while (reader.ReadLine() is { } line)
             {
-                if (HumrLogger.TryParseQuaternion(parts[i], out var rotation))
-                    rotationList.Add(rotation);
+                if (HumrLogger.HumrFrameStartIndex(line) >= 0) return true;
+                if (HumrLogger.LegacyHumrFrameStartIndex(line) >= 0) return true;
             }
 
-            if (rotationList.Count == 0) return false;
-
-            rotations = rotationList.ToArray();
-            return true;
+            return false;
         }
 
-        private static bool TryParseObjectValues(
-            string[] parts, out float recordTime, out Vector3 position, out Quaternion rotation, out Vector3 localScale)
+        private static string BuildRecordingDisplayName(string filePath, LogType type)
         {
-            recordTime = 0f;
-            position = Vector3.zero;
-            rotation = Quaternion.identity;
-            localScale = Vector3.one;
+            var rawFileName = Path.GetFileName(filePath);
+            var cleanedFileName = LogFileNameCleanupRegex.Replace(rawFileName, "");
+            var typeName = LogTypeToDisplayString(type);
 
-            if (parts.Length < 5) return false;
-            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out recordTime)) return false;
-            if (!HumrLogger.TryParseVector3(parts[2], out position)) return false;
-            if (!HumrLogger.TryParseQuaternion(parts[3], out rotation)) return false;
-            if (!HumrLogger.TryParseVector3(parts[4], out localScale)) return false;
-
-            return true;
+            return $"{cleanedFileName} {typeName}";
         }
 
-        private static void AddObjectCurveKeys(ObjectTake take, float time, Vector3 pos, Quaternion rot, Vector3 scale)
+        private static string LogTypeToDisplayString(LogType type)
         {
-            var curves = take.ObjectCurves;
-            curves[0].curve.AddKey(time, pos.x);
-            curves[1].curve.AddKey(time, pos.y);
-            curves[2].curve.AddKey(time, pos.z);
-            curves[3].curve.AddKey(time, rot.x);
-            curves[4].curve.AddKey(time, rot.y);
-            curves[5].curve.AddKey(time, rot.z);
-            curves[6].curve.AddKey(time, rot.w);
-            curves[7].curve.AddKey(time, scale.x);
-            curves[8].curve.AddKey(time, scale.y);
-            curves[9].curve.AddKey(time, scale.z);
-        }
-        
-        private static void AddBoneCurveKeys(BoneRotationsTake take, float time, Vector3 hipPos, Quaternion[] rotations)
-        {
-            take.HipCurves[0].curve.AddKey(time, hipPos.x);
-            take.HipCurves[1].curve.AddKey(time, hipPos.y);
-            take.HipCurves[2].curve.AddKey(time, hipPos.z);
-
-            var rotationCount = Mathf.Min(rotations.Length, take.BoneCurves.Length);
-            for (var i = 0; i < rotationCount; i++)
+            return type switch
             {
-                take.BoneCurves[i][0].curve.AddKey(time, rotations[i].x);
-                take.BoneCurves[i][1].curve.AddKey(time, rotations[i].y);
-                take.BoneCurves[i][2].curve.AddKey(time, rotations[i].z);
-                take.BoneCurves[i][3].curve.AddKey(time, rotations[i].w);
-            }
-        }
-
-        public static RecordingFile CreateRecordingFile(string filePath)
-        {
-            var type = DetectHumrMarkers(filePath) ? LogType.Humr : LogType.NoData;
-            return new RecordingFile
-            {
-                path = filePath,
-                type = type,
-                LastWriteTime = File.GetLastWriteTime(filePath),
-                fileName = BuildRecordingDisplayName(filePath, type)
+                LogType.Humr => "HUMR",
+                LogType.Corrupt => "HUMR (Corrupted)",
+                LogType.NoData => "----",
+                _ => type.ToString()
             };
+        }
+
+        private static StreamReader OpenReadOnlyTextFile(string filePath)
+        {
+            var fileStream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite);
+
+            return new StreamReader(fileStream);
         }
 
         private static (TargetType, string)[] ScanHumrTargets(RecordingFile recordingFile)
@@ -435,6 +364,105 @@ namespace DrSakuu.Humr.Editor
                 : (TargetType.Legacy, dataSegment.Substring(0, digitIndex));
         }
 
+        private static RecordingTake CreateRecordingTake(
+            (TargetType type, string name) targetTuple, long takeTimestamp = 0)
+        {
+            RecordingTake take = targetTuple.type == TargetType.Object ? new ObjectTake() : new BoneRotationsTake();
+
+            take.targetType = targetTuple.type;
+            take.targetName = targetTuple.name;
+            take.takeTimestamp = takeTimestamp;
+            return take;
+        }
+
+        private static bool IsNewTake(
+            RecordingTake currentTake,
+            long newTimestamp,
+            float currentTime,
+            float previousTime)
+        {
+            if (currentTake.IsEmpty) return false;
+            return newTimestamp != currentTake.takeTimestamp || currentTime < previousTime;
+        }
+
+        private static bool TryParseObjectValues(
+            string[] parts, out float recordTime, out Vector3 position, out Quaternion rotation, out Vector3 localScale)
+        {
+            recordTime = 0f;
+            position = Vector3.zero;
+            rotation = Quaternion.identity;
+            localScale = Vector3.one;
+
+            if (parts.Length < 5) return false;
+            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out recordTime))
+                return false;
+            if (!HumrLogger.TryParseVector3(parts[2], out position)) return false;
+            if (!HumrLogger.TryParseQuaternion(parts[3], out rotation)) return false;
+            if (!HumrLogger.TryParseVector3(parts[4], out localScale)) return false;
+
+            return true;
+        }
+
+        private static void AddObjectCurveKeys(ObjectTake take, float time, Vector3 pos, Quaternion rot, Vector3 scale)
+        {
+            var curves = take.ObjectCurves;
+            curves[0].curve.AddKey(time, pos.x);
+            curves[1].curve.AddKey(time, pos.y);
+            curves[2].curve.AddKey(time, pos.z);
+            curves[3].curve.AddKey(time, rot.x);
+            curves[4].curve.AddKey(time, rot.y);
+            curves[5].curve.AddKey(time, rot.z);
+            curves[6].curve.AddKey(time, rot.w);
+            curves[7].curve.AddKey(time, scale.x);
+            curves[8].curve.AddKey(time, scale.y);
+            curves[9].curve.AddKey(time, scale.z);
+        }
+
+        private static bool TryParseBoneValues(
+            string[] parts,
+            out float recordTime,
+            out Vector3 hipPosition,
+            out Quaternion[] rotations)
+        {
+            recordTime = 0f;
+            hipPosition = Vector3.zero;
+            rotations = null;
+
+            if (parts.Length < 3) return false;
+
+            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out recordTime))
+                return false;
+
+            if (!HumrLogger.TryParseVector3(parts[2], out hipPosition))
+                return false;
+
+            var rotationList = new List<Quaternion>();
+            for (var i = 3; i < parts.Length; i++)
+                if (HumrLogger.TryParseQuaternion(parts[i], out var rotation))
+                    rotationList.Add(rotation);
+
+            if (rotationList.Count == 0) return false;
+
+            rotations = rotationList.ToArray();
+            return true;
+        }
+
+        private static void AddBoneCurveKeys(BoneRotationsTake take, float time, Vector3 hipPos, Quaternion[] rotations)
+        {
+            take.HipCurves[0].curve.AddKey(time, hipPos.x);
+            take.HipCurves[1].curve.AddKey(time, hipPos.y);
+            take.HipCurves[2].curve.AddKey(time, hipPos.z);
+
+            var rotationCount = Mathf.Min(rotations.Length, take.BoneCurves.Length);
+            for (var i = 0; i < rotationCount; i++)
+            {
+                take.BoneCurves[i][0].curve.AddKey(time, rotations[i].x);
+                take.BoneCurves[i][1].curve.AddKey(time, rotations[i].y);
+                take.BoneCurves[i][2].curve.AddKey(time, rotations[i].z);
+                take.BoneCurves[i][3].curve.AddKey(time, rotations[i].w);
+            }
+        }
+
         private static bool TryParseFrame(
             string frameText,
             out (long timestamp, float recordTime, string[] parts) frame)
@@ -452,38 +480,6 @@ namespace DrSakuu.Humr.Editor
 
             frame = (timestamp, recordTime, parts);
             return true;
-        }
-
-        private static string LogTypeToDisplayString(LogType type)
-        {
-            return type switch
-            {
-                LogType.Humr => "HUMR",
-                LogType.Corrupt => "HUMR (Corrupted)",
-                LogType.NoData => "----",
-                _ => type.ToString()
-            };
-        }
-
-        private static bool DetectHumrMarkers(string filePath)
-        {
-            using var reader = OpenReadOnlyTextFile(filePath);
-            while (reader.ReadLine() is { } line)
-            {
-                if (HumrLogger.HumrFrameStartIndex(line) >= 0) return true;
-                if (HumrLogger.LegacyHumrFrameStartIndex(line) >= 0) return true;
-            }
-
-            return false;
-        }
-
-        private static string BuildRecordingDisplayName(string filePath, LogType type)
-        {
-            var rawFileName = Path.GetFileName(filePath);
-            var cleanedFileName = LogFileNameCleanupRegex.Replace(rawFileName, "");
-            var typeName = LogTypeToDisplayString(type);
-
-            return $"{cleanedFileName} {typeName}";
         }
     }
 }

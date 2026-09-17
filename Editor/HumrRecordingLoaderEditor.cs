@@ -54,8 +54,7 @@ namespace DrSakuu.Humr.Editor
         }
 
         private bool HasRecordingFiles => _recordingFiles is { Length: > 0 };
-
-        private TargetType CurrentTargetType => _currentFile.Targets[_loader.targetIndex].targetType;
+        private TargetType CurrentTargetType => _currentFile.Targets[_loader.targetIndex].type;
 
         private void OnEnable()
         {
@@ -93,7 +92,15 @@ namespace DrSakuu.Humr.Editor
             DrawExportButton(string.IsNullOrEmpty(errorMessage));
         }
 
-        public void UpdateRecordingFiles(bool clearCache = false)
+        private void ResetLogPath()
+        {
+            _userProfile ??= Environment.GetEnvironmentVariable("USERPROFILE");
+            LogPath = $"{_userProfile}{VrcLogPathSuffix}";
+            EditorUtility.SetDirty(_loader);
+            UpdateRecordingFiles();
+        }
+
+        private void UpdateRecordingFiles(bool clearCache = false)
         {
             if (clearCache) RecordingFileCache.Clear();
 
@@ -138,7 +145,20 @@ namespace DrSakuu.Humr.Editor
             SetCurrentRecordingFile();
         }
 
-        public void SetCurrentRecordingFile()
+        private void ClearRecordingFiles()
+        {
+            _currentFile = null;
+            _recordingFiles = null;
+            _recordingFileNames = new[] { NoLogsOption };
+        }
+
+        private void SelectFirstHumrFile()
+        {
+            var humrIndex = Array.FindIndex(_recordingFiles, file => file.type == LogType.Humr);
+            _loader.fileIndex = humrIndex >= 0 ? humrIndex : 0;
+        }
+
+        private void SetCurrentRecordingFile()
         {
             if (!HasRecordingFiles)
             {
@@ -153,7 +173,7 @@ namespace DrSakuu.Humr.Editor
             ParseTakes();
         }
 
-        public void ScanTargets()
+        private void ScanTargets()
         {
             if (_currentFile == null) return;
 
@@ -161,7 +181,7 @@ namespace DrSakuu.Humr.Editor
             _loader.targetIndex = 0;
         }
 
-        public void ParseTakes()
+        private void ParseTakes()
         {
             if (_currentFile?.Targets == null || _currentFile.Targets.Length == 0) return;
 
@@ -172,100 +192,10 @@ namespace DrSakuu.Humr.Editor
 
             _currentFile.LastWriteTime = File.GetLastWriteTime(_currentFile.path);
 
-            if (targetTuple.targetType == TargetType.Legacy)
+            if (targetTuple.type == TargetType.Legacy)
                 logLines = HumrLogParser.ConvertLegacyLines(logLines, targetTuple.name);
 
-            _currentFile.takes = HumrLogParser.ParseTakes(logLines, (targetTuple.targetType, targetTuple.name));
-        }
-
-        private bool TryDrawTargetSelection(ref string errorMessage)
-        {
-            if (_currentFile == null)
-            {
-                SetError(ref errorMessage, "No log file selected.");
-                return false;
-            }
-
-            if (_currentFile.Targets == null)
-            {
-                SetError(ref errorMessage, "Please select the log file again.");
-                ScanTargets();
-                return false;
-            }
-
-            if (_currentFile.Targets.Length == 0)
-            {
-                SetError(ref errorMessage, "No recording targets found.");
-                return false;
-            }
-
-            _loader.targetIndex = Mathf.Clamp(_loader.targetIndex, 0, _currentFile.Targets.Length - 1);
-
-            var targetOptions = _currentFile.Targets
-                .Select(targetTuple => $"{targetTuple.targetType}: {targetTuple.name}")
-                .ToArray();
-
-            EditorGUI.BeginChangeCheck();
-            _loader.targetIndex = EditorGUILayout.Popup("Recording Target", _loader.targetIndex, targetOptions);
-            if (EditorGUI.EndChangeCheck())
-                ParseTakes();
-
-            return true;
-        }
-
-        private void ValidateCurrentRecording(ref string errorMessage)
-        {
-            switch (_currentFile.type)
-            {
-                case LogType.NoData:
-                    SetError(ref errorMessage, "No HUMR data found.");
-                    break;
-                case LogType.Corrupt:
-                    SetError(ref errorMessage, "HUMR data is corrupt.");
-                    break;
-            }
-        }
-
-        private void DrawTakeSummary(ref string errorMessage, bool validHuman)
-        {
-            if (_currentFile.takes.Length == 0)
-            {
-                SetError(ref errorMessage, "No takes found");
-                return;
-            }
-
-            EditorGUILayout.PrefixLabel("Include in .fbx");
-
-            using var disabledScope = new EditorGUI.DisabledScope(!validHuman);
-            foreach (var take in _currentFile.takes)
-            {
-                EditorGUILayout.BeginHorizontal();
-                // var frameCount = take.Frames.Count;
-                // var lastRecordTime = take.Frames[^1].RecordTime;
-                // var simpleTakeSummary = $"{take.takeName}: {lastRecordTime:F2} seconds";
-                // var frameInfoSummary = $"{take.takeName}: {lastRecordTime:F2} seconds, {frameCount} frames";
-                // var takeContent = new GUIContent(ShowFrameInfo ? frameInfoSummary : simpleTakeSummary);
-                var takeContent = new GUIContent($"{take.takeName}");
-                take.includeInFbx = GUILayout.Toggle(take.includeInFbx, takeContent);
-                if (GUILayout.Button(new GUIContent("Export .anim"), GUILayout.Width(100)))
-                {
-                    var animationTimestamp = PathUtils.GetDateTimeFromFileName(_currentFile.fileName);
-                    ExportAnim(take, animationTimestamp);
-                }
-
-                EditorGUILayout.EndHorizontal();
-            }
-        }
-
-        private bool ValidateHumanAnimator()
-        {
-            if (!IsHumanoidBoneTarget(CurrentTargetType)) return true;
-
-            var animator = _loader.Animator;
-            var isHumanoidAvatar = animator != null && animator.avatar != null && animator.avatar.isHuman;
-            if (isHumanoidAvatar) return true;
-
-            return false;
+            _currentFile.takes = HumrLogParser.ParseTakes(logLines, targetTuple);
         }
 
         private void DrawAdvancedSection()
@@ -336,6 +266,159 @@ namespace DrSakuu.Humr.Editor
             return true;
         }
 
+        private static void SetError(ref string errorMessage, string message)
+        {
+            if (string.IsNullOrEmpty(errorMessage))
+                errorMessage = message;
+        }
+
+        private bool TryDrawTargetSelection(ref string errorMessage)
+        {
+            if (_currentFile == null)
+            {
+                SetError(ref errorMessage, "No log file selected.");
+                return false;
+            }
+
+            if (_currentFile.Targets == null)
+            {
+                SetError(ref errorMessage, "Please select the log file again.");
+                ScanTargets();
+                return false;
+            }
+
+            if (_currentFile.Targets.Length == 0)
+            {
+                SetError(ref errorMessage, "No recording targets found.");
+                return false;
+            }
+
+            _loader.targetIndex = Mathf.Clamp(_loader.targetIndex, 0, _currentFile.Targets.Length - 1);
+
+            var targetOptions = _currentFile.Targets
+                .Select(targetTuple => $"{targetTuple.type}: {targetTuple.name}")
+                .ToArray();
+
+            EditorGUI.BeginChangeCheck();
+            _loader.targetIndex = EditorGUILayout.Popup("Recording Target", _loader.targetIndex, targetOptions);
+            if (EditorGUI.EndChangeCheck())
+                ParseTakes();
+
+            return true;
+        }
+
+        private static void DrawError(string errorMessage)
+        {
+            if (!string.IsNullOrEmpty(errorMessage))
+                EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
+        }
+
+        private void ValidateCurrentRecording(ref string errorMessage)
+        {
+            switch (_currentFile.type)
+            {
+                case LogType.NoData:
+                    SetError(ref errorMessage, "No HUMR data found.");
+                    break;
+                case LogType.Corrupt:
+                    SetError(ref errorMessage, "HUMR data is corrupt.");
+                    break;
+            }
+        }
+
+        private bool ValidateHumanAnimator()
+        {
+            if (!IsHumanoidBoneTarget(CurrentTargetType)) return true;
+
+            var animator = _loader.Animator;
+            var isHumanoidAvatar = animator != null && animator.avatar != null && animator.avatar.isHuman;
+            return isHumanoidAvatar;
+        }
+
+        private static bool IsHumanoidBoneTarget(TargetType targetType)
+        {
+            return targetType is TargetType.BoneRotations or TargetType.Legacy;
+        }
+
+        private void DrawTakeSummary(ref string errorMessage, bool validHuman)
+        {
+            if (_currentFile.takes.Length == 0)
+            {
+                SetError(ref errorMessage, "No takes found");
+                return;
+            }
+
+            EditorGUILayout.PrefixLabel("Include in .fbx");
+
+            using var disabledScope = new EditorGUI.DisabledScope(!validHuman);
+            foreach (var take in _currentFile.takes)
+            {
+                EditorGUILayout.BeginHorizontal();
+                // var frameCount = take.Frames.Count;
+                // var lastRecordTime = take.Frames[^1].RecordTime;
+                // var simpleTakeSummary = $"{take.takeName}: {lastRecordTime:F2} seconds";
+                // var frameInfoSummary = $"{take.takeName}: {lastRecordTime:F2} seconds, {frameCount} frames";
+                // var takeContent = new GUIContent(ShowFrameInfo ? frameInfoSummary : simpleTakeSummary);
+                var takeContent = new GUIContent($"{take.takeName}");
+                take.includeInFbx = GUILayout.Toggle(take.includeInFbx, takeContent);
+                if (GUILayout.Button(new GUIContent("Export .anim"), GUILayout.Width(100)))
+                {
+                    var animationTimestamp = PathUtils.GetDateTimeFromFileName(_currentFile.fileName);
+                    ExportAnim(take, animationTimestamp);
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
+        private void ExportAnim(RecordingTake take, string logTimestamp)
+        {
+            var originalLoader = _loader;
+            var tempLoaderObject = Instantiate(_loader.gameObject);
+
+            tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
+            if (_loader.Animator == null) _loader.gameObject.AddComponent<Animator>();
+
+            AnimationClip takeClip;
+            try
+            {
+                takeClip = CreateAnimationClip(take);
+            }
+            finally
+            {
+                _loader = originalLoader;
+                DestroyImmediate(tempLoaderObject);
+            }
+
+            if (takeClip == null) return;
+
+            var animationName = PathUtils.BuildAnimationName(take, logTimestamp);
+            takeClip.name = animationName;
+            var animationAssetPath = GetAssetPath(
+                "Animations", take.targetName, animationName, "anim");
+            AnimationClipFactory.SaveAnimationAsset(takeClip, animationAssetPath);
+        }
+
+        private AnimationClip CreateAnimationClip(RecordingTake take)
+        {
+            return take.targetType switch
+            {
+                TargetType.BoneRotations => AnimationClipFactory.PopulateHumanoidClip(take, _loader.Animator),
+                TargetType.Legacy => AnimationClipFactory.PopulateHumanoidClip(take, _loader.Animator),
+                TargetType.Object => AnimationClipFactory.PopulateObjectClip(take),
+                _ => throw new NotImplementedException($"Unsupported target type: {take.targetType}")
+            };
+        }
+
+        private static string GetAssetPath(string subFolder, string targetName, string fileName, string extension)
+        {
+            var folderPath = Path.Join(HumrPath, subFolder, PathUtils.SanitizeFileName(targetName));
+            PathUtils.CreateDirectoryIfNotExist(folderPath);
+
+            return Path.Join(folderPath, $"{fileName}.{extension}");
+        }
+
         private void DrawExportButton(bool enabled)
         {
             using var disabledScope = new EditorGUI.DisabledScope(!enabled);
@@ -400,6 +483,27 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
+        private void AddTakeToController(RecordingTake take, string filePath, TempControllerBuilder controllerBuilder)
+        {
+            var takeClip = CreateFbxClip(take);
+            if (takeClip == null) return;
+
+            var animationName = PathUtils.BuildAnimationName(take, filePath);
+            takeClip.name = animationName;
+            controllerBuilder.AddClipToController(takeClip);
+        }
+
+        private AnimationClip CreateFbxClip(RecordingTake take)
+        {
+            return take.targetType switch
+            {
+                TargetType.BoneRotations => AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator),
+                TargetType.Legacy => AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator),
+                TargetType.Object => AnimationClipFactory.PopulateObjectClip(take),
+                _ => throw new NotImplementedException($"Unsupported target type: {take.targetType}")
+            };
+        }
+
         private void ExportControllerToFbx(
             TargetType targetType,
             string targetName,
@@ -459,88 +563,6 @@ namespace DrSakuu.Humr.Editor
             return originalRootBones;
         }
 
-        private void ExportAnim(RecordingTake take, string logTimestamp)
-        {
-            var originalLoader = _loader;
-            var tempLoaderObject = Instantiate(_loader.gameObject);
-
-            tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-            _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
-            if (_loader.Animator == null) _loader.gameObject.AddComponent<Animator>();
-
-            AnimationClip takeClip;
-            try
-            {
-                takeClip = CreateAnimationClip(take);
-            }
-            finally
-            {
-                _loader = originalLoader;
-                DestroyImmediate(tempLoaderObject);
-            }
-
-            if (takeClip == null) return;
-
-            var animationName = PathUtils.BuildAnimationName(take, logTimestamp);
-            takeClip.name = animationName;
-            var animationAssetPath = GetAssetPath(
-                "Animations", take.targetName, animationName, "anim");
-            AnimationClipFactory.SaveAnimationAsset(takeClip, animationAssetPath);
-        }
-
-        private void AddTakeToController(RecordingTake take, string filePath, TempControllerBuilder controllerBuilder)
-        {
-            var takeClip = CreateFbxClip(take);
-            if (takeClip == null) return;
-
-            var animationName = PathUtils.BuildAnimationName(take, filePath);
-            takeClip.name = animationName;
-            controllerBuilder.AddClipToController(takeClip);
-        }
-
-        private AnimationClip CreateAnimationClip(RecordingTake take)
-        {
-            return take.targetType switch
-            {
-                TargetType.BoneRotations => AnimationClipFactory.PopulateHumanoidClip(take, _loader.Animator),
-                TargetType.Legacy => AnimationClipFactory.PopulateHumanoidClip(take, _loader.Animator),
-                TargetType.Object => AnimationClipFactory.PopulateObjectClip(take),
-                _ => throw new NotImplementedException($"Unsupported target type: {take.targetType}")
-            };
-        }
-
-        private AnimationClip CreateFbxClip(RecordingTake take)
-        {
-            return take.targetType switch
-            {
-                TargetType.BoneRotations => AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator),
-                TargetType.Legacy => AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator),
-                TargetType.Object => AnimationClipFactory.PopulateObjectClip(take),
-                _ => throw new NotImplementedException($"Unsupported target type: {take.targetType}")
-            };
-        }
-
-        private void ResetLogPath()
-        {
-            _userProfile ??= Environment.GetEnvironmentVariable("USERPROFILE");
-            LogPath = $"{_userProfile}{VrcLogPathSuffix}";
-            EditorUtility.SetDirty(_loader);
-            UpdateRecordingFiles();
-        }
-
-        private void SelectFirstHumrFile()
-        {
-            var humrIndex = Array.FindIndex(_recordingFiles, file => file.type == LogType.Humr);
-            _loader.fileIndex = humrIndex >= 0 ? humrIndex : 0;
-        }
-
-        private void ClearRecordingFiles()
-        {
-            _currentFile = null;
-            _recordingFiles = null;
-            _recordingFileNames = new[] { NoLogsOption };
-        }
-
         private static void SelectExportedAsset(string exportPath)
         {
             EditorUtility.FocusProjectWindow();
@@ -550,13 +572,6 @@ namespace DrSakuu.Humr.Editor
 
             Selection.activeObject = createdAsset;
             EditorGUIUtility.PingObject(createdAsset);
-        }
-
-        private static void RestoreRootBones(
-            IEnumerable<(SkinnedMeshRenderer renderer, Transform rootBone)> originalRootBones)
-        {
-            foreach (var (renderer, rootBone) in originalRootBones)
-                renderer.rootBone = rootBone;
         }
 
         private static void SetHumanImportSettings(ModelImporter importer)
@@ -583,29 +598,11 @@ namespace DrSakuu.Humr.Editor
             importer.clipAnimations = clipAnimations;
         }
 
-        private static bool IsHumanoidBoneTarget(TargetType targetType)
+        private static void RestoreRootBones(
+            IEnumerable<(SkinnedMeshRenderer renderer, Transform rootBone)> originalRootBones)
         {
-            return targetType is TargetType.BoneRotations or TargetType.Legacy;
-        }
-
-        private static void DrawError(string errorMessage)
-        {
-            if (!string.IsNullOrEmpty(errorMessage))
-                EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
-        }
-
-        private static void SetError(ref string errorMessage, string message)
-        {
-            if (string.IsNullOrEmpty(errorMessage))
-                errorMessage = message;
-        }
-
-        private static string GetAssetPath(string subFolder, string targetName, string fileName, string extension)
-        {
-            var folderPath = Path.Join(HumrPath, subFolder, PathUtils.SanitizeFileName(targetName));
-            PathUtils.CreateDirectoryIfNotExist(folderPath);
-
-            return Path.Join(folderPath, $"{fileName}.{extension}");
+            foreach (var (renderer, rootBone) in originalRootBones)
+                renderer.rootBone = rootBone;
         }
     }
 }
