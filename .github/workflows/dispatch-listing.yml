@@ -2,6 +2,7 @@ name: Dispatch Build VPM Listing
 
 on: 
   release: 
+    types: [published]
   workflow_dispatch: 
 
 jobs:
