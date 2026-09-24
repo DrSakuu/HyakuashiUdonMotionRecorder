@@ -354,12 +354,10 @@ namespace DrSakuu.Humr.Editor
             foreach (var take in _currentFile.takes)
             {
                 EditorGUILayout.BeginHorizontal();
-                // var frameCount = take.Frames.Count;
-                // var lastRecordTime = take.Frames[^1].RecordTime;
-                // var simpleTakeSummary = $"{take.takeName}: {lastRecordTime:F2} seconds";
-                // var frameInfoSummary = $"{take.takeName}: {lastRecordTime:F2} seconds, {frameCount} frames";
-                // var takeContent = new GUIContent(ShowFrameInfo ? frameInfoSummary : simpleTakeSummary);
-                var takeContent = new GUIContent($"{take.takeName}");
+                var frameCount = take.frameTimes.Length;
+                var simpleTakeSummary = $"{take.takeName}: {take.length:F2} seconds";
+                var frameInfoSummary = $"{take.takeName}: {take.length:F2} seconds, {frameCount} frames";
+                var takeContent = new GUIContent(ShowFrameInfo ? frameInfoSummary : simpleTakeSummary);
                 take.includeInFbx = GUILayout.Toggle(take.includeInFbx, takeContent);
                 if (GUILayout.Button(new GUIContent("Export .anim"), GUILayout.Width(100)))
                 {

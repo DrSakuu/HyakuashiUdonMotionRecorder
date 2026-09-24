@@ -34,6 +34,8 @@ namespace DrSakuu.Humr.Editor
         public long takeTimestamp;
         public string takeName;
         public bool includeInFbx = true;
+        public float length = float.MinValue;
+        public float[] frameTimes;
 
         public virtual bool IsEmpty => true;
     }
@@ -199,7 +201,8 @@ namespace DrSakuu.Humr.Editor
         {
             var takesList = new List<RecordingTake>();
             var currentTake = CreateRecordingTake(targetTuple);
-            var previousTime = -1f;
+            var previousTime = 0f;
+            var frameTimes = new List<float>();
 
             foreach (var line in lines)
             {
@@ -216,9 +219,11 @@ namespace DrSakuu.Humr.Editor
                 }
                 else if (IsNewTake(currentTake, parsedFrame.timestamp, parsedFrame.recordTime, previousTime))
                 {
+                    currentTake.frameTimes = frameTimes.ToArray();
                     takesList.Add(currentTake);
                     currentTake = CreateRecordingTake(targetTuple, parsedFrame.timestamp);
-                    previousTime = -1f;
+                    previousTime = 0f;
+                    frameTimes.Clear();
                 }
 
                 switch (currentTake)
@@ -229,9 +234,10 @@ namespace DrSakuu.Humr.Editor
                                 out var scale))
                         {
                             AddObjectCurveKeys(objectTake, recordTime, pos, rot, scale);
+                            frameTimes.Add(recordTime - previousTime);
                             previousTime = recordTime;
+                            if (recordTime > currentTake.length) currentTake.length = recordTime;
                         }
-
                         break;
                     }
                     case BoneRotationsTake boneTake:
@@ -240,14 +246,16 @@ namespace DrSakuu.Humr.Editor
                                 out var rotations))
                         {
                             AddBoneCurveKeys(boneTake, recordTime, hipPos, rotations);
+                            frameTimes.Add(recordTime - previousTime);
                             previousTime = recordTime;
+                            if (recordTime > currentTake.length) currentTake.length = recordTime;
                         }
-
                         break;
                     }
                 }
             }
 
+            currentTake.frameTimes = frameTimes.ToArray();
             if (!currentTake.IsEmpty) takesList.Add(currentTake);
 
             var takes = takesList.ToArray();
