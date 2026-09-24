@@ -132,6 +132,15 @@ namespace DrSakuu.Humr.Editor
                     $"[Humr] Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
             }
 
+            var settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.keepOriginalOrientation = true;
+            settings.loopBlendOrientation = true;
+            settings.keepOriginalPositionXZ = true;
+            settings.loopBlendPositionXZ = true;
+            settings.keepOriginalPositionY = true;
+            settings.loopBlendPositionY = true;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+            
             AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(animAssetPath));
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
