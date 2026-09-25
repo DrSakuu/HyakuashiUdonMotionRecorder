@@ -14,7 +14,7 @@ namespace DrSakuu.Humr
         protected string targetName = "Target";
 
         [SerializeField] [Tooltip("Frames per second for recording.")]
-        protected float recordFramerate = 30;
+        protected float recordFramerate = 120;
 
         [SerializeField] [Tooltip("Start recording immediately on scene load.")]
         protected bool recordOnStart = true;
@@ -25,7 +25,7 @@ namespace DrSakuu.Humr
         [SerializeField] [Tooltip("Start recording button, connect onClick to StartRecording custom event.")]
         private Button startRecordButton;
 
-        [SerializeField] [Tooltip("Stop recording button, connect onClick to StartRecording custom event.")]
+        [SerializeField] [Tooltip("Stop recording button, connect onClick to StopRecording custom event.")]
         private Button stopRecordButton;
 
         [SerializeField] [Tooltip("Target mesh to that changes material to indicate recording state.")]
@@ -68,10 +68,22 @@ namespace DrSakuu.Humr
             }
 
             _recordTime += Time.deltaTime;
-            if (_recordTime < _nextRecordTime) return;
-            _nextRecordTime = _recordTime + _recordInterval;
 
-            OnRecordTick();
+            if (_recordInterval == 0)
+            {
+                RecordObjects();
+                return;
+            }
+
+            if (_recordTime >= _nextRecordTime)
+            {
+                RecordObjects();
+            }
+            
+            while (_recordTime >= _nextRecordTime)
+            {
+                _nextRecordTime += _recordInterval;
+            }
         }
 
         private void OnDestroy()
@@ -84,8 +96,10 @@ namespace DrSakuu.Humr
             if (!RecordIsReady) return;
             
             _recordTime = 0f;
-            _nextRecordTime = _recordTime;
-            _recordInterval = recordFramerate <= 0 ? Mathf.Infinity : 1f / recordFramerate;
+            _recordInterval = float.IsInfinity(recordFramerate)
+                ? 0f
+                : (recordFramerate <= 0 ? Mathf.Infinity : 1f / recordFramerate);
+            _nextRecordTime = _recordInterval;
             _takeTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             IsRecording = true;
             RecordObjects();
@@ -94,7 +108,7 @@ namespace DrSakuu.Humr
 
         public virtual void StopRecording()
         {
-            RecordObjects();
+            if (RecordIsReady) RecordObjects();
             IsRecording = false;
             UpdateUI();
         }
@@ -105,11 +119,6 @@ namespace DrSakuu.Humr
             if (stopRecordButton != null) stopRecordButton.gameObject.SetActive(IsRecording);
             if (indicatorRenderer != null && recordingMaterial != null)
                 indicatorRenderer.material = IsRecording ? recordingMaterial : _indicatorDefaultMaterial;
-        }
-
-        private void OnRecordTick()
-        {
-            RecordObjects();
         }
 
         protected virtual void UpdateRecordingObjects()
