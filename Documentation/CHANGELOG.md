@@ -10,6 +10,7 @@
 - Toggles to include individual animations in .fbx
 - Toggle to show frame information
 - Choose exported animation frame rate
+- Replace or rename existing animation assets
 
 ### Changed
 
@@ -30,6 +31,7 @@
 ### Added
 
 - Choose exported animation frame rate
+- Replace or rename existing animation assets
 
 ### Fixed
 

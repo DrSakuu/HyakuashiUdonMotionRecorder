@@ -9,6 +9,13 @@ using Object = UnityEngine.Object;
 
 namespace DrSakuu.Humr.Editor
 {
+    public enum ReplaceExistingAction
+    {
+        Ask = 0,
+        Replace = 1,
+        Rename = 2
+    }
+    
     [CustomEditor(typeof(HumrRecordingLoader))]
     public class HumrRecordingLoaderEditor : UnityEditor.Editor
     {
@@ -20,6 +27,7 @@ namespace DrSakuu.Humr.Editor
         private const string ShowAdvancedKey = "DrSakuu.Humr.ShowAdvanced";
         private const string BlenderHipFixKey = "DrSakuu.Humr.BlenderHipFix";
         private const string ShowFrameInfoKey = "DrSakuu.Humr.ShowFrameInfo";
+        private const string ReplaceExistingKey = "DrSakuu.Humr.ReplaceExisting";
         private const string AnimFpsKey = "DrSakuu.Humr.AnimFps";
         private readonly string[] _fpsOptions = { "24", "30", "60", "Custom" };
         private readonly float[] _fpsValues = { 24f, 30f, 60f };
@@ -55,6 +63,12 @@ namespace DrSakuu.Humr.Editor
         {
             get => EditorPrefs.GetBool(ShowFrameInfoKey, false);
             set => EditorPrefs.SetBool(ShowFrameInfoKey, value);
+        }
+
+        private static ReplaceExistingAction ReplaceExisting
+        {
+            get => (ReplaceExistingAction)EditorPrefs.GetInt(ReplaceExistingKey, 0);
+            set => EditorPrefs.SetInt(ReplaceExistingKey, (int)value);
         }
 
         private static float AnimFps
@@ -261,6 +275,12 @@ namespace DrSakuu.Humr.Editor
                     "Show number of frames and other information"),
                 ShowFrameInfo);
 
+            ReplaceExisting = (ReplaceExistingAction)EditorGUILayout.EnumPopup(
+                new GUIContent(
+                    "Replace existing",
+                    "Choose what happens when an .anim or .fbx asset already exists."),
+                ReplaceExisting);
+
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
             EditorGUI.indentLevel--;
         }
@@ -435,6 +455,8 @@ namespace DrSakuu.Humr.Editor
             takeClip.name = animationName;
             var animationAssetPath = GetAssetPath(
                 "Animations", take.targetName, animationName, "anim");
+            animationAssetPath = ResolveExistingAssetPath(animationAssetPath, ReplaceExisting);
+            
             AnimationClipFactory.SaveAnimationAsset(takeClip, animationAssetPath);
         }
 
@@ -557,6 +579,8 @@ namespace DrSakuu.Humr.Editor
 
                 var fileName = $"{targetName}_{logTimestamp}";
                 var exportPath = GetAssetPath("FBXs", targetName, fileName, "fbx");
+                exportPath = ResolveExistingAssetPath(exportPath, ReplaceExisting);
+
                 ModelExporter.ExportObject(exportPath, _loader.gameObject);
 
                 SelectExportedAsset(exportPath);
@@ -573,6 +597,38 @@ namespace DrSakuu.Humr.Editor
             {
                 _loader.Animator.runtimeAnimatorController = previousAnimatorController;
                 RestoreRootBones(originalRootBones);
+            }
+        }
+        
+        private static string ResolveExistingAssetPath(string assetPath, ReplaceExistingAction replaceExisting)
+        {
+            if (!File.Exists(assetPath))
+                return assetPath;
+
+            if (replaceExisting == ReplaceExistingAction.Ask)
+            {
+                var replace = EditorUtility.DisplayDialog(
+                    "Asset Already Exists",
+                    $"An asset already exists at:\n\n{assetPath}\n\nWhat would you like to do?",
+                    "Replace",
+                    "Rename");
+
+                replaceExisting = replace
+                    ? ReplaceExistingAction.Replace
+                    : ReplaceExistingAction.Rename;
+            }
+
+            switch (replaceExisting)
+            {
+                case ReplaceExistingAction.Replace:
+                    AssetDatabase.DeleteAsset(assetPath);
+                    return assetPath;
+
+                case ReplaceExistingAction.Rename:
+                    return AssetDatabase.GenerateUniqueAssetPath(assetPath);
+
+                default:
+                    return assetPath;
             }
         }
 

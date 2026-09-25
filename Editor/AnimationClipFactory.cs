@@ -128,13 +128,6 @@ namespace DrSakuu.Humr.Editor
             if (clip == null || string.IsNullOrEmpty(animAssetPath))
                 return;
 
-            if (File.Exists(animAssetPath))
-            {
-                AssetDatabase.DeleteAsset(animAssetPath);
-                Debug.LogWarning(
-                    $"[Humr] Overwrite target collision detected: Existing asset deleted at {animAssetPath}");
-            }
-
             var settings = AnimationUtility.GetAnimationClipSettings(clip);
             settings.keepOriginalOrientation = true;
             settings.loopBlendOrientation = true;
@@ -144,7 +137,7 @@ namespace DrSakuu.Humr.Editor
             settings.loopBlendPositionY = true;
             AnimationUtility.SetAnimationClipSettings(clip, settings);
             
-            AssetDatabase.CreateAsset(clip, AssetDatabase.GenerateUniqueAssetPath(animAssetPath));
+            AssetDatabase.CreateAsset(clip, animAssetPath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
