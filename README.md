@@ -62,7 +62,7 @@ Recording camera motion: [Camera.md](Documentation/Camera/Camera.md)
 
 ## Contributing
 
-[Issues](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues) and [Pull requests](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/pulls) are welcome! There's already a lot of features planned for [v2.1](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues/2) and [v2.2](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues/3)!
+[Issues](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/issues) and [Pull requests](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/pulls) are welcome! There's already a lot of features planned for [v2.1](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/milestone/2) and [further](https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/milestones)!
 
 ## License
 

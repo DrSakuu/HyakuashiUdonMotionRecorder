@@ -23,7 +23,7 @@
 - Remove Animator requirement from Object recording export
 - Unity 6 .fbx import
 
-## [2.1.0-beta.2] - 2026-10-24
+## [2.1.0-beta.2] - 2026-9-24
 
 ### Added
 

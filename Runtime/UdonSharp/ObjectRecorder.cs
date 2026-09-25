@@ -15,7 +15,7 @@ namespace DrSakuu.Humr
         protected override void UpdateRecordingObjects()
         {
             RecordingObjects[0] = worldAbsolutePosition ? transform.position : transform.localPosition;
-            RecordingObjects[1] = transform.rotation;
+            RecordingObjects[1] = transform.rotation; //TODO: worldAbsoluteRotation
             RecordingObjects[2] = transform.localScale;
         }
     }
