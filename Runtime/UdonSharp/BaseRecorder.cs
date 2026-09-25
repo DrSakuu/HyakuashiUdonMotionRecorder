@@ -14,7 +14,7 @@ namespace DrSakuu.Humr
         protected string targetName = "Target";
 
         [SerializeField] [Tooltip("Frames per second for recording.")]
-        protected float recordFramerate = 120;
+        protected float recordFramerate = 30;
 
         [SerializeField] [Tooltip("Start recording immediately on scene load.")]
         protected bool recordOnStart = true;

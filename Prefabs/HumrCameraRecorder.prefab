@@ -94,6 +94,7 @@ MonoBehaviour:
   smoothMaxDist: 0.2
   smoothDistMult: 0.1
   rotSmoothTime: 0
+  removeConstraints: 1
 --- !u!114 &7117510996218423586
 MonoBehaviour:
   m_ObjectHideFlags: 0

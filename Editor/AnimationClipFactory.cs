@@ -9,12 +9,12 @@ namespace DrSakuu.Humr.Editor
     {
         private const string RootTransformPath = "";
 
-        public static AnimationClip PopulateHumanoidClip(RecordingTake take, Animator animator)
+        public static AnimationClip PopulateHumanoidClip(RecordingTake take, Animator animator, float frameRate)
         {
             if (take is not BoneRotationsTake boneTake || animator == null || !animator.isHuman || boneTake.IsEmpty)
                 return null;
 
-            var frameCount = boneTake.HipCurves[0].curve.length;
+            var frameCount = boneTake.frameTimes.Length;
 
             ExtractWorldKeys(boneTake, out var hipKeys, out var boneKeys);
 
@@ -57,26 +57,29 @@ namespace DrSakuu.Humr.Editor
                     muscleKeys[i][frameIndex] = new Keyframe(recordTime, humanPose.muscles[i]);
             }
 
-            return BuildHumanoidClip(rootPosKeys, rootRotKeys, muscleKeys);
+            return BuildHumanoidClip(rootPosKeys, rootRotKeys, muscleKeys, frameRate);
         }
 
-        public static AnimationClip PopulateObjectClip(RecordingTake take)
+        public static AnimationClip PopulateObjectClip(RecordingTake take, float frameRate)
         {
             if (take is not ObjectTake objectTake || objectTake.ObjectCurves == null)
                 return null;
 
-            var clip = CreateAnimationClip();
+            var clip = new AnimationClip
+            {
+                frameRate = frameRate
+            };
             SetPropertyCurves(clip, RootTransformPath, objectTake.ObjectCurves);
             clip.EnsureQuaternionContinuity();
             return clip;
         }
 
-        public static AnimationClip PopulateBoneRotationsClip(RecordingTake take, Animator animator)
+        public static AnimationClip PopulateBoneRotationsClip(RecordingTake take, Animator animator, float frameRate)
         {
             if (take is not BoneRotationsTake boneTake || animator == null || boneTake.IsEmpty)
                 return null;
 
-            var frameCount = boneTake.HipCurves[0].curve.length;
+            var frameCount = take.frameTimes.Length;
             var rotationCount = boneTake.BoneCurves.Length;
 
             ExtractWorldKeys(boneTake, out var hipKeys, out var boneKeys);
@@ -117,7 +120,7 @@ namespace DrSakuu.Humr.Editor
                 }
             }
 
-            return BuildBoneRotationsClip(animator, localHipKeys, localBoneKeys);
+            return BuildBoneRotationsClip(animator, localHipKeys, localBoneKeys, frameRate);
         }
 
         public static void SaveAnimationAsset(AnimationClip clip, string animAssetPath)
@@ -203,9 +206,12 @@ namespace DrSakuu.Humr.Editor
         }
 
         private static AnimationClip BuildHumanoidClip(Keyframe[][] rootPosKeys, Keyframe[][] rootRotKeys,
-            Keyframe[][] muscleKeys)
+            Keyframe[][] muscleKeys, float frameRate)
         {
-            var clip = CreateAnimationClip();
+            var clip = new AnimationClip
+            {
+                frameRate = frameRate
+            };
             var animatorType = typeof(Animator);
 
             var posNames = new[] { "RootT.x", "RootT.y", "RootT.z" };
@@ -222,15 +228,6 @@ namespace DrSakuu.Humr.Editor
 
             clip.EnsureQuaternionContinuity();
             return clip;
-        }
-
-        private static AnimationClip CreateAnimationClip()
-        {
-            return new AnimationClip
-            {
-                legacy = false,
-                frameRate = 60f
-            };
         }
 
         private static void SetPropertyCurves(AnimationClip clip, string transformPath, PropertyCurve[] propertyCurves)
@@ -269,9 +266,12 @@ namespace DrSakuu.Humr.Editor
         }
 
         private static AnimationClip BuildBoneRotationsClip(Animator animator, Keyframe[][] localHipKeys,
-            Keyframe[][][] localBoneKeys)
+            Keyframe[][][] localBoneKeys, float frameRate)
         {
-            var clip = CreateAnimationClip();
+            var clip = new AnimationClip
+            {
+                frameRate = frameRate
+            };
             var transformType = typeof(Transform);
 
             var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);

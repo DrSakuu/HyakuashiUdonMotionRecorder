@@ -191,7 +191,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 2198187421064365204}
   targetName: Target
-  recordFramerate: 120
+  recordFramerate: 30
   recordOnStart: 0
   worldAbsolutePosition: 0
   startRecordButton: {fileID: 3404536332706373457}

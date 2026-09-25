@@ -9,6 +9,7 @@
 - Buttons to export individual takes as .anim
 - Toggles to include individual animations in .fbx
 - Toggle to show frame information
+- Choose exported animation frame rate
 
 ### Changed
 
@@ -25,6 +26,10 @@
 - Keep recording interval fixed to target framerate
 
 ## [2.1.0-beta.3] - Unreleased
+
+### Added
+
+- Choose exported animation frame rate
 
 ### Fixed
 
@@ -99,7 +104,7 @@ v2 can read pre-2.0.0 logs, but not write them.
 - Add TargetName to animation name
 - Select newest HUMR log file automatically, sort in reverse order
 - Show which log files have HUMR data
-- Select player DisplayName from a dropdown
+- Select player DisplayName from a popup
 
 ### Fixed
 
@@ -181,7 +186,7 @@ v2 can read pre-2.0.0 logs, but not write them.
 
 - BaseRecorder: Use Unix timestamp as take number
 - BaseRecorder: Start/stop recording on pickup use
-- HumrRecordingLoader: Show target type in target dropdown
+- HumrRecordingLoader: Show target type in target popup
 - New OutputLog format:
 
 ```txt
@@ -213,7 +218,7 @@ v2 can read pre-2.0.0 logs, but not write them.
 
 - Select newest log file automatically, sort in reverse order
 - Show which log files have HUMR data
-- Select player DisplayName from a dropdown
+- Select player DisplayName from a popup
 
 ### Fixed
 
