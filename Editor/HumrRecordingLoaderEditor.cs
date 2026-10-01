@@ -106,7 +106,7 @@ namespace DrSakuu.Humr.Editor
             DrawAdvancedSection();
 
             var errorMessage = string.Empty;
-            if (!DrawLogFileDropdown())
+            if (!DrawLogFilePopup())
                 SetError(ref errorMessage, "No log files found.");
 
             if (!TryDrawTargetSelection(ref errorMessage))
@@ -285,7 +285,7 @@ namespace DrSakuu.Humr.Editor
             EditorGUI.indentLevel--;
         }
 
-        private bool DrawLogFileDropdown()
+        private bool DrawLogFilePopup()
         {
             EditorGUILayout.BeginHorizontal();
 
