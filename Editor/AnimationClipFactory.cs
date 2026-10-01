@@ -69,7 +69,7 @@ namespace DrSakuu.Humr.Editor
             {
                 frameRate = frameRate
             };
-            SetPropertyCurves(clip, RootTransformPath, objectTake.ObjectCurves);
+            SetObjectCurves(clip, RootTransformPath, objectTake.ObjectCurves);
             clip.EnsureQuaternionContinuity();
             return clip;
         }
@@ -210,51 +210,84 @@ namespace DrSakuu.Humr.Editor
             var posNames = new[] { "RootT.x", "RootT.y", "RootT.z" };
             var rotNames = new[] { "RootQ.x", "RootQ.y", "RootQ.z", "RootQ.w" };
 
-            SetCurves(clip, RootTransformPath, animatorType, posNames, rootPosKeys);
-            SetCurves(clip, RootTransformPath, animatorType, rotNames, rootRotKeys);
+            SetBoneRotationsCurves(clip, RootTransformPath, animatorType, posNames, rootPosKeys);
+            SetBoneRotationsCurves(clip, RootTransformPath, animatorType, rotNames, rootRotKeys);
 
             var muscleCount = HumanTrait.MuscleCount;
             var muscleNames = new string[muscleCount];
             for (var i = 0; i < muscleCount; i++) muscleNames[i] = GetMusclePropertyName(HumanTrait.MuscleName[i]);
 
-            SetCurves(clip, RootTransformPath, animatorType, muscleNames, muscleKeys);
+            SetBoneRotationsCurves(clip, RootTransformPath, animatorType, muscleNames, muscleKeys);
 
             clip.EnsureQuaternionContinuity();
             return clip;
         }
 
-        private static void SetPropertyCurves(AnimationClip clip, string transformPath, PropertyCurve[] propertyCurves)
+        private static void SetObjectCurves(
+            AnimationClip clip, string transformPath, PropertyCurve[] propertyCurves)
         {
             foreach (var propertyCurve in propertyCurves)
             {
                 var curve = propertyCurve.curve;
                 if (curve == null || curve.length == 0) continue;
 
-                for (var k = 0; k < curve.keys.Length; k++)
-                {
-                    AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
-                    AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
-                }
+                curve = ResampleCurve(curve, clip.frameRate);
+                SetLinearTangents(curve);
 
                 clip.SetCurve(transformPath, typeof(Transform), propertyCurve.propertyName, curve);
             }
         }
-
-        private static void SetCurves(
+        
+        private static void SetBoneRotationsCurves(
             AnimationClip clip, string path, Type type, string[] propertyNames, Keyframe[][] keyframes)
         {
             for (var i = 0; i < propertyNames.Length; i++)
             {
                 if (keyframes[i] == null || keyframes[i].Length == 0) continue;
 
-                var curve = new AnimationCurve(keyframes[i]);
-                for (var k = 0; k < curve.keys.Length; k++)
-                {
-                    AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
-                    AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
-                }
+                var curve = ResampleCurve(new AnimationCurve(keyframes[i]), clip.frameRate);
+                SetLinearTangents(curve);
 
                 clip.SetCurve(path, type, propertyNames[i], curve);
+            }
+        }
+        
+        private static AnimationCurve ResampleCurve(AnimationCurve source, float frameRate)
+        {
+            if (source == null || source.length == 0 || frameRate <= 0f)
+                return source;
+
+            var keys = source.keys;
+            var startTime = keys[0].time;
+            var endTime = keys[^1].time;
+
+            if (Mathf.Approximately(startTime, endTime))
+                return new AnimationCurve(new Keyframe(startTime, source.Evaluate(startTime)));
+
+            var frameInterval = 1f / frameRate;
+            var frameCount = Mathf.RoundToInt((endTime - startTime) * frameRate) + 1;
+            frameCount = Mathf.Max(frameCount, 2);
+
+            var resampledKeys = new Keyframe[frameCount];
+
+            for (var i = 0; i < frameCount; i++)
+            {
+                var time = i == frameCount - 1
+                    ? endTime
+                    : Mathf.Min(startTime + i * frameInterval, endTime);
+
+                resampledKeys[i] = new Keyframe(time, source.Evaluate(time));
+            }
+
+            return new AnimationCurve(resampledKeys);
+        }
+
+        private static void SetLinearTangents(AnimationCurve curve)
+        {
+            for (var k = 0; k < curve.keys.Length; k++)
+            {
+                AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
+                AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
             }
         }
 
@@ -272,7 +305,7 @@ namespace DrSakuu.Humr.Editor
             {
                 var hipsPath = AnimationUtility.CalculateTransformPath(hipsTransform, animator.transform);
                 var posNames = new[] { "localPosition.x", "localPosition.y", "localPosition.z" };
-                SetCurves(clip, hipsPath, transformType, posNames, localHipKeys);
+                SetBoneRotationsCurves(clip, hipsPath, transformType, posNames, localHipKeys);
             }
 
             for (var boneIndex = 0; boneIndex < localBoneKeys.Length; boneIndex++)
@@ -285,7 +318,7 @@ namespace DrSakuu.Humr.Editor
                 var bonePath = AnimationUtility.CalculateTransformPath(boneTransform, animator.transform);
                 var rotNames = new[] { "localRotation.x", "localRotation.y", "localRotation.z", "localRotation.w" };
 
-                SetCurves(clip, bonePath, transformType, rotNames, localBoneKeys[boneIndex]);
+                SetBoneRotationsCurves(clip, bonePath, transformType, rotNames, localBoneKeys[boneIndex]);
             }
 
             clip.EnsureQuaternionContinuity();

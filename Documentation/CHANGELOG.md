@@ -25,6 +25,7 @@
 - Remove Animator requirement from Object recording export
 - Unity 6 .fbx import
 - Keep recording interval fixed to target framerate
+- Resample exported keys to match output framerate
 
 ## [2.1.0-beta.3] - Unreleased
 
@@ -36,6 +37,7 @@
 ### Fixed
 
 - Keep recording interval fixed to target framerate
+- Resample exported keys to match output framerate
 
 ## [2.1.0-beta.2] - 2026-9-24
 
