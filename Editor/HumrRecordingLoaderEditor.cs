@@ -414,7 +414,7 @@ namespace DrSakuu.Humr.Editor
             foreach (var take in _currentFile.takes)
             {
                 EditorGUILayout.BeginHorizontal();
-                var frameCount = take.frameTimes.Length;
+                var frameCount = take.FrameCount;
                 var simpleTakeSummary = $"{take.takeName}: {take.length:F2} seconds";
                 var frameInfoSummary = $"{take.takeName}: {take.length:F2} seconds, {frameCount} frames, {frameCount / take.length:F2} fps";
                 var takeContent = new GUIContent(ShowFrameInfo ? frameInfoSummary : simpleTakeSummary);

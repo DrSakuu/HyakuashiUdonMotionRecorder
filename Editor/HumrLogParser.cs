@@ -36,6 +36,7 @@ namespace DrSakuu.Humr.Editor
         public bool includeInFbx = true;
         public float length = float.MinValue;
         public float[] frameTimes;
+        public int FrameCount => frameTimes.Length;
 
         public virtual bool IsEmpty => true;
     }
@@ -202,7 +203,7 @@ namespace DrSakuu.Humr.Editor
             var takesList = new List<RecordingTake>();
             var currentTake = CreateRecordingTake(targetTuple);
             var previousTime = 0f;
-            var frameTimes = new List<float>();
+            var frameTimesList = new List<float>();
 
             foreach (var line in lines)
             {
@@ -219,11 +220,11 @@ namespace DrSakuu.Humr.Editor
                 }
                 else if (IsNewTake(currentTake, parsedFrame.timestamp, parsedFrame.recordTime, previousTime))
                 {
-                    currentTake.frameTimes = frameTimes.ToArray();
+                    currentTake.frameTimes = frameTimesList.ToArray();
                     takesList.Add(currentTake);
                     currentTake = CreateRecordingTake(targetTuple, parsedFrame.timestamp);
                     previousTime = 0f;
-                    frameTimes.Clear();
+                    frameTimesList.Clear();
                 }
 
                 switch (currentTake)
@@ -234,7 +235,14 @@ namespace DrSakuu.Humr.Editor
                                 out var scale))
                         {
                             AddObjectCurveKeys(objectTake, recordTime, pos, rot, scale);
-                            frameTimes.Add(recordTime - previousTime);
+                            if (frameTimesList.Count == 0 && Mathf.Approximately(recordTime - previousTime, 0f))
+                            {
+                                // First frame has no elapsed delta, don't add it as a frame interval.
+                            }
+                            else
+                            {
+                                frameTimesList.Add(recordTime - previousTime);
+                            }
                             previousTime = recordTime;
                             if (recordTime > currentTake.length) currentTake.length = recordTime;
                         }
@@ -246,7 +254,14 @@ namespace DrSakuu.Humr.Editor
                                 out var rotations))
                         {
                             AddBoneCurveKeys(boneTake, recordTime, hipPos, rotations);
-                            frameTimes.Add(recordTime - previousTime);
+                            if (frameTimesList.Count == 0 && Mathf.Approximately(recordTime - previousTime, 0f))
+                            {
+                                // First frame has no elapsed delta, don't add it as a frame interval.
+                            }
+                            else
+                            {
+                                frameTimesList.Add(recordTime - previousTime);
+                            }
                             previousTime = recordTime;
                             if (recordTime > currentTake.length) currentTake.length = recordTime;
                         }
@@ -255,7 +270,7 @@ namespace DrSakuu.Humr.Editor
                 }
             }
 
-            currentTake.frameTimes = frameTimes.ToArray();
+            currentTake.frameTimes = frameTimesList.ToArray();
             if (!currentTake.IsEmpty) takesList.Add(currentTake);
 
             var takes = takesList.ToArray();

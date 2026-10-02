@@ -14,7 +14,7 @@ namespace DrSakuu.Humr.Editor
             if (take is not BoneRotationsTake boneTake || animator == null || !animator.isHuman || boneTake.IsEmpty)
                 return null;
 
-            var frameCount = boneTake.frameTimes.Length;
+            var frameCount = boneTake.FrameCount;
 
             ExtractWorldKeys(boneTake, out var hipKeys, out var boneKeys);
 
@@ -40,8 +40,8 @@ namespace DrSakuu.Humr.Editor
                 var currentRootRot = humanPose.bodyRotation;
                 if (frameIndex == 0) prevRootRot = currentRootRot;
                 if (Quaternion.Dot(prevRootRot, currentRootRot) < 0f)
-                    currentRootRot = new Quaternion(-currentRootRot.x, -currentRootRot.y, -currentRootRot.z,
-                        -currentRootRot.w);
+                    currentRootRot = new Quaternion(
+                        -currentRootRot.x, -currentRootRot.y, -currentRootRot.z, -currentRootRot.w);
                 prevRootRot = currentRootRot;
 
                 rootPosKeys[0][frameIndex] = new Keyframe(recordTime, humanPose.bodyPosition.x);
@@ -79,7 +79,7 @@ namespace DrSakuu.Humr.Editor
             if (take is not BoneRotationsTake boneTake || animator == null || boneTake.IsEmpty)
                 return null;
 
-            var frameCount = take.frameTimes.Length;
+            var frameCount = boneTake.FrameCount;
             var rotationCount = boneTake.BoneCurves.Length;
 
             ExtractWorldKeys(boneTake, out var hipKeys, out var boneKeys);
