@@ -88,10 +88,11 @@ namespace DrSakuu.Humr.Editor
             var localBoneKeys = new Keyframe[rotationCount][][];
             for (var i = 0; i < rotationCount; i++)
                 if (boneKeys[i] != null)
-                    localBoneKeys[i] = CreateKeyframeArrays(4, frameCount);
+                    localBoneKeys[i] = CreateKeyframeArrays(3, frameCount);
 
             var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
             var armatureRoot = hipsTransform != null ? hipsTransform.parent : null;
+            var previousEulerAngles = new Vector3?[rotationCount];
 
             for (var frameIndex = 0; frameIndex < frameCount; frameIndex++)
             {
@@ -112,11 +113,15 @@ namespace DrSakuu.Humr.Editor
                     var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
                     if (boneTransform == null) continue;
 
-                    var localRot = boneTransform.localRotation;
-                    localBoneKeys[boneIndex][0][frameIndex] = new Keyframe(recordTime, localRot.x);
-                    localBoneKeys[boneIndex][1][frameIndex] = new Keyframe(recordTime, localRot.y);
-                    localBoneKeys[boneIndex][2][frameIndex] = new Keyframe(recordTime, localRot.z);
-                    localBoneKeys[boneIndex][3][frameIndex] = new Keyframe(recordTime, localRot.w);
+                    var localEuler = boneTransform.localEulerAngles;
+                    if (previousEulerAngles[boneIndex].HasValue)
+                        localEuler = GetContinuousEulerAngles(previousEulerAngles[boneIndex].Value, localEuler);
+
+                    previousEulerAngles[boneIndex] = localEuler;
+
+                    localBoneKeys[boneIndex][0][frameIndex] = new Keyframe(recordTime, localEuler.x);
+                    localBoneKeys[boneIndex][1][frameIndex] = new Keyframe(recordTime, localEuler.y);
+                    localBoneKeys[boneIndex][2][frameIndex] = new Keyframe(recordTime, localEuler.z);
                 }
             }
 
@@ -290,6 +295,15 @@ namespace DrSakuu.Humr.Editor
                 AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
             }
         }
+        
+        private static Vector3 GetContinuousEulerAngles(Vector3 previous, Vector3 current)
+        {
+            return new Vector3(
+                previous.x + Mathf.DeltaAngle(previous.x, current.x),
+                previous.y + Mathf.DeltaAngle(previous.y, current.y),
+                previous.z + Mathf.DeltaAngle(previous.z, current.z)
+            );
+        }
 
         private static AnimationClip BuildBoneRotationsClip(Animator animator, Keyframe[][] localHipKeys,
             Keyframe[][][] localBoneKeys, float frameRate)
@@ -316,12 +330,11 @@ namespace DrSakuu.Humr.Editor
                 if (boneTransform == null) continue;
 
                 var bonePath = AnimationUtility.CalculateTransformPath(boneTransform, animator.transform);
-                var rotNames = new[] { "localRotation.x", "localRotation.y", "localRotation.z", "localRotation.w" };
+                var rotNames = new[] { "localEulerAnglesRaw.x", "localEulerAnglesRaw.y", "localEulerAnglesRaw.z" };
 
                 SetBoneRotationsCurves(clip, bonePath, transformType, rotNames, localBoneKeys[boneIndex]);
             }
 
-            clip.EnsureQuaternionContinuity();
             return clip;
         }
 
