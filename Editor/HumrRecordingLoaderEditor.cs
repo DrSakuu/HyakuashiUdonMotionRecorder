@@ -570,12 +570,13 @@ namespace DrSakuu.Humr.Editor
             string logTimestamp,
             TempControllerBuilder tempController)
         {
-            var originalRootBones = ApplyBlenderHipFix();
-            var previousAnimatorController = _loader.Animator.runtimeAnimatorController;
+            var animator = _loader.Animator;
+            var originalRootBones = ApplyBlenderHipFix(animator);
+            var previousAnimatorController = animator.runtimeAnimatorController;
 
             try
             {
-                _loader.Animator.runtimeAnimatorController = tempController.Controller;
+                animator.runtimeAnimatorController = tempController.Controller;
 
                 var fileName = $"{targetName}_{logTimestamp}";
                 var exportPath = GetAssetPath("FBXs", targetName, fileName, "fbx");
@@ -595,7 +596,7 @@ namespace DrSakuu.Humr.Editor
             }
             finally
             {
-                _loader.Animator.runtimeAnimatorController = previousAnimatorController;
+                animator.runtimeAnimatorController = previousAnimatorController;
                 RestoreRootBones(originalRootBones);
             }
         }
@@ -632,19 +633,19 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private List<(SkinnedMeshRenderer renderer, Transform rootBone)> ApplyBlenderHipFix()
+        private static List<(SkinnedMeshRenderer renderer, Transform rootBone)> ApplyBlenderHipFix(Animator animator)
         {
             var originalRootBones = new List<(SkinnedMeshRenderer renderer, Transform rootBone)>();
 
-            if (!BlenderHipFix || _loader.Animator == null || !_loader.Animator.isHuman)
+            if (!BlenderHipFix || animator == null || !animator.isHuman)
                 return originalRootBones;
 
-            var hipsTransform = _loader.Animator.GetBoneTransform(HumanBodyBones.Hips);
+            var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
             if (hipsTransform == null || hipsTransform.parent == null)
                 return originalRootBones;
 
             var armatureRoot = hipsTransform.parent;
-            var skinnedRenderers = _loader.Animator.GetComponentsInChildren<SkinnedMeshRenderer>();
+            var skinnedRenderers = animator.GetComponentsInChildren<SkinnedMeshRenderer>();
 
             foreach (var renderer in skinnedRenderers)
             {

@@ -1,11 +1,18 @@
 # Changelog
 
+## [2.1.1] - Unreleased
+
+### Fixed
+
+- Reduce calls to GetComponent\<Animator>
+
 ## [2.1.0] - 2026-10-03
 
 Improved loader interface with more options and export animation files as Humanoid AnimationClips.
 
 ### Known issues
 
+- Humanoid AnimationClips don't have foot IK information
 - Hips and feet flip sometimes in .fbx exports
 
 ### Added
