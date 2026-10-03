@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.1.0] - Unreleased
+## [2.1.0] - 2026-10-03
+
+Improved loader interface with more options and export animation files as Humanoid AnimationClips.
+
+### Known issues
+
+- Hips and feet flip sometimes in .fbx exports
 
 ### Added
 
@@ -11,6 +17,7 @@
 - Toggle to show frame information
 - Choose exported animation frame rate
 - Replace or rename existing animation assets
+- Add RecorderListener for UI updates
 
 ### Changed
 
@@ -19,7 +26,7 @@
 
 ### Fixed
 
-- Set Loader editor only to not prevent VRChat upload
+- Set Loader to editor only to not prevent VRChat upload
 - Cache created recording files
 - Store takes as an array, better name handling
 - Remove Animator requirement from Object recording export
@@ -27,17 +34,13 @@
 - Keep recording interval fixed to target framerate
 - Resample exported keys to match output framerate
 
-## [2.1.0-beta.3] - Unreleased
-
-### Added
+### Since 2.1.0-beta.2
 
 - Choose exported animation frame rate
 - Replace or rename existing animation assets
-
-### Fixed
-
 - Keep recording interval fixed to target framerate
 - Resample exported keys to match output framerate
+- Add RecorderListener for UI updates
 
 ## [2.1.0-beta.2] - 2026-9-24
 
@@ -65,7 +68,7 @@
 
 ### Fixed
 
-- Set Loader editor only to not prevent VRChat upload
+- Set Loader to editor only to not prevent VRChat upload
 - Cache created recording files
 - Store takes as an array, better name handling
 - Remove Animator requirement from Object recording export

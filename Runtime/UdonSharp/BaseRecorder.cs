@@ -1,10 +1,9 @@
 #if UDONSHARP
 using System;
-using System.Globalization;
 using UdonSharp;
 using UnityEngine;
-using UnityEngine.UI;
 using VRC.SDK3.Components;
+using VRC.SDKBase;
 
 namespace DrSakuu.Humr
 {
@@ -18,28 +17,16 @@ namespace DrSakuu.Humr
 
         [SerializeField] [Tooltip("Start recording immediately on scene load.")]
         protected bool recordOnStart = true;
-        
+
         [SerializeField] [Tooltip("Record position relative to world origin, otherwise local position relative to parent.")]
         protected bool worldAbsolutePosition;
-
-        [SerializeField] [Tooltip("Start recording button, connect onClick to StartRecording custom event.")]
-        private Button startRecordButton;
-
-        [SerializeField] [Tooltip("Stop recording button, connect onClick to StopRecording custom event.")]
-        private Button stopRecordButton;
-
-        [SerializeField] [Tooltip("Target mesh to that changes material to indicate recording state.")]
-        private Renderer indicatorRenderer;
-
-        [SerializeField] [Tooltip("The material to set the indicator when HUMR is recording.")]
-        private Material recordingMaterial;
 
         protected object[] RecordingObjects;
         protected TargetType TargetType = TargetType.Object;
         protected bool IsRecording;
         protected bool RecordIsReady = true;
 
-        private Material _indicatorDefaultMaterial;
+        private RecorderListener[] _listeners = new RecorderListener[0];
         private float _nextRecordTime;
         private VRCPickup _pickup;
         private float _recordInterval;
@@ -48,19 +35,17 @@ namespace DrSakuu.Humr
 
         public virtual void Start()
         {
-            if (recordOnStart) StartRecording();
-
             _pickup = GetComponent<VRCPickup>();
             if (_pickup != null) _pickup.UseText = "Record";
 
-            if (indicatorRenderer != null && recordingMaterial != null)
-                _indicatorDefaultMaterial = indicatorRenderer.material;
+            if (recordOnStart) StartRecording();
+            else SendRecordingState();
         }
 
         private void Update()
         {
             if (!IsRecording) return;
-            
+
             if (!RecordIsReady)
             {
                 StopRecording();
@@ -79,7 +64,7 @@ namespace DrSakuu.Humr
             {
                 RecordObjects();
             }
-            
+
             while (_recordTime >= _nextRecordTime)
             {
                 _nextRecordTime += _recordInterval;
@@ -94,7 +79,7 @@ namespace DrSakuu.Humr
         public virtual void StartRecording()
         {
             if (!RecordIsReady) return;
-            
+
             _recordTime = 0f;
             _recordInterval = float.IsInfinity(recordFramerate)
                 ? 0f
@@ -103,22 +88,38 @@ namespace DrSakuu.Humr
             _takeTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             IsRecording = true;
             RecordObjects();
-            UpdateUI();
+            SendRecordingState();
         }
 
         public virtual void StopRecording()
         {
             if (RecordIsReady) RecordObjects();
             IsRecording = false;
-            UpdateUI();
+            SendRecordingState();
         }
 
-        private void UpdateUI()
+        public RecorderListener[] EventListeners
         {
-            if (startRecordButton != null) startRecordButton.gameObject.SetActive(!IsRecording);
-            if (stopRecordButton != null) stopRecordButton.gameObject.SetActive(IsRecording);
-            if (indicatorRenderer != null && recordingMaterial != null)
-                indicatorRenderer.material = IsRecording ? recordingMaterial : _indicatorDefaultMaterial;
+            get => _listeners;
+            set => _listeners = value;
+        }
+
+        public void AddListener(RecorderListener listener)
+        {
+            if (!Utilities.IsValid(listener) || Array.IndexOf(_listeners, listener) >= 0) return;
+            
+            _listeners = _listeners.Add(listener);
+        }
+
+        private void SendRecordingState()
+        {
+            var len = _listeners.Length;
+            for (var i = 0; i < len; i++)
+            {
+                var listener = _listeners[i];
+                if (Utilities.IsValid(listener))
+                    listener.AfterRecordingStateChanged(IsRecording, RecordIsReady);
+            }
         }
 
         protected virtual void UpdateRecordingObjects()

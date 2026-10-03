@@ -73,7 +73,7 @@ namespace DrSakuu.Humr.Editor
 
         private static float AnimFps
         {
-            get => EditorPrefs.GetFloat(AnimFpsKey, 60f);
+            get => EditorPrefs.GetFloat(AnimFpsKey, 30f);
             set => EditorPrefs.SetFloat(AnimFpsKey, value);
         }
 
