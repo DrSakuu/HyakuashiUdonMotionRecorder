@@ -15,7 +15,7 @@ namespace DrSakuu.Humr.Editor
         Replace = 1,
         Rename = 2
     }
-    
+
     [CustomEditor(typeof(HumrRecordingLoader))]
     public class HumrRecordingLoaderEditor : UnityEditor.Editor
     {
@@ -29,17 +29,17 @@ namespace DrSakuu.Humr.Editor
         private const string ShowFrameInfoKey = "DrSakuu.Humr.ShowFrameInfo";
         private const string ReplaceExistingKey = "DrSakuu.Humr.ReplaceExisting";
         private const string AnimFpsKey = "DrSakuu.Humr.AnimFps";
-        private readonly string[] _fpsOptions = { "24", "30", "60", "Custom" };
-        private readonly float[] _fpsValues = { 24f, 30f, 60f };
 
         private static readonly Dictionary<string, (DateTime, RecordingFile)> RecordingFileCache = new();
+        private readonly string[] _fpsOptions = { "24", "25", "30", "50", "60", "Custom" };
+        private readonly float[] _fpsValues = { 24f, 25f, 30f, 50f, 60f };
 
         private RecordingFile _currentFile;
+        private int _fpsPopupIndex = 3;
         private HumrRecordingLoader _loader;
         private string[] _recordingFileNames = { NoLogsOption };
         private RecordingFile[] _recordingFiles;
         private string _userProfile;
-        private int _fpsPopupIndex = 2;
 
         private static string LogPath
         {
@@ -92,13 +92,9 @@ namespace DrSakuu.Humr.Editor
 
             var animFpsIndex = Array.IndexOf(_fpsValues, AnimFps);
             if (animFpsIndex >= 0)
-            {
                 _fpsPopupIndex = animFpsIndex;
-            }
             else
-            {
                 _fpsPopupIndex = _fpsOptions.Length - 1;
-            }
         }
 
         public override void OnInspectorGUI()
@@ -396,10 +392,7 @@ namespace DrSakuu.Humr.Editor
             EditorGUI.BeginChangeCheck();
             _fpsPopupIndex = EditorGUILayout.Popup(fpsPopupContent, _fpsPopupIndex, _fpsOptions);
 
-            if (EditorGUI.EndChangeCheck() && _fpsPopupIndex < _fpsValues.Length)
-            {
-                AnimFps = _fpsValues[_fpsPopupIndex];
-            }
+            if (EditorGUI.EndChangeCheck() && _fpsPopupIndex < _fpsValues.Length) AnimFps = _fpsValues[_fpsPopupIndex];
 
             if (_fpsPopupIndex == _fpsOptions.Length - 1)
                 AnimFps = EditorGUILayout.FloatField(AnimFps);
@@ -407,7 +400,7 @@ namespace DrSakuu.Humr.Editor
             EditorGUILayout.EndHorizontal();
 
             AnimFps = Mathf.Max(1f, AnimFps);
-            
+
             EditorGUILayout.PrefixLabel("Include in .fbx");
 
             using var disabledScope = new EditorGUI.DisabledScope(!validHuman);
@@ -416,7 +409,8 @@ namespace DrSakuu.Humr.Editor
                 EditorGUILayout.BeginHorizontal();
                 var frameCount = take.FrameCount;
                 var simpleTakeSummary = $"{take.takeName}: {take.length:F2} seconds";
-                var frameInfoSummary = $"{take.takeName}: {take.length:F2} seconds, {frameCount} frames, {frameCount / take.length:F2} fps";
+                var frameInfoSummary =
+                    $"{take.takeName}: {take.length:F2} seconds, {frameCount} frames, {frameCount / take.length:F2} fps";
                 var takeContent = new GUIContent(ShowFrameInfo ? frameInfoSummary : simpleTakeSummary);
                 take.includeInFbx = GUILayout.Toggle(take.includeInFbx, takeContent);
                 if (GUILayout.Button(new GUIContent("Export .anim"), GUILayout.Width(100)))
@@ -456,7 +450,7 @@ namespace DrSakuu.Humr.Editor
             var animationAssetPath = GetAssetPath(
                 "Animations", take.targetName, animationName, "anim");
             animationAssetPath = ResolveExistingAssetPath(animationAssetPath, ReplaceExisting);
-            
+
             AnimationClipFactory.SaveAnimationAsset(takeClip, animationAssetPath);
         }
 
@@ -557,7 +551,8 @@ namespace DrSakuu.Humr.Editor
         {
             return take.targetType switch
             {
-                TargetType.BoneRotations => AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator, AnimFps),
+                TargetType.BoneRotations => AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator,
+                    AnimFps),
                 TargetType.Legacy => AnimationClipFactory.PopulateBoneRotationsClip(take, _loader.Animator, AnimFps),
                 TargetType.Object => AnimationClipFactory.PopulateObjectClip(take, AnimFps),
                 _ => throw new NotImplementedException($"Unsupported target type: {take.targetType}")
@@ -600,7 +595,7 @@ namespace DrSakuu.Humr.Editor
                 RestoreRootBones(originalRootBones);
             }
         }
-        
+
         private static string ResolveExistingAssetPath(string assetPath, ReplaceExistingAction replaceExisting)
         {
             if (!File.Exists(assetPath))

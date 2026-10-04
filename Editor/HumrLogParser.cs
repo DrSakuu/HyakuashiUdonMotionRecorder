@@ -35,8 +35,8 @@ namespace DrSakuu.Humr.Editor
         public string takeName;
         public bool includeInFbx = true;
         public float length = float.MinValue;
-        public float[] frameTimes;
-        public int FrameCount => frameTimes.Length;
+        public float[] deltaTimes;
+        public int FrameCount => deltaTimes.Length;
 
         public virtual bool IsEmpty => true;
     }
@@ -48,9 +48,9 @@ namespace DrSakuu.Humr.Editor
         {
             HipCurves = new[]
             {
-                new PropertyCurve("localPosition.x"),
-                new PropertyCurve("localPosition.y"),
-                new PropertyCurve("localPosition.z")
+                new PropertyCurve("position.x"),
+                new PropertyCurve("position.y"),
+                new PropertyCurve("position.z")
             };
 
             var boneCount = HumanTrait.BoneCount;
@@ -58,10 +58,10 @@ namespace DrSakuu.Humr.Editor
             for (var i = 0; i < boneCount; i++)
                 BoneCurves[i] = new[]
                 {
-                    new PropertyCurve("localRotation.x"),
-                    new PropertyCurve("localRotation.y"),
-                    new PropertyCurve("localRotation.z"),
-                    new PropertyCurve("localRotation.w")
+                    new PropertyCurve("rotation.x"),
+                    new PropertyCurve("rotation.y"),
+                    new PropertyCurve("rotation.z"),
+                    new PropertyCurve("rotation.w")
                 };
         }
 
@@ -203,7 +203,7 @@ namespace DrSakuu.Humr.Editor
             var takesList = new List<RecordingTake>();
             var currentTake = CreateRecordingTake(targetTuple);
             var previousTime = 0f;
-            var frameTimesList = new List<float>();
+            var deltaTimesList = new List<float>();
 
             foreach (var line in lines)
             {
@@ -220,57 +220,56 @@ namespace DrSakuu.Humr.Editor
                 }
                 else if (IsNewTake(currentTake, parsedFrame.timestamp, parsedFrame.recordTime, previousTime))
                 {
-                    currentTake.frameTimes = frameTimesList.ToArray();
+                    currentTake.deltaTimes = deltaTimesList.ToArray();
                     takesList.Add(currentTake);
                     currentTake = CreateRecordingTake(targetTuple, parsedFrame.timestamp);
                     previousTime = 0f;
-                    frameTimesList.Clear();
+                    deltaTimesList.Clear();
                 }
 
                 switch (currentTake)
                 {
                     case ObjectTake objectTake:
                     {
-                        if (TryParseObjectValues(parsedFrame.parts, out var recordTime, out var pos, out var rot,
+                        if (TryParseObjectValues(
+                                parsedFrame.parts,
+                                out var recordTime,
+                                out var pos,
+                                out var rot,
                                 out var scale))
                         {
                             AddObjectCurveKeys(objectTake, recordTime, pos, rot, scale);
-                            if (frameTimesList.Count == 0 && Mathf.Approximately(recordTime - previousTime, 0f))
-                            {
-                                // First frame has no elapsed delta, don't add it as a frame interval.
-                            }
-                            else
-                            {
-                                frameTimesList.Add(recordTime - previousTime);
-                            }
+                            if (deltaTimesList.Count != 0 || !Mathf.Approximately(recordTime - previousTime, 0f))
+                                deltaTimesList.Add(recordTime - previousTime);
+
                             previousTime = recordTime;
                             if (recordTime > currentTake.length) currentTake.length = recordTime;
                         }
+
                         break;
                     }
                     case BoneRotationsTake boneTake:
                     {
-                        if (TryParseBoneValues(parsedFrame.parts, out var recordTime, out var hipPos,
+                        if (TryParseBoneValues(
+                                parsedFrame.parts,
+                                out var recordTime,
+                                out var hipPos,
                                 out var rotations))
                         {
                             AddBoneCurveKeys(boneTake, recordTime, hipPos, rotations);
-                            if (frameTimesList.Count == 0 && Mathf.Approximately(recordTime - previousTime, 0f))
-                            {
-                                // First frame has no elapsed delta, don't add it as a frame interval.
-                            }
-                            else
-                            {
-                                frameTimesList.Add(recordTime - previousTime);
-                            }
+                            if (deltaTimesList.Count != 0 || !Mathf.Approximately(recordTime - previousTime, 0f))
+                                deltaTimesList.Add(recordTime - previousTime);
+
                             previousTime = recordTime;
                             if (recordTime > currentTake.length) currentTake.length = recordTime;
                         }
+
                         break;
                     }
                 }
             }
 
-            currentTake.frameTimes = frameTimesList.ToArray();
+            currentTake.deltaTimes = deltaTimesList.ToArray();
             if (!currentTake.IsEmpty) takesList.Add(currentTake);
 
             var takes = takesList.ToArray();
