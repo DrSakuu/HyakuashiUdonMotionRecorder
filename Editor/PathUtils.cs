@@ -37,7 +37,7 @@ namespace DrSakuu.Humr.Editor
 
         public static string BuildAnimationName(RecordingTake take, string filePath)
         {
-            var logTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
+            var logTimestamp = GetDateTimeFromFileName(filePath);
             var targetName = take.targetName;
             var takeStamp = take.takeTimestamp;
             var takeName = take.takeName;

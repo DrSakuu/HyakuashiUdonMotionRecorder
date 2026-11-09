@@ -70,42 +70,6 @@ namespace DrSakuu.Humr.Editor
             return clip;
         }
 
-        private static AnimationClip InitializeAnimationClip(float length, float frameRate, out float[] frameTimes)
-        {
-            var clip = new AnimationClip
-            {
-                frameRate = frameRate
-            };
-            frameTimes = ResampleFrameTimes(length, clip.frameRate);
-            return clip;
-        }
-
-        private static void SetAvatarBoneRotations(Animator animator, BoneRotationsTake boneTake, float frameTime)
-        {
-            var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
-            var hipCurveXValue = boneTake.HipCurves[0].curve.Evaluate(frameTime);
-            var hipCurveYValue = boneTake.HipCurves[1].curve.Evaluate(frameTime);
-            var hipCurveZValue = boneTake.HipCurves[2].curve.Evaluate(frameTime);
-
-            if (hipsTransform != null)
-                hipsTransform.position = new Vector3(hipCurveXValue, hipCurveYValue, hipCurveZValue);
-
-            for (var boneIndex = 0; boneIndex < boneTake.BoneCurves.Length; boneIndex++)
-            {
-                var boneRotationCurves = boneTake.BoneCurves[boneIndex];
-                var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
-                if (boneTransform == null)
-                    continue;
-
-                boneTransform.rotation = new Quaternion(
-                    boneRotationCurves[0].curve.Evaluate(frameTime),
-                    boneRotationCurves[1].curve.Evaluate(frameTime),
-                    boneRotationCurves[2].curve.Evaluate(frameTime),
-                    boneRotationCurves[3].curve.Evaluate(frameTime)
-                );
-            }
-        }
-
         public static AnimationClip PopulateObjectClip(RecordingTake take, float frameRate)
         {
             if (take is not ObjectTake objectTake || objectTake.ObjectCurves == null)
@@ -200,6 +164,57 @@ namespace DrSakuu.Humr.Editor
             SelectCreatedAsset(clip);
         }
 
+        private static string GetAnimatorMuscleName(string muscleName)
+        {
+            if (!muscleName.StartsWith("Left ") && !muscleName.StartsWith("Right ")) return muscleName;
+
+            var fingers = new[] { "Thumb", "Index", "Middle", "Ring", "Little" };
+            foreach (var finger in fingers)
+                if (muscleName.Contains(finger))
+                    return muscleName
+                        .Replace("Left ", "LeftHand.")
+                        .Replace("Right ", "RightHand.")
+                        .Replace($"{finger} ", $"{finger}.");
+
+            return muscleName;
+        }
+
+        private static AnimationClip InitializeAnimationClip(float length, float frameRate, out float[] frameTimes)
+        {
+            var clip = new AnimationClip
+            {
+                frameRate = frameRate
+            };
+            frameTimes = ResampleFrameTimes(length, clip.frameRate);
+            return clip;
+        }
+
+        private static void SetAvatarBoneRotations(Animator animator, BoneRotationsTake boneTake, float frameTime)
+        {
+            var hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips);
+            var hipCurveXValue = boneTake.HipCurves[0].curve.Evaluate(frameTime);
+            var hipCurveYValue = boneTake.HipCurves[1].curve.Evaluate(frameTime);
+            var hipCurveZValue = boneTake.HipCurves[2].curve.Evaluate(frameTime);
+
+            if (hipsTransform != null)
+                hipsTransform.position = new Vector3(hipCurveXValue, hipCurveYValue, hipCurveZValue);
+
+            for (var boneIndex = 0; boneIndex < boneTake.BoneCurves.Length; boneIndex++)
+            {
+                var boneRotationCurves = boneTake.BoneCurves[boneIndex];
+                var boneTransform = animator.GetBoneTransform((HumanBodyBones)boneIndex);
+                if (boneTransform == null)
+                    continue;
+
+                boneTransform.rotation = new Quaternion(
+                    boneRotationCurves[0].curve.Evaluate(frameTime),
+                    boneRotationCurves[1].curve.Evaluate(frameTime),
+                    boneRotationCurves[2].curve.Evaluate(frameTime),
+                    boneRotationCurves[3].curve.Evaluate(frameTime)
+                );
+            }
+        }
+
         private static void SetPropertyCurves(AnimationClip clip, string path, Type type, PropertyCurve[] propCurves,
             float[] frameTimes)
         {
@@ -215,16 +230,15 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private static AnimationCurve ResampleCurve(AnimationCurve source, float[] frameTimes)
+        private static void SelectCreatedAsset(AnimationClip clip)
         {
-            if (source == null || source.length == 0 || frameTimes == null || frameTimes.Length == 0)
-                return source;
+            EditorUtility.FocusProjectWindow();
+            var createdAsset = AssetDatabase.LoadAssetAtPath<AnimationClip>(AssetDatabase.GetAssetPath(clip));
+            if (createdAsset == null) return;
 
-            var resampledCurve = new AnimationCurve();
-            foreach (var frameTime in frameTimes) resampledCurve.AddKey(frameTime, source.Evaluate(frameTime));
-            return resampledCurve;
+            Selection.activeObject = createdAsset;
+            EditorGUIUtility.PingObject(createdAsset);
         }
-
 
         private static float[] ResampleFrameTimes(float length, float frameRate)
         {
@@ -255,6 +269,16 @@ namespace DrSakuu.Humr.Editor
             return resampledTimes;
         }
 
+        private static AnimationCurve ResampleCurve(AnimationCurve source, float[] frameTimes)
+        {
+            if (source == null || source.length == 0 || frameTimes == null || frameTimes.Length == 0)
+                return source;
+
+            var resampledCurve = new AnimationCurve();
+            foreach (var frameTime in frameTimes) resampledCurve.AddKey(frameTime, source.Evaluate(frameTime));
+            return resampledCurve;
+        }
+
         private static void SetLinearTangents(AnimationCurve curve)
         {
             for (var k = 0; k < curve.keys.Length; k++)
@@ -262,31 +286,6 @@ namespace DrSakuu.Humr.Editor
                 AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
                 AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
             }
-        }
-
-        private static void SelectCreatedAsset(AnimationClip clip)
-        {
-            EditorUtility.FocusProjectWindow();
-            var createdAsset = AssetDatabase.LoadAssetAtPath<AnimationClip>(AssetDatabase.GetAssetPath(clip));
-            if (createdAsset == null) return;
-
-            Selection.activeObject = createdAsset;
-            EditorGUIUtility.PingObject(createdAsset);
-        }
-
-        private static string GetAnimatorMuscleName(string muscleName)
-        {
-            if (!muscleName.StartsWith("Left ") && !muscleName.StartsWith("Right ")) return muscleName;
-
-            var fingers = new[] { "Thumb", "Index", "Middle", "Ring", "Little" };
-            foreach (var finger in fingers)
-                if (muscleName.Contains(finger))
-                    return muscleName
-                        .Replace("Left ", "LeftHand.")
-                        .Replace("Right ", "RightHand.")
-                        .Replace($"{finger} ", $"{finger}.");
-
-            return muscleName;
         }
     }
 }

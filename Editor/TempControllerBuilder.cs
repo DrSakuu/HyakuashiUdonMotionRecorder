@@ -6,8 +6,8 @@ namespace DrSakuu.Humr.Editor
 {
     internal class TempControllerBuilder
     {
-        public AnimatorController Controller { get; private set; }
         private string _controllerPath;
+        public AnimatorController Controller { get; private set; }
 
         public void Setup(string humrPath)
         {
