@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -283,10 +284,21 @@ namespace DrSakuu.Humr.Editor
         private static bool DetectHumrMarkers(string filePath)
         {
             using var reader = OpenReadOnlyTextFile(filePath);
-            while (reader.ReadLine() is { } line)
+            var buffer = new char[16 * 1024];
+            var overlapLength = Math.Max(HumrLogger.HumrRecordingPrefix.Length, HumrLogger.LegacyHumrPrefix.Length) - 1;
+            var retained = 0;
+            int read;
+            while ((read = reader.Read(buffer, retained, buffer.Length - retained)) > 0)
             {
-                if (HumrLogger.HumrFrameStartIndex(line) >= 0) return true;
-                if (HumrLogger.LegacyHumrFrameStartIndex(line) >= 0) return true;
+                var count = retained + read;
+                var text = buffer.AsSpan(0, count);
+                if (text.IndexOf(HumrLogger.HumrRecordingPrefix.AsSpan()) >= 0 ||
+                    text.IndexOf(HumrLogger.LegacyHumrPrefix.AsSpan()) >= 0)
+                    return true;
+
+                // Preserve partial markers, including when a read returns fewer characters than requested.
+                retained = Math.Min(overlapLength, count);
+                Array.Copy(buffer, count - retained, buffer, 0, retained);
             }
 
             return false;
@@ -314,13 +326,16 @@ namespace DrSakuu.Humr.Editor
 
         private static StreamReader OpenReadOnlyTextFile(string filePath)
         {
+            const int bufferSize = 64 * 1024;
             var fileStream = new FileStream(
                 filePath,
                 FileMode.Open,
                 FileAccess.Read,
-                FileShare.ReadWrite);
+                FileShare.ReadWrite,
+                bufferSize,
+                FileOptions.SequentialScan);
 
-            return new StreamReader(fileStream);
+            return new StreamReader(fileStream, Encoding.UTF8, true, bufferSize);
         }
 
         private static (TargetType, string)[] ScanHumrTargets(RecordingFile recordingFile)

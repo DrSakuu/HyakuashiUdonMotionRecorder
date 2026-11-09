@@ -22,8 +22,8 @@ namespace DrSakuu.Humr
         private const char ComponentDelimiter = ',';
         private const string FloatFormat = "F6";
         private const string UnsupportedTargetType = "Unsupported";
-        private const string HumrRecordingPrefix = LogTagPrefix + HumrTag + " " + RecordingTag;
-        private const string LegacyHumrPrefix = LogTagPrefix + LegacyHumrTag;
+        public const string HumrRecordingPrefix = LogTagPrefix + HumrTag + " " + RecordingTag;
+        public const string LegacyHumrPrefix = LogTagPrefix + LegacyHumrTag;
 
         public static void Log(object message)
         {
