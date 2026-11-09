@@ -1,12 +1,13 @@
 # Changelog
 
-## [2.1.1] - Unreleased
+## [2.1.1] - 2026-11-09
 
 ### Fixed
 
 - Reduce calls to GetComponent\<Animator>
 - Cache parsed takes
 - Batch curve construction and linear tangent updates
+- Reduce frame parsing allocations with spans and reusable buffers
 
 ## [2.1.0] - 2026-10-03
 

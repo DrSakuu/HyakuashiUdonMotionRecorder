@@ -112,6 +112,7 @@ namespace DrSakuu.Humr.Editor
 
     public static class HumrLogParser
     {
+
         private static readonly (TargetType, string) CorruptTargetTuple = (TargetType.Unknown, "HUMR data is corrupt");
         private static readonly Regex LogFileNameCleanupRegex = new(@"^output_log_|\.txt$", RegexOptions.Compiled);
 
@@ -205,14 +206,15 @@ namespace DrSakuu.Humr.Editor
             var currentTake = CreateRecordingTake(targetTuple);
             var previousTime = 0f;
             var deltaTimesList = new List<float>();
+            var targetPrefix = $"{HumrLogger.HumrRecordingPrefix};{targetTuple.type};{targetTuple.name};";
+            var rotations = new Quaternion[HumanTrait.BoneCount];
 
             foreach (var line in lines)
             {
-                var frameStartIndex = HumrLogger.TargetFrameStartIndex(
-                    line, targetTuple.type, targetTuple.name);
+                var frameStartIndex = line.IndexOf(targetPrefix, StringComparison.Ordinal);
                 if (frameStartIndex < 0) continue;
 
-                var frameText = line.Substring(frameStartIndex);
+                var frameText = line.AsSpan(frameStartIndex + targetPrefix.Length);
                 if (!TryParseFrame(frameText, out var parsedFrame)) continue;
 
                 if (currentTake.takeTimestamp == 0 && currentTake.IsEmpty)
@@ -228,13 +230,13 @@ namespace DrSakuu.Humr.Editor
                     deltaTimesList.Clear();
                 }
 
+                var recordTime = parsedFrame.recordTime;
                 switch (currentTake)
                 {
                     case ObjectTake objectTake:
                     {
                         if (TryParseObjectValues(
                                 parsedFrame.parts,
-                                out var recordTime,
                                 out var pos,
                                 out var rot,
                                 out var scale))
@@ -253,11 +255,10 @@ namespace DrSakuu.Humr.Editor
                     {
                         if (TryParseBoneValues(
                                 parsedFrame.parts,
-                                out var recordTime,
                                 out var hipPos,
-                                out var rotations))
+                                rotations, out var rotationCount))
                         {
-                            AddBoneCurveKeys(boneTake, recordTime, hipPos, rotations);
+                            AddBoneCurveKeys(boneTake, recordTime, hipPos, rotations, rotationCount);
                             if (deltaTimesList.Count != 0 || !Mathf.Approximately(recordTime - previousTime, 0f))
                                 deltaTimesList.Add(recordTime - previousTime);
 
@@ -423,21 +424,14 @@ namespace DrSakuu.Humr.Editor
         }
 
         private static bool TryParseObjectValues(
-            string[] parts, out float recordTime, out Vector3 position, out Quaternion rotation, out Vector3 localScale)
+            ReadOnlySpan<char> parts, out Vector3 position, out Quaternion rotation, out Vector3 localScale)
         {
-            recordTime = 0f;
-            position = Vector3.zero;
+            position = default;
             rotation = Quaternion.identity;
             localScale = Vector3.one;
-
-            if (parts.Length < 5) return false;
-            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out recordTime))
-                return false;
-            if (!HumrLogger.TryParseVector3(parts[2], out position)) return false;
-            if (!HumrLogger.TryParseQuaternion(parts[3], out rotation)) return false;
-            if (!HumrLogger.TryParseVector3(parts[4], out localScale)) return false;
-
-            return true;
+            return TryParseVector3(TakeField(ref parts), out position) &&
+                   TryParseQuaternion(TakeField(ref parts), out rotation) &&
+                   TryParseVector3(TakeField(ref parts), out localScale);
         }
 
         private static void AddObjectCurveKeys(ObjectTake take, float time, Vector3 pos, Quaternion rot, Vector3 scale)
@@ -456,41 +450,24 @@ namespace DrSakuu.Humr.Editor
         }
 
         private static bool TryParseBoneValues(
-            string[] parts,
-            out float recordTime,
-            out Vector3 hipPosition,
-            out Quaternion[] rotations)
+            ReadOnlySpan<char> parts, out Vector3 hipPosition, Quaternion[] rotations, out int rotationCount)
         {
-            recordTime = 0f;
-            hipPosition = Vector3.zero;
-            rotations = null;
-
-            if (parts.Length < 3) return false;
-
-            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out recordTime))
-                return false;
-
-            if (!HumrLogger.TryParseVector3(parts[2], out hipPosition))
-                return false;
-
-            var rotationList = new List<Quaternion>();
-            for (var i = 3; i < parts.Length; i++)
-                if (HumrLogger.TryParseQuaternion(parts[i], out var rotation))
-                    rotationList.Add(rotation);
-
-            if (rotationList.Count == 0) return false;
-
-            rotations = rotationList.ToArray();
-            return true;
+            rotationCount = 0;
+            if (!TryParseVector3(TakeField(ref parts), out hipPosition)) return false;
+            // Preserve the existing compaction of valid rotations; extra bones are ignored by the writer.
+            while (!parts.IsEmpty && rotationCount < rotations.Length)
+                if (TryParseQuaternion(TakeField(ref parts), out var rotation))
+                    rotations[rotationCount++] = rotation;
+            return rotationCount > 0;
         }
 
-        private static void AddBoneCurveKeys(BoneRotationsTake take, float time, Vector3 hipPos, Quaternion[] rotations)
+        private static void AddBoneCurveKeys(BoneRotationsTake take, float time, Vector3 hipPos, Quaternion[] rotations, int rotationCount)
         {
             take.HipCurves[0].curve.AddKey(time, hipPos.x);
             take.HipCurves[1].curve.AddKey(time, hipPos.y);
             take.HipCurves[2].curve.AddKey(time, hipPos.z);
 
-            var rotationCount = Mathf.Min(rotations.Length, take.BoneCurves.Length);
+            rotationCount = Mathf.Min(rotationCount, take.BoneCurves.Length);
             for (var i = 0; i < rotationCount; i++)
             {
                 take.BoneCurves[i][0].curve.AddKey(time, rotations[i].x);
@@ -500,22 +477,62 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private static bool TryParseFrame(
-            string frameText,
-            out (long timestamp, float recordTime, string[] parts) frame)
+        private ref struct ParsedFrame
+        {
+            public long timestamp;
+            public float recordTime;
+            public ReadOnlySpan<char> parts;
+        }
+
+        private static bool TryParseFrame(ReadOnlySpan<char> frameText, out ParsedFrame frame)
         {
             frame = default;
+            if (frameText.IndexOf(';') < 0) return false;
+            if (!long.TryParse(TakeField(ref frameText), NumberStyles.Integer,
+                    CultureInfo.InvariantCulture, out frame.timestamp)) return false;
+            if (!float.TryParse(TakeField(ref frameText), NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out frame.recordTime)) return false;
+            frame.parts = frameText;
+            return true;
+        }
 
-            var parts = HumrLogger.SplitFrame(frameText);
-            if (parts.Length < 2) return false;
+        private static ReadOnlySpan<char> TakeField(ref ReadOnlySpan<char> remaining)
+        {
+            var separator = remaining.IndexOf(';');
+            var field = separator < 0 ? remaining : remaining.Slice(0, separator);
+            remaining = separator < 0 ? ReadOnlySpan<char>.Empty : remaining.Slice(separator + 1);
+            return field;
+        }
 
-            if (!long.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var timestamp))
-                return false;
+        private static bool TryParseComponents(ReadOnlySpan<char> text, Span<float> values)
+        {
+            for (var i = 0; i < values.Length; i++)
+            {
+                var separator = text.IndexOf(',');
+                if ((separator < 0) != (i == values.Length - 1)) return false;
+                var component = separator < 0 ? text : text.Slice(0, separator);
+                if (!float.TryParse(component, NumberStyles.Float, CultureInfo.InvariantCulture, out values[i]))
+                    return false;
+                if (separator >= 0) text = text.Slice(separator + 1);
+            }
+            return true;
+        }
 
-            if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var recordTime))
-                return false;
+        private static bool TryParseVector3(ReadOnlySpan<char> text, out Vector3 value)
+        {
+            value = default;
+            Span<float> components = stackalloc float[3];
+            if (!TryParseComponents(text, components)) return false;
+            value = new Vector3(components[0], components[1], components[2]);
+            return true;
+        }
 
-            frame = (timestamp, recordTime, parts);
+        private static bool TryParseQuaternion(ReadOnlySpan<char> text, out Quaternion value)
+        {
+            value = default;
+            Span<float> components = stackalloc float[4];
+            if (!TryParseComponents(text, components)) return false;
+            value = new Quaternion(components[0], components[1], components[2], components[3]);
             return true;
         }
     }
