@@ -6,6 +6,7 @@
 
 - Reduce calls to GetComponent\<Animator>
 - Cache parsed takes
+- Batch curve construction and linear tangent updates
 
 ## [2.1.0] - 2026-10-03
 

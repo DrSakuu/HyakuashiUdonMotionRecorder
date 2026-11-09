@@ -493,7 +493,8 @@ namespace DrSakuu.Humr.Editor
         private void ExportAnim(RecordingTake take, string logTimestamp)
         {
             var originalLoader = _loader;
-            var tempLoaderObject = Instantiate(_loader.gameObject);
+            GameObject tempLoaderObject;
+            tempLoaderObject = Instantiate(_loader.gameObject);
 
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
@@ -563,7 +564,8 @@ namespace DrSakuu.Humr.Editor
             }
 
             var originalLoader = _loader;
-            var tempLoaderObject = Instantiate(_loader.gameObject);
+            GameObject tempLoaderObject;
+            tempLoaderObject = Instantiate(_loader.gameObject);
 
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();

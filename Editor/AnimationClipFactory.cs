@@ -6,6 +6,7 @@ namespace DrSakuu.Humr.Editor
 {
     public static class AnimationClipFactory
     {
+
         public static AnimationClip PopulateHumanoidClip(RecordingTake take, Animator animator, float frameRate)
         {
             if (take is not BoneRotationsTake boneTake || animator == null || !animator.isHuman || boneTake.IsEmpty)
@@ -274,18 +275,59 @@ namespace DrSakuu.Humr.Editor
             if (source == null || source.length == 0 || frameTimes == null || frameTimes.Length == 0)
                 return source;
 
-            var resampledCurve = new AnimationCurve();
-            foreach (var frameTime in frameTimes) resampledCurve.AddKey(frameTime, source.Evaluate(frameTime));
-            return resampledCurve;
+            var keys = new Keyframe[frameTimes.Length];
+            var keyCount = 0;
+            foreach (var frameTime in frameTimes)
+            {
+                // Generated sample times are ordered. Match AddKey's rejection of duplicate times.
+                if (keyCount > 0 && keys[keyCount - 1].time == frameTime) continue;
+                keys[keyCount++] = new Keyframe(frameTime, source.Evaluate(frameTime));
+            }
+
+            if (keyCount != keys.Length) Array.Resize(ref keys, keyCount);
+            return new AnimationCurve(keys);
         }
 
         private static void SetLinearTangents(AnimationCurve curve)
         {
-            for (var k = 0; k < curve.keys.Length; k++)
+            if (curve.length <= 4)
             {
-                AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
-                AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
+                for (var k = 0; k < curve.length; k++)
+                {
+                    AnimationUtility.SetKeyLeftTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
+                    AnimationUtility.SetKeyRightTangentMode(curve, k, AnimationUtility.TangentMode.Linear);
+                }
+                return;
             }
+
+            var keys = curve.keys;
+            var templateCurve = new AnimationCurve();
+            templateCurve.AddKey(keys[0].time, keys[0].value);
+            templateCurve.AddKey(keys[1].time, keys[1].value);
+            templateCurve.AddKey(keys[keys.Length - 2].time, keys[keys.Length - 2].value);
+            templateCurve.AddKey(keys[keys.Length - 1].time, keys[keys.Length - 1].value);
+            for (var k = 0; k < templateCurve.length; k++)
+            {
+                AnimationUtility.SetKeyLeftTangentMode(templateCurve, k, AnimationUtility.TangentMode.Linear);
+                AnimationUtility.SetKeyRightTangentMode(templateCurve, k, AnimationUtility.TangentMode.Linear);
+            }
+
+            var templates = templateCurve.keys;
+            var previousSlope = (keys[1].value - keys[0].value) / (keys[1].time - keys[0].time);
+            for (var k = 1; k < keys.Length - 1; k++)
+            {
+                var nextSlope = (keys[k + 1].value - keys[k].value) / (keys[k + 1].time - keys[k].time);
+                var key = templates[1];
+                key.time = keys[k].time;
+                key.value = keys[k].value;
+                key.inTangent = previousSlope;
+                key.outTangent = nextSlope;
+                keys[k] = key;
+                previousSlope = nextSlope;
+            }
+            keys[0] = templates[0];
+            keys[keys.Length - 1] = templates[templates.Length - 1];
+            curve.keys = keys;
         }
     }
 }
