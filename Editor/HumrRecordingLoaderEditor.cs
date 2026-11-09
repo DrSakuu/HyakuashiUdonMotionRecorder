@@ -30,11 +30,20 @@ namespace DrSakuu.Humr.Editor
         private const string ReplaceExistingKey = "DrSakuu.Humr.ReplaceExisting";
         private const string AnimFpsKey = "DrSakuu.Humr.AnimFps";
 
-        private static readonly Dictionary<string, (DateTime, RecordingFile)> RecordingFileCache = new();
+        private sealed class RecordingCacheEntry
+        {
+            public (DateTime lastWriteTimeUtc, long length) Version;
+            public RecordingFile File;
+            public readonly Dictionary<(TargetType type, string name), RecordingTake[]> Takes = new();
+        }
+
+        private static readonly Dictionary<string, RecordingCacheEntry> RecordingFileCache =
+            new(StringComparer.OrdinalIgnoreCase);
         private readonly string[] _fpsOptions = { "24", "25", "30", "50", "60", "Custom" };
         private readonly float[] _fpsValues = { 24f, 25f, 30f, 50f, 60f };
 
         private RecordingFile _currentFile;
+        private RecordingTake[] _currentTakes = Array.Empty<RecordingTake>();
         private int _fpsPopupIndex = 3;
         private HumrRecordingLoader _loader;
         private string[] _recordingFileNames = { NoLogsOption };
@@ -145,18 +154,7 @@ namespace DrSakuu.Humr.Editor
 
             foreach (var filePath in logFilePaths)
             {
-                var lastWriteTime = File.GetLastWriteTime(filePath);
-
-                if (RecordingFileCache.TryGetValue(filePath, out var cachedFile) &&
-                    cachedFile.Item1 == lastWriteTime)
-                {
-                    recordFileList.Add(cachedFile.Item2);
-                    continue;
-                }
-
-                var recordingFile = HumrLogParser.CreateRecordingFile(filePath);
-                RecordingFileCache[filePath] = (lastWriteTime, recordingFile);
-                recordFileList.Add(recordingFile);
+                recordFileList.Add(GetRecordingCacheEntry(filePath).File);
             }
 
             _recordingFiles = recordFileList.OrderByDescending(file => file.LastWriteTime).ToArray();
@@ -178,6 +176,7 @@ namespace DrSakuu.Humr.Editor
         private void ClearRecordingFiles()
         {
             _currentFile = null;
+            _currentTakes = Array.Empty<RecordingTake>();
             _recordingFiles = null;
             _recordingFileNames = new[] { NoLogsOption };
         }
@@ -190,6 +189,7 @@ namespace DrSakuu.Humr.Editor
 
         private void SetCurrentRecordingFile()
         {
+            _currentTakes = Array.Empty<RecordingTake>();
             if (!HasRecordingFiles)
             {
                 _currentFile = null;
@@ -207,25 +207,92 @@ namespace DrSakuu.Humr.Editor
         {
             if (_currentFile == null) return;
 
-            _currentFile.Targets = HumrLogParser.ScanTargets(_currentFile);
+            GetCurrentCacheEntry();
             _loader.targetIndex = 0;
+        }
+
+        private static (DateTime lastWriteTimeUtc, long length) GetFileVersion(string path)
+        {
+            var info = new FileInfo(path);
+            return (info.LastWriteTimeUtc, info.Length);
+        }
+
+        private static RecordingCacheEntry GetRecordingCacheEntry(string path)
+        {
+            var version = GetFileVersion(path);
+            if (RecordingFileCache.TryGetValue(path, out var entry) && entry.Version == version)
+                return entry;
+
+            RecordingFileCache.Remove(path);
+            entry = new RecordingCacheEntry
+            {
+                Version = version,
+                File = HumrLogParser.CreateRecordingFile(path)
+            };
+
+            if (GetFileVersion(path) == version)
+                RecordingFileCache[path] = entry;
+            return entry;
+        }
+
+        private static void DiscardChangedEntry(RecordingCacheEntry entry)
+        {
+            var path = entry.File.path;
+            if (GetFileVersion(path) != entry.Version &&
+                RecordingFileCache.TryGetValue(path, out var cached) && ReferenceEquals(cached, entry))
+                RecordingFileCache.Remove(path);
+        }
+
+        private RecordingCacheEntry GetCurrentCacheEntry()
+        {
+            var entry = GetRecordingCacheEntry(_currentFile.path);
+            _currentFile = entry.File;
+            _recordingFiles[_loader.fileIndex] = _currentFile;
+            _recordingFileNames[_loader.fileIndex] = _currentFile.fileName;
+            if (_currentFile.Targets == null)
+            {
+                try
+                {
+                    _currentFile.Targets = HumrLogParser.ScanTargets(_currentFile);
+                }
+                finally
+                {
+                    DiscardChangedEntry(entry);
+                }
+            }
+            return entry;
         }
 
         private void ParseTakes()
         {
+            _currentTakes = Array.Empty<RecordingTake>();
+            if (_currentFile == null) return;
+            var entry = GetCurrentCacheEntry();
             if (_currentFile?.Targets == null || _currentFile.Targets.Length == 0) return;
 
             _loader.targetIndex = Mathf.Clamp(_loader.targetIndex, 0, _currentFile.Targets.Length - 1);
 
             var targetTuple = _currentFile.Targets[_loader.targetIndex];
-            var logLines = HumrLogParser.LoadHumrLogLines(_currentFile.path);
+            if (entry.Takes.TryGetValue(targetTuple, out var cachedTakes))
+            {
+                _currentTakes = cachedTakes;
+                return;
+            }
 
-            _currentFile.LastWriteTime = File.GetLastWriteTime(_currentFile.path);
+            try
+            {
+                var logLines = HumrLogParser.LoadHumrLogLines(_currentFile.path);
 
-            if (targetTuple.type == TargetType.Legacy)
-                logLines = HumrLogParser.ConvertLegacyLines(logLines, targetTuple.name);
+                if (targetTuple.type == TargetType.Legacy)
+                    logLines = HumrLogParser.ConvertLegacyLines(logLines, targetTuple.name);
 
-            _currentFile.takes = HumrLogParser.ParseTakes(logLines, targetTuple);
+                _currentTakes = HumrLogParser.ParseTakes(logLines, targetTuple);
+                entry.Takes[targetTuple] = _currentTakes;
+            }
+            finally
+            {
+                DiscardChangedEntry(entry);
+            }
         }
 
         private void DrawAdvancedSection()
@@ -378,7 +445,7 @@ namespace DrSakuu.Humr.Editor
 
         private void DrawTakeSummary(ref string errorMessage, bool validHuman)
         {
-            if (_currentFile.takes.Length == 0)
+            if (_currentTakes.Length == 0)
             {
                 SetError(ref errorMessage, "No takes found");
                 return;
@@ -404,7 +471,7 @@ namespace DrSakuu.Humr.Editor
             EditorGUILayout.PrefixLabel("Include in .fbx");
 
             using var disabledScope = new EditorGUI.DisabledScope(!validHuman);
-            foreach (var take in _currentFile.takes)
+            foreach (var take in _currentTakes)
             {
                 EditorGUILayout.BeginHorizontal();
                 var frameCount = take.FrameCount;
@@ -489,7 +556,7 @@ namespace DrSakuu.Humr.Editor
                 return;
             }
 
-            if (_currentFile?.takes == null || _currentFile.takes.Length == 0)
+            if (_currentFile == null || _currentTakes.Length == 0)
             {
                 HumrLogger.Error("No takes found.");
                 return;
@@ -504,7 +571,7 @@ namespace DrSakuu.Humr.Editor
 
             try
             {
-                PrepareFbxController(_currentFile.takes, _currentFile.path);
+                PrepareFbxController(_currentTakes, _currentFile.path);
             }
             finally
             {

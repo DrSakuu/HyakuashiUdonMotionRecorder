@@ -5,6 +5,7 @@
 ### Fixed
 
 - Reduce calls to GetComponent\<Animator>
+- Cache parsed takes
 
 ## [2.1.0] - 2026-10-03
 
