@@ -2,6 +2,10 @@
 
 ## [2.1.3] - Unreleased
 
+### Added
+
+- Save log type cache to disk
+
 ### Changed
 
 - Save recording selection per avatar definition

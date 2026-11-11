@@ -116,9 +116,18 @@ namespace DrSakuu.Humr.Editor
         private static readonly (TargetType, string) CorruptTargetTuple = (TargetType.Unknown, "HUMR data is corrupt");
         private static readonly Regex LogFileNameCleanupRegex = new(@"^output_log_|\.txt$", RegexOptions.Compiled);
 
-        public static RecordingFile CreateRecordingFile(string filePath)
+        public static RecordingFile CreateRecordingFile(string filePath, bool bypassDiskCache = false)
         {
-            var type = DetectHumrMarkers(filePath) ? LogType.Humr : LogType.NoData;
+            var source = new FileInfo(filePath);
+            var lastWriteTimeUtc = source.LastWriteTimeUtc;
+            var fileSize = source.Length;
+            var containsHumrData = false;
+            if (bypassDiskCache || !RecordingDiskCache.TryLoad(filePath, lastWriteTimeUtc, fileSize, out containsHumrData))
+            {
+                containsHumrData = DetectHumrMarkers(filePath);
+                RecordingDiskCache.Save(filePath, lastWriteTimeUtc, fileSize, containsHumrData);
+            }
+            var type = containsHumrData ? LogType.Humr : LogType.NoData;
             return new RecordingFile
             {
                 path = filePath,

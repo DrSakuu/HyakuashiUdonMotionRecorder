@@ -169,7 +169,11 @@ namespace DrSakuu.Humr.Editor
 
         private void UpdateRecordingFiles(bool clearCache = false)
         {
-            if (clearCache) RecordingFileCache.Clear();
+            if (clearCache)
+            {
+                RecordingFileCache.Clear();
+                RecordingDiskCache.Clear();
+            }
 
             if (string.IsNullOrEmpty(LogPath) || !Directory.Exists(LogPath))
             {
@@ -182,7 +186,7 @@ namespace DrSakuu.Humr.Editor
 
             foreach (var filePath in logFilePaths)
             {
-                recordFileList.Add(GetRecordingCacheEntry(filePath).File);
+                recordFileList.Add(GetRecordingCacheEntry(filePath, clearCache).File);
             }
 
             _recordingFiles = recordFileList.OrderByDescending(file => file.LastWriteTime).ToArray();
@@ -255,7 +259,7 @@ namespace DrSakuu.Humr.Editor
             return (info.LastWriteTimeUtc, info.Length);
         }
 
-        private static RecordingCacheEntry GetRecordingCacheEntry(string path)
+        private static RecordingCacheEntry GetRecordingCacheEntry(string path, bool bypassDiskCache = false)
         {
             var version = GetFileVersion(path);
             if (RecordingFileCache.TryGetValue(path, out var entry) && entry.Version == version)
@@ -265,7 +269,7 @@ namespace DrSakuu.Humr.Editor
             entry = new RecordingCacheEntry
             {
                 Version = version,
-                File = HumrLogParser.CreateRecordingFile(path)
+                File = HumrLogParser.CreateRecordingFile(path, bypassDiskCache)
             };
 
             if (GetFileVersion(path) == version)
