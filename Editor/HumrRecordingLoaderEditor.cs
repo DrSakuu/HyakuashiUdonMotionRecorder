@@ -677,6 +677,9 @@ namespace DrSakuu.Humr.Editor
                 var importer = AssetImporter.GetAtPath(exportPath) as ModelImporter;
                 if (importer == null) return;
 
+                importer.isReadable = true;
+                importer.importBlendShapeNormals = ModelImporterNormals.None;
+
                 foreach (var identifier in importer.GetExternalObjectMap().Keys)
                     if (identifier.type == typeof(Material))
                         importer.RemoveRemap(identifier);

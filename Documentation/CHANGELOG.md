@@ -9,6 +9,7 @@
 ### Changed
 
 - Use source object name for exported assets
+- Enable fbx import Read/Write and disable BlendShape normals
 
 ### Fixed
 
