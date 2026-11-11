@@ -5,6 +5,7 @@
 ### Added
 
 - Advanced setting to strip non-deforming objects from export
+- Set .anim export type Humanoid/Generic
 
 ### Changed
 

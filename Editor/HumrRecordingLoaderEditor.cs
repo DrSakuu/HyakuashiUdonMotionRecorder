@@ -31,6 +31,15 @@ namespace DrSakuu.Humr.Editor
         private const string ShowFrameInfoKey = "DrSakuu.Humr.ShowFrameInfo";
         private const string ReplaceExistingKey = "DrSakuu.Humr.ReplaceExisting";
         private const string AnimFpsKey = "DrSakuu.Humr.AnimFps";
+        private const string AnimRigTypeKey = "DrSakuu.Humr.AnimRigType";
+
+        private enum AnimRigType { Humanoid, Generic }
+
+        private static AnimRigType AnimType
+        {
+            get => (AnimRigType)EditorPrefs.GetInt(AnimRigTypeKey, (int)AnimRigType.Humanoid);
+            set => EditorPrefs.SetInt(AnimRigTypeKey, (int)value);
+        }
 
         private sealed class RecordingCacheEntry
         {
@@ -480,7 +489,11 @@ namespace DrSakuu.Humr.Editor
 
             AnimFps = Mathf.Max(1f, AnimFps);
 
-            EditorGUILayout.PrefixLabel("Include in .fbx");
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Include in .fbx", GUILayout.MinWidth(90));
+            GUILayout.Label(new GUIContent("Type:", "Animation type for .anim exports only."), GUILayout.Width(35));
+            AnimType = (AnimRigType)EditorGUILayout.EnumPopup(AnimType, GUILayout.Width(100));
+            EditorGUILayout.EndHorizontal();
 
             using var disabledScope = new EditorGUI.DisabledScope(!validHuman);
             foreach (var take in _currentTakes)
@@ -549,6 +562,9 @@ namespace DrSakuu.Humr.Editor
 
         private AnimationClip CreateAnimationClip(RecordingTake take)
         {
+            if (AnimType == AnimRigType.Generic)
+                return CreateFbxClip(take);
+
             return take.targetType switch
             {
                 TargetType.BoneRotations => AnimationClipFactory.PopulateHumanoidClip(take, _loader.Animator, AnimFps),
@@ -690,6 +706,12 @@ namespace DrSakuu.Humr.Editor
 
                 if (IsHumanoidBoneTarget(targetType))
                     SetHumanImportSettings(importer, animator.avatar);
+                else
+                {
+                    importer.animationType = ModelImporterAnimationType.Generic;
+                    importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                    importer.sourceAvatar = null;
+                }
                 importer.SaveAndReimport();
             }
             finally
