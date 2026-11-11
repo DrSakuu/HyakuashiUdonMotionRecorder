@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.2] - Unreleased
+## [2.1.2] - 2026-11-11
 
 ### Added
 
@@ -16,6 +16,7 @@
 
 - Preserve exported bone names
 - Copy avatar definition and materials from source avatar
+- Keep same recording file selected
 
 ## [2.1.1] - 2026-11-09
 

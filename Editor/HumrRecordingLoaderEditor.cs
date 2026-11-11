@@ -104,6 +104,7 @@ namespace DrSakuu.Humr.Editor
         }
 
         private bool HasRecordingFiles => _recordingFiles is { Length: > 0 };
+        private string RecordingSelectionKey => $"DrSakuu.Humr.SelectedRecording.{_loader.GetInstanceID()}";
         private TargetType CurrentTargetType => _currentFile.Targets[_loader.targetIndex].type;
 
         private void OnEnable()
@@ -186,7 +187,13 @@ namespace DrSakuu.Humr.Editor
                 .Select(file => file.fileName)
                 .ToArray();
 
-            SelectFirstHumrFile();
+            var selectedPath = SessionState.GetString(RecordingSelectionKey, string.Empty);
+            var selectedIndex = Array.FindIndex(_recordingFiles,
+                file => string.Equals(file.path, selectedPath, StringComparison.OrdinalIgnoreCase));
+            if (selectedIndex >= 0)
+                _loader.fileIndex = selectedIndex;
+            else
+                SelectFirstHumrFile();
             SetCurrentRecordingFile();
         }
 
@@ -216,6 +223,11 @@ namespace DrSakuu.Humr.Editor
             _loader.fileIndex = Mathf.Clamp(_loader.fileIndex, 0, _recordingFiles.Length - 1);
             _currentFile = _recordingFiles[_loader.fileIndex];
 
+            var previousPath = SessionState.GetString(RecordingSelectionKey, string.Empty);
+            if (!string.Equals(previousPath, _currentFile.path, StringComparison.OrdinalIgnoreCase))
+                _loader.targetIndex = 0;
+            SessionState.SetString(RecordingSelectionKey, _currentFile.path);
+
             ScanTargets();
             ParseTakes();
         }
@@ -225,7 +237,6 @@ namespace DrSakuu.Humr.Editor
             if (_currentFile == null) return;
 
             GetCurrentCacheEntry();
-            _loader.targetIndex = 0;
         }
 
         private static (DateTime lastWriteTimeUtc, long length) GetFileVersion(string path)
