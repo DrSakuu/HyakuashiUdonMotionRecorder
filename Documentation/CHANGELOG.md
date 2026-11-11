@@ -1,22 +1,10 @@
 # Changelog
 
-## [2.1.2] - 2026-11-11
-
-### Added
-
-- Advanced setting to strip non-deforming objects from export
-- Set .anim export type Humanoid/Generic
+## [2.1.3] - Unreleased
 
 ### Changed
 
-- Use source object name for exported assets
-- Enable fbx import Read/Write and disable BlendShape normals
-
-### Fixed
-
-- Preserve exported bone names
-- Copy avatar definition and materials from source avatar
-- Keep same recording file selected
+- Save recording selection per avatar definition
 
 ## [2.1.1] - 2026-11-09
 

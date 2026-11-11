@@ -104,7 +104,17 @@ namespace DrSakuu.Humr.Editor
         }
 
         private bool HasRecordingFiles => _recordingFiles is { Length: > 0 };
-        private string RecordingSelectionKey => $"DrSakuu.Humr.SelectedRecording.{_loader.GetInstanceID()}";
+        private string RecordingSelectionKey
+        {
+            get
+            {
+                var animator = _loader.Animator;
+                var avatarName = animator != null && animator.avatar != null
+                    ? animator.avatar.name
+                    : _loader.gameObject.name;
+                return $"DrSakuu.Humr.SelectedRecording.{avatarName}";
+            }
+        }
         private TargetType CurrentTargetType => _currentFile.Targets[_loader.targetIndex].type;
 
         private void OnEnable()
