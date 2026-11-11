@@ -491,16 +491,20 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void ExportAnim(RecordingTake take, string logTimestamp)
+        private GameObject CreateTempExportObject()
         {
-            var originalLoader = _loader;
-            GameObject tempLoaderObject;
-            tempLoaderObject = Instantiate(_loader.gameObject);
-            tempLoaderObject.name = originalLoader.gameObject.name;
-
+            var tempLoaderObject = Instantiate(_loader.gameObject);
+            tempLoaderObject.name = _loader.gameObject.name;
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
             if (_loader.Animator == null) _loader.gameObject.AddComponent<Animator>();
+            return tempLoaderObject;
+        }
+
+        private void ExportAnim(RecordingTake take, string logTimestamp)
+        {
+            var originalLoader = _loader;
+            var tempLoaderObject = CreateTempExportObject();
 
             AnimationClip takeClip;
             try
@@ -566,13 +570,7 @@ namespace DrSakuu.Humr.Editor
             }
 
             var originalLoader = _loader;
-            GameObject tempLoaderObject;
-            tempLoaderObject = Instantiate(_loader.gameObject);
-            tempLoaderObject.name = originalLoader.gameObject.name;
-
-            tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-            _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
-            if (_loader.Animator == null) _loader.gameObject.AddComponent<Animator>();
+            var tempLoaderObject = CreateTempExportObject();
 
             try
             {
