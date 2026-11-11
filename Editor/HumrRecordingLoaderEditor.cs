@@ -658,10 +658,12 @@ namespace DrSakuu.Humr.Editor
                 StripUnusedExportObjects(_loader.transform, animator, tempController.Controller.animationClips);
             var originalRootBones = ApplyBlenderHipFix(animator);
             var previousAnimatorController = animator.runtimeAnimatorController;
+            var exportMaterials = new Dictionary<Material, Material>();
 
             try
             {
                 animator.runtimeAnimatorController = tempController.Controller;
+                PrepareExportMaterials(_loader.gameObject, exportMaterials);
 
                 var fileName = $"{targetName}_{logTimestamp}";
                 var exportPath = GetAssetPath("FBXs", targetName, fileName, "fbx");
@@ -671,18 +673,62 @@ namespace DrSakuu.Humr.Editor
 
                 SelectExportedAsset(exportPath);
 
-                if (!IsHumanoidBoneTarget(targetType)) return;
-
                 var importer = AssetImporter.GetAtPath(exportPath) as ModelImporter;
                 if (importer == null) return;
 
-                SetHumanImportSettings(importer, animator.avatar);
+                foreach (var identifier in importer.GetExternalObjectMap().Keys)
+                    if (identifier.type == typeof(Material))
+                        importer.RemoveRemap(identifier);
+                foreach (var pair in exportMaterials)
+                    if (EditorUtility.IsPersistent(pair.Key))
+                        importer.AddRemap(
+                            new AssetImporter.SourceAssetIdentifier(typeof(Material), pair.Value.name), pair.Key);
+
+                if (IsHumanoidBoneTarget(targetType))
+                    SetHumanImportSettings(importer, animator.avatar);
                 importer.SaveAndReimport();
             }
             finally
             {
                 animator.runtimeAnimatorController = previousAnimatorController;
                 RestoreRootBones(originalRootBones);
+                foreach (var material in exportMaterials.Values)
+                    DestroyImmediate(material);
+            }
+        }
+
+        private static void PrepareExportMaterials(GameObject root, Dictionary<Material, Material> exportMaterials)
+        {
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            var originalNames = new HashSet<string>(renderers.SelectMany(renderer => renderer.sharedMaterials)
+                .Where(material => material != null).Select(material => material.name));
+            var usedNames = new HashSet<string>();
+            foreach (var renderer in renderers)
+            {
+                var materials = renderer.sharedMaterials;
+                for (var i = 0; i < materials.Length; i++)
+                {
+                    var original = materials[i];
+                    if (original == null) continue;
+                    if (!exportMaterials.TryGetValue(original, out var exportMaterial))
+                    {
+                        var exportName = original.name;
+                        if (!usedNames.Add(exportName))
+                        {
+                            var suffix = 1;
+                            do { exportName = $"{original.name}_{suffix++}"; }
+                            while (originalNames.Contains(exportName) || !usedNames.Add(exportName));
+                        }
+                        exportMaterial = new Material(original)
+                        {
+                            name = exportName,
+                            hideFlags = HideFlags.HideAndDontSave
+                        };
+                        exportMaterials.Add(original, exportMaterial);
+                    }
+                    materials[i] = exportMaterial;
+                }
+                renderer.sharedMaterials = materials;
             }
         }
 
