@@ -9,6 +9,7 @@
 ### Fixed
 
 - Preserve exported bone names
+- Copy avatar definition for export from source avatar
 
 ## [2.1.1] - 2026-11-09
 

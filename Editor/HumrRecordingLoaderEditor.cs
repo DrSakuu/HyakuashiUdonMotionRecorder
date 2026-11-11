@@ -506,6 +506,13 @@ namespace DrSakuu.Humr.Editor
         {
             var tempLoaderObject = Instantiate(_loader.gameObject);
             tempLoaderObject.name = _loader.gameObject.name;
+            var avatar = _loader.Animator != null ? _loader.Animator.avatar : null;
+            if (avatar != null && avatar.isValid && avatar.isHuman)
+            {
+                var skeleton = avatar.humanDescription.skeleton;
+                if (skeleton != null && skeleton.Length > 0 && !string.IsNullOrEmpty(skeleton[0].name))
+                    tempLoaderObject.name = skeleton[0].name;
+            }
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
             if (_loader.Animator == null) _loader.gameObject.AddComponent<Animator>();
@@ -669,7 +676,7 @@ namespace DrSakuu.Humr.Editor
                 var importer = AssetImporter.GetAtPath(exportPath) as ModelImporter;
                 if (importer == null) return;
 
-                SetHumanImportSettings(importer);
+                SetHumanImportSettings(importer, animator.avatar);
                 importer.SaveAndReimport();
             }
             finally
@@ -804,9 +811,11 @@ namespace DrSakuu.Humr.Editor
             EditorGUIUtility.PingObject(createdAsset);
         }
 
-        private static void SetHumanImportSettings(ModelImporter importer)
+        private static void SetHumanImportSettings(ModelImporter importer, Avatar sourceAvatar)
         {
             importer.animationType = ModelImporterAnimationType.Human;
+            importer.avatarSetup = ModelImporterAvatarSetup.CopyFromOther;
+            importer.sourceAvatar = sourceAvatar;
 
             var clipAnimations = importer.clipAnimations.Length == 0
                 ? importer.defaultClipAnimations
