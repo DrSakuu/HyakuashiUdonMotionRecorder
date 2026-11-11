@@ -537,7 +537,8 @@ namespace DrSakuu.Humr.Editor
 
             if (takeClip == null) return;
 
-            var animationName = PathUtils.BuildAnimationName(take, logTimestamp);
+            var sourceName = originalLoader.gameObject.name;
+            var animationName = PathUtils.BuildAnimationName(take, logTimestamp, sourceName);
             takeClip.name = animationName;
             var animationAssetPath = GetAssetPath(
                 "Animations", take.targetName, animationName, "anim");
@@ -562,7 +563,7 @@ namespace DrSakuu.Humr.Editor
             var folderPath = Path.Join(HumrPath, subFolder, PathUtils.SanitizeFileName(targetName));
             PathUtils.CreateDirectoryIfNotExist(folderPath);
 
-            return Path.Join(folderPath, $"{fileName}.{extension}");
+            return Path.Join(folderPath, $"{PathUtils.SanitizeFileName(fileName)}.{extension}");
         }
 
         private void DrawExportButton(bool enabled)
@@ -592,7 +593,7 @@ namespace DrSakuu.Humr.Editor
 
             try
             {
-                PrepareFbxController(_currentTakes, _currentFile.path);
+                PrepareFbxController(_currentTakes, _currentFile.path, originalLoader.gameObject.name);
             }
             finally
             {
@@ -601,7 +602,7 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void PrepareFbxController(RecordingTake[] takes, string filePath)
+        private void PrepareFbxController(RecordingTake[] takes, string filePath, string sourceName)
         {
             PathUtils.CreateDirectoryIfNotExist(HumrPath);
 
@@ -611,13 +612,12 @@ namespace DrSakuu.Humr.Editor
             try
             {
                 var targetType = takes[0].targetType;
-                var targetName = takes[0].targetName;
                 foreach (var take in takes)
                     if (take.includeInFbx)
-                        AddTakeToController(take, filePath, tempController);
+                        AddTakeToController(take, filePath, sourceName, tempController);
 
                 var logTimestamp = PathUtils.GetDateTimeFromFileName(filePath);
-                ExportControllerToFbx(targetType, targetName, logTimestamp, tempController);
+                ExportControllerToFbx(targetType, takes[0].targetName, sourceName, logTimestamp, tempController);
             }
             finally
             {
@@ -625,12 +625,12 @@ namespace DrSakuu.Humr.Editor
             }
         }
 
-        private void AddTakeToController(RecordingTake take, string filePath, TempControllerBuilder controllerBuilder)
+        private void AddTakeToController(RecordingTake take, string filePath, string sourceName, TempControllerBuilder controllerBuilder)
         {
             var takeClip = CreateFbxClip(take);
             if (takeClip == null) return;
 
-            var animationName = PathUtils.BuildAnimationName(take, filePath);
+            var animationName = PathUtils.BuildAnimationName(take, filePath, sourceName);
             takeClip.name = animationName;
             controllerBuilder.AddClipToController(takeClip);
         }
@@ -650,6 +650,7 @@ namespace DrSakuu.Humr.Editor
         private void ExportControllerToFbx(
             TargetType targetType,
             string targetName,
+            string sourceName,
             string logTimestamp,
             TempControllerBuilder tempController)
         {
@@ -665,7 +666,7 @@ namespace DrSakuu.Humr.Editor
                 animator.runtimeAnimatorController = tempController.Controller;
                 PrepareExportMaterials(_loader.gameObject, exportMaterials);
 
-                var fileName = $"{targetName}_{logTimestamp}";
+                var fileName = $"{sourceName}_{logTimestamp}";
                 var exportPath = GetAssetPath("FBXs", targetName, fileName, "fbx");
                 exportPath = ResolveExistingAssetPath(exportPath, ReplaceExisting);
 

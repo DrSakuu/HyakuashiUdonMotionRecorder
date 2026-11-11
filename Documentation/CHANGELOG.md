@@ -6,6 +6,10 @@
 
 - Advanced setting to strip non-deforming objects from export
 
+### Changed
+
+- Use source object name for exported assets
+
 ### Fixed
 
 - Preserve exported bone names
