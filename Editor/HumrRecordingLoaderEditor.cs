@@ -20,6 +20,13 @@ namespace DrSakuu.Humr.Editor
     [CustomEditor(typeof(HumrRecordingLoader))]
     public class HumrRecordingLoaderEditor : UnityEditor.Editor
     {
+        [Serializable]
+        private sealed class SeenRecordingState
+        {
+            public string folder;
+            public string[] paths;
+        }
+
         private const string VrcLogPathSuffix = @"\AppData\LocalLow\VRChat\VRChat";
         private const string HumrPath = @"Assets\HUMR";
         private const string NoLogsOption = "No logs found";
@@ -190,6 +197,7 @@ namespace DrSakuu.Humr.Editor
             }
 
             _recordingFiles = recordFileList.OrderByDescending(file => file.LastWriteTime).ToArray();
+            var newRecordingIndex = TrackSeenRecordings();
 
             if (_recordingFiles.Length == 0)
             {
@@ -204,11 +212,47 @@ namespace DrSakuu.Humr.Editor
             var selectedPath = SessionState.GetString(RecordingSelectionKey, string.Empty);
             var selectedIndex = Array.FindIndex(_recordingFiles,
                 file => string.Equals(file.path, selectedPath, StringComparison.OrdinalIgnoreCase));
-            if (selectedIndex >= 0)
+            if (newRecordingIndex >= 0)
+                _loader.fileIndex = newRecordingIndex;
+            else if (selectedIndex >= 0)
                 _loader.fileIndex = selectedIndex;
             else
                 SelectFirstHumrFile();
             SetCurrentRecordingFile();
+        }
+
+        private int TrackSeenRecordings()
+        {
+            var key = "DrSakuu.Humr.SeenRecordings." + RecordingSelectionKey;
+            var folder = Path.GetFullPath(LogPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var json = SessionState.GetString(key, string.Empty);
+            SeenRecordingState state = null;
+            if (!string.IsNullOrEmpty(json))
+            {
+                try { state = JsonUtility.FromJson<SeenRecordingState>(json); }
+                catch (ArgumentException) { }
+            }
+
+            var initialized = state?.paths != null &&
+                string.Equals(state.folder, folder, StringComparison.OrdinalIgnoreCase);
+            var seen = new HashSet<string>(initialized ? state.paths : Array.Empty<string>(),
+                StringComparer.OrdinalIgnoreCase);
+            var newRecordingIndex = -1;
+            for (var i = 0; i < _recordingFiles.Length; i++)
+            {
+                var file = _recordingFiles[i];
+                if (file.type != LogType.Humr) continue;
+                if (seen.Add(Path.GetFullPath(file.path)) && initialized && newRecordingIndex < 0)
+                    newRecordingIndex = i;
+            }
+
+            // Retain previously seen paths even when logs disappear temporarily.
+            SessionState.SetString(key, JsonUtility.ToJson(new SeenRecordingState
+            {
+                folder = folder,
+                paths = seen.ToArray()
+            }));
+            return newRecordingIndex;
         }
 
         private void ClearRecordingFiles()
