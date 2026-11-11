@@ -2,6 +2,10 @@
 
 ## [2.1.2] - Unreleased
 
+### Added
+
+- Advanced setting to strip non-deforming objects from export
+
 ### Fixed
 
 - Preserve exported bone names

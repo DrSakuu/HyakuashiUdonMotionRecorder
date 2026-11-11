@@ -27,6 +27,7 @@ namespace DrSakuu.Humr.Editor
         private const string LogPathKey = "DrSakuu.Humr.LogPath";
         private const string ShowAdvancedKey = "DrSakuu.Humr.ShowAdvanced";
         private const string BlenderHipFixKey = "DrSakuu.Humr.BlenderHipFix";
+        private const string StripNonDeformingBonesKey = "DrSakuu.Humr.StripNonDeformingBones";
         private const string ShowFrameInfoKey = "DrSakuu.Humr.ShowFrameInfo";
         private const string ReplaceExistingKey = "DrSakuu.Humr.ReplaceExisting";
         private const string AnimFpsKey = "DrSakuu.Humr.AnimFps";
@@ -73,6 +74,12 @@ namespace DrSakuu.Humr.Editor
         {
             get => EditorPrefs.GetBool(ShowFrameInfoKey, false);
             set => EditorPrefs.SetBool(ShowFrameInfoKey, value);
+        }
+
+        private static bool StripNonDeformingBones
+        {
+            get => EditorPrefs.GetBool(StripNonDeformingBonesKey, true);
+            set => EditorPrefs.SetBool(StripNonDeformingBonesKey, value);
         }
 
         private static ReplaceExistingAction ReplaceExisting
@@ -334,6 +341,10 @@ namespace DrSakuu.Humr.Editor
             BlenderHipFix = EditorGUILayout.Toggle(new GUIContent("Blender hip fix",
                     "If a skinned mesh renderer's Root Bone is not set to Armature, the .fbx file will import into Blender with incorrect bone structure."),
                 BlenderHipFix);
+
+            StripNonDeformingBones = EditorGUILayout.Toggle(new GUIContent("Strip non-deforming bones",
+                    "Remove unused branches from FBX exports. Keep meshes, skin bones, humanoid bones, animated objects and their ancestors."),
+                StripNonDeformingBones);
 
             ShowFrameInfo = EditorGUILayout.Toggle(new GUIContent("Show frame info",
                     "Show number of frames and other information"),
@@ -636,6 +647,8 @@ namespace DrSakuu.Humr.Editor
             TempControllerBuilder tempController)
         {
             var animator = _loader.Animator;
+            if (StripNonDeformingBones)
+                StripUnusedExportObjects(_loader.transform, animator, tempController.Controller.animationClips);
             var originalRootBones = ApplyBlenderHipFix(animator);
             var previousAnimatorController = animator.runtimeAnimatorController;
 
@@ -664,6 +677,49 @@ namespace DrSakuu.Humr.Editor
                 animator.runtimeAnimatorController = previousAnimatorController;
                 RestoreRootBones(originalRootBones);
             }
+        }
+
+        private static void StripUnusedExportObjects(Transform root, Animator animator, AnimationClip[] clips)
+        {
+            var keep = new HashSet<Transform> { root };
+
+            void KeepWithAncestors(Transform node)
+            {
+                if (node == null || !node.IsChildOf(root)) return;
+                while (node != null && keep.Add(node))
+                    node = node.parent;
+            }
+
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+                KeepWithAncestors(renderer.transform);
+            foreach (var mesh in root.GetComponentsInChildren<MeshFilter>(true))
+                KeepWithAncestors(mesh.transform);
+            foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                KeepWithAncestors(skin.rootBone);
+                foreach (var bone in skin.bones)
+                    KeepWithAncestors(bone);
+            }
+
+            KeepWithAncestors(animator.transform);
+            if (animator.isHuman)
+                for (var bone = 0; bone < (int)HumanBodyBones.LastBone; bone++)
+                    KeepWithAncestors(animator.GetBoneTransform((HumanBodyBones)bone));
+
+            foreach (var clip in clips)
+            {
+                var bindings = AnimationUtility.GetCurveBindings(clip)
+                    .Concat(AnimationUtility.GetObjectReferenceCurveBindings(clip));
+                foreach (var binding in bindings)
+                    KeepWithAncestors(string.IsNullOrEmpty(binding.path)
+                        ? animator.transform
+                        : animator.transform.Find(binding.path));
+            }
+
+            // Delete only unused branch roots; retained descendants always retain their ancestors.
+            foreach (var node in root.GetComponentsInChildren<Transform>(true))
+                if (node != null && !keep.Contains(node) && keep.Contains(node.parent))
+                    DestroyImmediate(node.gameObject);
         }
 
         private static void ExportFbx(string path, Object target)
