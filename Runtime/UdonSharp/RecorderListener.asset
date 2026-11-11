@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: RecorderListener
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 4390291188d7f69469ae09bf638912fb, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 6109b9a7a7e675e4bbf79e1568a6371c, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: ee8e5b8a40738884ea5eeb8736c6a625, type: 3}

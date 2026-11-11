@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.2] - Unreleased
+
+### Fixed
+
+- Preserve exported bone names
+
 ## [2.1.1] - 2026-11-09
 
 ### Fixed
@@ -8,6 +14,7 @@
 - Cache parsed takes
 - Batch curve construction and linear tangent updates
 - Reduce frame parsing allocations with spans and reusable buffers
+- Use PropertyCurves to build AnimationClips
 
 ## [2.1.0] - 2026-10-03
 

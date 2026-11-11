@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Formats.Fbx.Exporter;
 using UnityEngine;
@@ -646,7 +647,7 @@ namespace DrSakuu.Humr.Editor
                 var exportPath = GetAssetPath("FBXs", targetName, fileName, "fbx");
                 exportPath = ResolveExistingAssetPath(exportPath, ReplaceExisting);
 
-                ModelExporter.ExportObject(exportPath, _loader.gameObject);
+                ExportFbx(exportPath, _loader.gameObject);
 
                 SelectExportedAsset(exportPath);
 
@@ -663,6 +664,20 @@ namespace DrSakuu.Humr.Editor
                 animator.runtimeAnimatorController = previousAnimatorController;
                 RestoreRootBones(originalRootBones);
             }
+        }
+
+        private static void ExportFbx(string path, Object target)
+        {
+            // FBX Exporter 4.2.1 exposes custom export options only through its internal API.
+            var exporterType = typeof(ModelExporter);
+            var optionsType = exporterType.Assembly.GetType(
+                "UnityEditor.Formats.Fbx.Exporter.ExportModelSettingsSerialize", throwOnError: true);
+            var options = Activator.CreateInstance(optionsType, nonPublic: true);
+            optionsType.GetMethod("SetUseMayaCompatibleNames").Invoke(options, new object[] { false });
+
+            var export = exporterType.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+                .Single(method => method.Name == "ExportObjects" && method.GetParameters().Length == 4);
+            export.Invoke(null, new object[] { path, new Object[] { target }, options, null });
         }
 
         private static string ResolveExistingAssetPath(string assetPath, ReplaceExistingAction replaceExisting)
