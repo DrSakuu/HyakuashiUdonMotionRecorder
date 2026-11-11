@@ -496,6 +496,7 @@ namespace DrSakuu.Humr.Editor
             var originalLoader = _loader;
             GameObject tempLoaderObject;
             tempLoaderObject = Instantiate(_loader.gameObject);
+            tempLoaderObject.name = originalLoader.gameObject.name;
 
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
@@ -567,6 +568,7 @@ namespace DrSakuu.Humr.Editor
             var originalLoader = _loader;
             GameObject tempLoaderObject;
             tempLoaderObject = Instantiate(_loader.gameObject);
+            tempLoaderObject.name = originalLoader.gameObject.name;
 
             tempLoaderObject.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             _loader = tempLoaderObject.GetComponent<HumrRecordingLoader>();
