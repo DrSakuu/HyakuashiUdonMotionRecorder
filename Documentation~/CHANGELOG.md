@@ -10,6 +10,10 @@
 
 - Save recording selection per avatar definition
 
+### Fixed
+
+- Ensure quaternion continuity when parsing
+
 ## [2.1.1] - 2026-11-09
 
 ### Fixed

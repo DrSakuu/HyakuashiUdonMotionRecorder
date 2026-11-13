@@ -434,10 +434,7 @@ namespace DrSakuu.Humr.Editor
             curves[0].curve.AddKey(time, pos.x);
             curves[1].curve.AddKey(time, pos.y);
             curves[2].curve.AddKey(time, pos.z);
-            curves[3].curve.AddKey(time, rot.x);
-            curves[4].curve.AddKey(time, rot.y);
-            curves[5].curve.AddKey(time, rot.z);
-            curves[6].curve.AddKey(time, rot.w);
+            AddQuaternionCurveKeys(curves, 3, time, rot);
             curves[7].curve.AddKey(time, scale.x);
             curves[8].curve.AddKey(time, scale.y);
             curves[9].curve.AddKey(time, scale.z);
@@ -464,11 +461,30 @@ namespace DrSakuu.Humr.Editor
             rotationCount = Mathf.Min(rotationCount, take.BoneCurves.Length);
             for (var i = 0; i < rotationCount; i++)
             {
-                take.BoneCurves[i][0].curve.AddKey(time, rotations[i].x);
-                take.BoneCurves[i][1].curve.AddKey(time, rotations[i].y);
-                take.BoneCurves[i][2].curve.AddKey(time, rotations[i].z);
-                take.BoneCurves[i][3].curve.AddKey(time, rotations[i].w);
+                AddQuaternionCurveKeys(take.BoneCurves[i], 0, time, rotations[i]);
             }
+        }
+
+        private static void AddQuaternionCurveKeys(PropertyCurve[] curves, int offset, float time, Quaternion rotation)
+        {
+            var lastIndex = curves[offset].curve.length - 1;
+            if (lastIndex >= 0)
+            {
+                var previous = new Quaternion(
+                    curves[offset].curve[lastIndex].value,
+                    curves[offset + 1].curve[lastIndex].value,
+                    curves[offset + 2].curve[lastIndex].value,
+                    curves[offset + 3].curve[lastIndex].value);
+
+                // q and -q are the same rotation. Align signs before component curves are interpolated.
+                if (Quaternion.Dot(previous, rotation) < 0f)
+                    rotation = new Quaternion(-rotation.x, -rotation.y, -rotation.z, -rotation.w);
+            }
+
+            curves[offset].curve.AddKey(time, rotation.x);
+            curves[offset + 1].curve.AddKey(time, rotation.y);
+            curves[offset + 2].curve.AddKey(time, rotation.z);
+            curves[offset + 3].curve.AddKey(time, rotation.w);
         }
 
         private ref struct ParsedFrame
