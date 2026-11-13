@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -150,7 +149,7 @@ namespace DrSakuu.Humr.Editor
         public static string[] LoadHumrLogLines(string path)
         {
             var lines = new List<string>();
-            using var reader = OpenReadOnlyTextFile(path);
+            using var reader = LogFileReader.Open(path);
             while (reader.ReadLine() is { } line)
                 if (HumrLogger.AnyHumrFrameStartIndex(line) >= 0)
                     lines.Add(line);
@@ -293,7 +292,7 @@ namespace DrSakuu.Humr.Editor
 
         private static bool DetectHumrMarkers(string filePath)
         {
-            using var reader = OpenReadOnlyTextFile(filePath);
+            using var reader = LogFileReader.Open(filePath, preserveLastAccessTime: true);
             var buffer = new char[16 * 1024];
             var overlapLength = Math.Max(HumrLogger.HumrRecordingPrefix.Length, HumrLogger.LegacyHumrPrefix.Length) - 1;
             var retained = 0;
@@ -334,20 +333,6 @@ namespace DrSakuu.Humr.Editor
             };
         }
 
-        private static StreamReader OpenReadOnlyTextFile(string filePath)
-        {
-            const int bufferSize = 64 * 1024;
-            var fileStream = new FileStream(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite,
-                bufferSize,
-                FileOptions.SequentialScan);
-
-            return new StreamReader(fileStream, Encoding.UTF8, true, bufferSize);
-        }
-
         private static (TargetType, string)[] ScanHumrTargets(RecordingFile recordingFile)
         {
             if (!File.Exists(recordingFile.path))
@@ -355,7 +340,7 @@ namespace DrSakuu.Humr.Editor
 
             var targets = new HashSet<(TargetType, string)>();
 
-            using var reader = OpenReadOnlyTextFile(recordingFile.path);
+            using var reader = LogFileReader.Open(recordingFile.path);
             while (reader.ReadLine() is { } line)
             {
                 var target = ExtractHumrOrLegacyTarget(line);
