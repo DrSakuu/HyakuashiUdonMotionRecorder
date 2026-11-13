@@ -1,8 +1,8 @@
 # Hyakuashi Udon Motion Recorder
 
-[日本語](Documentation/README/README.ja.md)
+[日本語](Documentation~/README/README.ja.md)
 
-![HUMR Logo](Documentation/README/Social.png)
+![HUMR Logo](Documentation~/README/Social.png)
 
 HUMR is a motion capture tool that records user's movements into the VRChat log files and then exports them to FBX in a Unity project. This is version 2, which uses a new log format.
 
@@ -27,38 +27,38 @@ The VRChat SDK is not needed to load a recording and export it as `.fbx`. If you
 
 ### VRChat Package Manager
 
-Install from [Sakuu's VPM Listing](https://drsakuu.github.io/vpm-listing/): <a href="https://drsakuu.github.io/vpm-listing/"><img src="Documentation/README/AddToVCC.png" alt="Add to VCC" height="24"></a> (with [ALCOM](https://vrc-get.anatawa12.com/alcom/)).
+Install from [Sakuu's VPM Listing](https://drsakuu.github.io/vpm-listing/): <a href="https://drsakuu.github.io/vpm-listing/"><img src="Documentation~/README/AddToVCC.png" alt="Add to VCC" height="24"></a> (with [ALCOM](https://vrc-get.anatawa12.com/alcom/)).
 
 ## Usage
 
 ### Recording
 
-*Full guide: [Recording.md](Documentation/Recording/Recording.md)*
+*Full guide: [Recording.md](Documentation~/Recording/Recording.md)*
 
 > [!IMPORTANT]
 > You need to set Logging to Full in the VRChat Debug settings for HUMR recording to work.
 
 Either use [the public world](https://vrchat.com/home/launch?worldId=wrld_1fbb2fea-788e-43a8-a588-8ee7edf8e680) or add the HumrPlayerRecorder prefab to your [VRChat World project](https://creators.vrchat.com/worlds/).
 
-![Recording an animation with HUMR in VRChat](Documentation/Recording/HumrRecordingStart.gif)
+![Recording an animation with HUMR in VRChat](Documentation~/Recording/HumrRecordingStart.gif)
 
 ### Loading
 
-*Full guide: [Loading.md](Documentation/Loading/Loading.md)*
+*Full guide: [Loading.md](Documentation~/Loading/Loading.md)*
 
 Add the HumrRecordingLoader Component to an animator with a human avatar. Select the VRChat log file you recorded earlier and export the takes as either .fbx or .anim.
 
-![Loading an animation in Unity](Documentation/Loading/HUMRLoading.gif)
+![Loading an animation in Unity](Documentation~/Loading/HUMRLoading.gif)
 
 ### Advanced guides
 
-Applying the animation to an avatar: [Avatar.md](Documentation/Avatar/Avatar.md)
+Applying the animation to an avatar: [Avatar.md](Documentation~/Avatar/Avatar.md)
 
-Recording camera motion: [Camera.md](Documentation/Camera/Camera.md)
+Recording camera motion: [Camera.md](Documentation~/Camera/Camera.md)
 
 ## Changelog
 
-[CHANGELOG.md](Documentation/CHANGELOG.md)
+[CHANGELOG.md](Documentation~/CHANGELOG.md)
 
 ## Contributing
 
