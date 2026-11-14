@@ -1,4 +1,4 @@
-# Changelog
+# Changelog[^format]
 
 ## [2.1.3] - Unreleased
 
@@ -359,3 +359,18 @@ v2 can read pre-2.0.0 logs, but not write them.
 ### 追加
 
 - リリース
+
+[2.1.3]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.2...HEAD
+[2.1.1]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.0-beta.2...v2.1.0
+[2.1.0-beta.2]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.0-beta.1...v2.1.0-beta.2
+[2.1.0-beta.1]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.0.0...v2.1.0-beta.1
+[2.0.0]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.0.0-beta.5...v2.0.0
+[2.0.0-beta.5]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.0.0-beta.4...v2.0.0-beta.5
+[2.0.0-beta.4]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.0.0-beta.3...v2.0.0-beta.4
+[2.0.0-beta.3]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.0.0-beta.2...v2.0.0-beta.3
+[2.0.0-beta.2]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.0.0-beta.1...v2.0.0-beta.2
+[2.0.0-beta.1]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.0.0-beta.0...v2.0.0-beta.1
+[2.0.0-beta.0]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v1.5.0...v2.0.0-beta.0
+
+[^format]: The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
