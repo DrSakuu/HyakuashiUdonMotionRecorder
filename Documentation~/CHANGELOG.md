@@ -1,6 +1,24 @@
 # Changelog[^format]
 
-## [2.1.3] - Unreleased
+## [2.2.0] - 2026-11-20
+
+### Added
+
+- World, Local and Recording Start transform spaces
+
+### Changed
+
+- Select newest HUMR log file when created
+- Split take on avatar or height change
+- Hide documentation and source assets from Unity editor
+- Use material variant for HUMR-Chan face
+
+### Fixed
+
+- Restore log file access times during HUMR detection
+- Hide unused player name in PlayerRecorder inspector
+
+## [2.1.2] - 2026-11-11
 
 ### Added
 
@@ -360,7 +378,8 @@ v2 can read pre-2.0.0 logs, but not write them.
 
 - リリース
 
-[2.1.3]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.2...HEAD
+[2.2.0]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.2...v2.2.0
+[2.1.2]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.0-beta.2...v2.1.0
 [2.1.0-beta.2]: https://github.com/DrSakuu/HyakuashiUdonMotionRecorder/compare/v2.1.0-beta.1...v2.1.0-beta.2

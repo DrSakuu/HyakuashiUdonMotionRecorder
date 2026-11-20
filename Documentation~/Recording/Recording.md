@@ -13,6 +13,8 @@ Either use [the public world](https://vrchat.com/home/launch?worldId=wrld_1fbb2f
 
 Use the Start/Stop recording button of the prefab to start and stop recording. Multiple recordings will be split into takes in the same exported file.
 
+## Avatar and log requirements
+
 The lengths and rotations of the bones of the avatar that you record and load your motion with have to match exactly. VRChat has [a lot of public avatars](https://vrchat.com/home/launch?worldId=wrld_57514404-7f4e-4aee-a50a-57f55d3084bf), but if you don't have the exact .fbx file available in Unity, the recording is going to import with incorrect rotations.
 
 You can use the HUMR-Chan sample avatar from the pedestal in the public world, because she is included in the VRChat SDK. She has good proportions for recording humanoid animations. Unity can retarget the animation to another avatar after you import it, or you can use a tool like [Rokoko plugin for Blender](https://github.com/Rokoko/rokoko-studio-live-blender/) for manual retargeting.
