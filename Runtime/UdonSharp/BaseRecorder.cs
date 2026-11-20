@@ -7,6 +7,13 @@ using VRC.SDKBase;
 
 namespace DrSakuu.Humr
 {
+    public enum RecordingSpace
+    {
+        World,
+        Local,
+        RecordingStart
+    }
+
     public class BaseRecorder : UdonSharpBehaviour
     {
         [SerializeField] [Tooltip("Target name for recording.")]
@@ -18,13 +25,15 @@ namespace DrSakuu.Humr
         [SerializeField] [Tooltip("Start recording immediately on scene load.")]
         protected bool recordOnStart = true;
 
-        [SerializeField] [Tooltip("Record position relative to world origin, otherwise local position relative to parent.")]
-        protected bool worldAbsolutePosition;
+        [SerializeField] [Tooltip("Reference frame for position and rotation. Local follows the object's parent or the player recorder. Recording Start uses a fixed starting pose (player root position and heading for players). Object scale is always recorded as localScale.")]
+        protected RecordingSpace recordingSpace = RecordingSpace.Local;
 
         protected object[] RecordingObjects;
         protected TargetType TargetType = TargetType.Object;
         protected bool IsRecording;
         protected bool RecordIsReady = true;
+        protected Vector3 RecordingStartPosition;
+        protected Quaternion RecordingStartInverseRotation;
 
         private RecorderListener[] _listeners = new RecorderListener[0];
         private float _nextRecordTime;
@@ -80,6 +89,8 @@ namespace DrSakuu.Humr
         {
             if (!RecordIsReady) return;
 
+            if (recordingSpace == RecordingSpace.RecordingStart) CaptureRecordingStart();
+
             _recordTime = 0f;
             _recordInterval = float.IsInfinity(recordFramerate)
                 ? 0f
@@ -120,6 +131,12 @@ namespace DrSakuu.Humr
                 if (Utilities.IsValid(listener))
                     listener.AfterRecordingStateChanged(IsRecording, RecordIsReady);
             }
+        }
+
+        protected virtual void CaptureRecordingStart()
+        {
+            RecordingStartPosition = transform.position;
+            RecordingStartInverseRotation = Quaternion.Inverse(transform.rotation);
         }
 
         protected virtual void UpdateRecordingObjects()
