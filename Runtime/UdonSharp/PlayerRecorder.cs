@@ -7,6 +7,7 @@ namespace DrSakuu.Humr
     public class PlayerRecorder : BaseRecorder
     {
         private VRCPlayerApi _player;
+        private int _lastTakeStartFrame = -1;
 
         public override void Start()
         {
@@ -22,10 +23,40 @@ namespace DrSakuu.Humr
 
         public override void OnAvatarChanged(VRCPlayerApi player)
         {
-            if (!player.isLocal || RecordIsReady) return;
+            if (!player.isLocal) return;
+
+            if (RecordIsReady)
+            {
+                RestartTake();
+                return;
+            }
 
             RecordIsReady = true;
             if (recordOnStart && !IsRecording) StartRecording();
+        }
+
+        public override void OnAvatarEyeHeightChanged(VRCPlayerApi player, float prevEyeHeightAsMeters)
+        {
+            if (!player.isLocal) return;
+
+            RestartTake();
+        }
+
+        public override void StartRecording()
+        {
+            if (!RecordIsReady) return;
+
+            _lastTakeStartFrame = Time.frameCount;
+            base.StartRecording();
+        }
+
+        private void RestartTake()
+        {
+            if (!IsRecording || !RecordIsReady || _lastTakeStartFrame == Time.frameCount) return;
+
+            // Start directly so the changed avatar's pose is not appended to the old take.
+            StartRecording();
+            HumrLogger.Log($"PlayerRecorder: restarted take after avatar or height change frame={Time.frameCount}");
         }
 
         protected override void CaptureRecordingStart()
